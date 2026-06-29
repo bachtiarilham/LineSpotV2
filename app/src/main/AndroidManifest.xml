@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <application
+        android:name=".LineSpotApplication"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.LineSpotV2">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.LineSpotV2">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
+
+    <!--        hati hati dengan allowbackup ya, karena menyimpan data sensitif-->
+<!--    Menengah: HttpLoggingInterceptor.Level.BODY di NetworkModule.kt (line 45) akan log body request/response, termasuk login/password/token kalau build non-debug nanti ikut pakai config ini.-->
+<!--    Menengah: backup masih aktif dan rules masih sample kosong: AndroidManifest.xml (line 6), data_extraction_rules.xml (line 8), backup_rules.xml (line 8). Ini masih rawan untuk token/profile lokal.-->
+<!--    Menengah: fallbackToDestructiveMigration() di DatabaseModule.kt (line 21) akan hapus cache DB saat schema berubah. Oke untuk dev, kurang aman untuk production.-->
