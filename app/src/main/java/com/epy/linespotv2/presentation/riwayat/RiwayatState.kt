@@ -1,6 +1,6 @@
 package com.epy.linespotv2.presentation.riwayat
 
-import com.epy.linespotv2.domain.model.RiwayatModel
+import com.epy.linespotv2.domain.model.riwayat.RiwayatModel
 
 data class RiwayatState(
     //riwayatscreen

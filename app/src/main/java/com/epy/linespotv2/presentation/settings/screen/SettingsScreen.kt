@@ -66,7 +66,7 @@ import com.epy.linespotv2.core.ui.theme.GreyText
 import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
-import com.epy.linespotv2.domain.model.UserModel
+import com.epy.linespotv2.domain.model.auth.UserModel
 import com.epy.linespotv2.presentation.settings.SettingsEffect
 import com.epy.linespotv2.presentation.settings.SettingsIntent
 import com.epy.linespotv2.presentation.settings.SettingsState

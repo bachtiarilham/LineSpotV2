@@ -3,10 +3,10 @@ package com.epy.linespotv2.domain.usecase
 import com.epy.linespotv2.core.network.ApiCondition
 import com.epy.linespotv2.core.utils.Dispatcher
 import com.epy.linespotv2.core.utils.parseIndonesiaDateOrNull
-import com.epy.linespotv2.domain.model.RiwayatModel
-import com.epy.linespotv2.domain.model.RiwayatPaymentFilter
-import com.epy.linespotv2.domain.model.RiwayatTransactionFilter
-import com.epy.linespotv2.domain.model.RiwayatVehicleFilter
+import com.epy.linespotv2.domain.model.riwayat.RiwayatModel
+import com.epy.linespotv2.domain.model.riwayat.RiwayatPaymentFilter
+import com.epy.linespotv2.domain.model.riwayat.RiwayatTransactionFilter
+import com.epy.linespotv2.domain.model.riwayat.RiwayatVehicleFilter
 import com.epy.linespotv2.domain.repository.RiwayatRepository
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit

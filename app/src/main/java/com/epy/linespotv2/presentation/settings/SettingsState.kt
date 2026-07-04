@@ -1,6 +1,6 @@
 package com.epy.linespotv2.presentation.settings
 
-import com.epy.linespotv2.domain.model.UserModel
+import com.epy.linespotv2.domain.model.auth.UserModel
 
 data class SettingsState(
     val isLoading: Boolean         = false,

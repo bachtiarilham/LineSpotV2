@@ -5,10 +5,10 @@ import com.epy.linespotv2.core.base.BaseViewModel
 import com.epy.linespotv2.core.network.ApiCondition
 import com.epy.linespotv2.core.preferences.AppPreferences
 import com.epy.linespotv2.core.utils.toIndonesiaDate
-import com.epy.linespotv2.domain.model.LokasiModel
-import com.epy.linespotv2.domain.model.RiwayatPaymentFilter
-import com.epy.linespotv2.domain.model.RiwayatTransactionFilter
-import com.epy.linespotv2.domain.model.RiwayatVehicleFilter
+import com.epy.linespotv2.domain.model.helper.LokasiModel
+import com.epy.linespotv2.domain.model.riwayat.RiwayatPaymentFilter
+import com.epy.linespotv2.domain.model.riwayat.RiwayatTransactionFilter
+import com.epy.linespotv2.domain.model.riwayat.RiwayatVehicleFilter
 import com.epy.linespotv2.domain.usecase.GetLokasiUseCase
 import com.epy.linespotv2.domain.usecase.RiwayatUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel

@@ -1,11 +1,11 @@
 package com.epy.linespotv2.data.remote.mapper
 
 import com.epy.linespotv2.data.local.entity.HomeEntity
-import com.epy.linespotv2.domain.model.HomeModel
-import com.epy.linespotv2.domain.model.HomeSummaryInfo
-import com.epy.linespotv2.domain.model.HomeWarnings
-import com.epy.linespotv2.domain.model.JukirSummaryInfo
-import com.epy.linespotv2.domain.model.Profile
+import com.epy.linespotv2.domain.model.home.HomeModel
+import com.epy.linespotv2.domain.model.home.HomeSummaryInfo
+import com.epy.linespotv2.domain.model.home.HomeWarnings
+import com.epy.linespotv2.domain.model.home.JukirSummaryInfo
+import com.epy.linespotv2.domain.model.home.Profile
 
 fun HomeEntity.toDomain(): HomeModel = HomeModel(
     profile = Profile(

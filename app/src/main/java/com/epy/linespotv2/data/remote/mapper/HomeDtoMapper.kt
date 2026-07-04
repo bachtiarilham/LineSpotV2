@@ -1,21 +1,21 @@
 package com.epy.linespotv2.data.remote.mapper
 
-import com.epy.linespotv2.data.remote.dto.EventDto
-import com.epy.linespotv2.data.remote.dto.HomeDto
-import com.epy.linespotv2.data.remote.dto.JukirSummaryDto
-import com.epy.linespotv2.data.remote.dto.NewsDto
-import com.epy.linespotv2.data.remote.dto.ProfileDto
-import com.epy.linespotv2.data.remote.dto.SummaryDto
-import com.epy.linespotv2.data.remote.dto.WarningsDto
-import com.epy.linespotv2.domain.model.HomeEventItem
-import com.epy.linespotv2.domain.model.HomeModel
-import com.epy.linespotv2.domain.model.HomeNewsItem
-import com.epy.linespotv2.domain.model.Profile
-import com.epy.linespotv2.domain.model.HomeSummaryInfo
-import com.epy.linespotv2.domain.model.HomeWarnings
-import com.epy.linespotv2.domain.model.JukirSummaryInfo
+import com.epy.linespotv2.data.remote.dto.home.EventDto
+import com.epy.linespotv2.data.remote.dto.home.HomeResponseDto
+import com.epy.linespotv2.data.remote.dto.home.JukirSummaryDto
+import com.epy.linespotv2.data.remote.dto.home.NewsDto
+import com.epy.linespotv2.data.remote.dto.home.ProfileDto
+import com.epy.linespotv2.data.remote.dto.home.SummaryDto
+import com.epy.linespotv2.data.remote.dto.home.WarningsDto
+import com.epy.linespotv2.domain.model.home.HomeEventItem
+import com.epy.linespotv2.domain.model.home.HomeModel
+import com.epy.linespotv2.domain.model.home.HomeNewsItem
+import com.epy.linespotv2.domain.model.home.Profile
+import com.epy.linespotv2.domain.model.home.HomeSummaryInfo
+import com.epy.linespotv2.domain.model.home.HomeWarnings
+import com.epy.linespotv2.domain.model.home.JukirSummaryInfo
 
-fun HomeDto.toDomain(): HomeModel = HomeModel(
+fun HomeResponseDto.toDomain(): HomeModel = HomeModel(
     profile = profile.toDomain(),
     summary = summary.toDomain(),
     jukirSummary = jukirSummary.toDomain(),

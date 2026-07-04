@@ -1,17 +1,17 @@
 package com.epy.linespotv2.data.remote.mapper
 
-import com.epy.linespotv2.data.remote.dto.PackageCardDto
-import com.epy.linespotv2.data.remote.dto.PromoDto
-import com.epy.linespotv2.data.remote.dto.PromoTerpilihDto
-import com.epy.linespotv2.data.remote.dto.StatusCardDto
-import com.epy.linespotv2.data.remote.dto.SubscribeDto
+import com.epy.linespotv2.data.remote.dto.subscription.PackageCardDto
+import com.epy.linespotv2.data.remote.dto.subscription.PromoDto
+import com.epy.linespotv2.data.remote.dto.subscription.PromoTerpilihDto
+import com.epy.linespotv2.data.remote.dto.subscription.StatusCardDto
+import com.epy.linespotv2.data.remote.dto.subscription.SubscribeResponseDto
 import com.epy.linespotv2.domain.model.PackageCard
 import com.epy.linespotv2.domain.model.Promo
 import com.epy.linespotv2.domain.model.PromoTerpilih
 import com.epy.linespotv2.domain.model.StatusCard
 import com.epy.linespotv2.domain.model.SubscribeModel
 
-fun SubscribeDto.toDomain() : SubscribeModel = SubscribeModel (
+fun SubscribeResponseDto.toDomain() : SubscribeModel = SubscribeModel (
     statusCard = statusCard.toDomain(),
     packageCard = this.packageCard?.map { it.toDomain() }.orEmpty(),
     promo = this.promo?.map { it.toDomain() }.orEmpty(),

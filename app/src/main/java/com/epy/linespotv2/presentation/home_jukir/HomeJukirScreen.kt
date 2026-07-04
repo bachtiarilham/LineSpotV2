@@ -58,11 +58,11 @@ import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
 import com.epy.linespotv2.core.utils.toIndonesiaDate
-import com.epy.linespotv2.domain.model.HomeModel
-import com.epy.linespotv2.domain.model.HomeSummaryInfo
-import com.epy.linespotv2.domain.model.HomeWarnings
-import com.epy.linespotv2.domain.model.JukirSummaryInfo
-import com.epy.linespotv2.domain.model.Profile
+import com.epy.linespotv2.domain.model.home.HomeModel
+import com.epy.linespotv2.domain.model.home.HomeSummaryInfo
+import com.epy.linespotv2.domain.model.home.HomeWarnings
+import com.epy.linespotv2.domain.model.home.JukirSummaryInfo
+import com.epy.linespotv2.domain.model.home.Profile
 import java.util.Date
 
 @Composable

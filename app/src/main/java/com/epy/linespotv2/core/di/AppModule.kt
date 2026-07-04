@@ -1,18 +1,18 @@
 package com.epy.linespotv2.core.di
 
 import com.epy.linespotv2.core.utils.Dispatcher
-import com.epy.linespotv2.data.repository.HomeJukirRepositoryImpl
-import com.epy.linespotv2.data.repository.LoginRepositoryImpl
-import com.epy.linespotv2.data.repository.RegisterRepositoryImpl
-import com.epy.linespotv2.data.repository.GetLokasiRepositoryImpl
-import com.epy.linespotv2.data.repository.InputManualRepositoryImpl
-import com.epy.linespotv2.data.repository.LaporanRepositoryImpl
-import com.epy.linespotv2.data.repository.PembayaranStatusRepositoryImpl
-import com.epy.linespotv2.data.repository.RiwayatRepositoryImpl
-import com.epy.linespotv2.data.repository.PostQrRepositoryImpl
-import com.epy.linespotv2.data.repository.SubscribeRepositoryImpl
-import com.epy.linespotv2.data.repository.UserRepositoryImpl
-import com.epy.linespotv2.domain.repository.HomeJukirRepository
+import com.epy.linespotv2.data.repository_impl.HomeJukirRepositoryImpl
+import com.epy.linespotv2.data.repository_impl.LoginRepositoryImpl
+import com.epy.linespotv2.data.repository_impl.RegisterRepositoryImpl
+import com.epy.linespotv2.data.repository_impl.GetLokasiRepositoryImpl
+import com.epy.linespotv2.data.repository_impl.InputManualRepositoryImpl
+import com.epy.linespotv2.data.repository_impl.LaporanRepositoryImpl
+import com.epy.linespotv2.data.repository_impl.PembayaranStatusRepositoryImpl
+import com.epy.linespotv2.data.repository_impl.RiwayatRepositoryImpl
+import com.epy.linespotv2.data.repository_impl.PostQrRepositoryImpl
+import com.epy.linespotv2.data.repository_impl.SubscribeRepositoryImpl
+import com.epy.linespotv2.data.repository_impl.UserRepositoryImpl
+import com.epy.linespotv2.domain.repository.HomeRepository
 import com.epy.linespotv2.domain.repository.LoginRepository
 import com.epy.linespotv2.domain.repository.RegisterRepository
 import com.epy.linespotv2.domain.repository.GetLokasiRepository
@@ -41,7 +41,7 @@ abstract class AppModule {
     @Binds @Singleton
     abstract fun bindUserRepository(impl: UserRepositoryImpl): UserRepository
     @Binds @Singleton
-    abstract fun bindHomeRepository(impl: HomeJukirRepositoryImpl): HomeJukirRepository
+    abstract fun bindHomeRepository(impl: HomeJukirRepositoryImpl): HomeRepository
     @Binds @Singleton
     abstract fun bindRegisterRepository(impl: RegisterRepositoryImpl): RegisterRepository
     @Binds @Singleton

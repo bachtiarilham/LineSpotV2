@@ -1,7 +1,7 @@
 package com.epy.linespotv2.data.remote.mapper
 
-import com.epy.linespotv2.data.remote.dto.RegisterResultDto
-import com.epy.linespotv2.domain.model.RegisterModel
+import com.epy.linespotv2.data.remote.dto.auth.RegisterResultDto
+import com.epy.linespotv2.domain.model.auth.RegisterModel
 
 
 fun RegisterResultDto.toDomain(): RegisterModel = RegisterModel(

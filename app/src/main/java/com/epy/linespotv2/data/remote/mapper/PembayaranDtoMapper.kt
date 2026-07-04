@@ -1,19 +1,18 @@
 package com.epy.linespotv2.data.remote.mapper
 
-import com.epy.linespotv2.data.remote.dto.PembayaranDto
-import com.epy.linespotv2.data.remote.dto.PembayaranOptionDto
-import com.epy.linespotv2.data.remote.dto.PembayaranQrisSectionDto
-import com.epy.linespotv2.data.remote.dto.PembayaranStatusCardDto
-import com.epy.linespotv2.data.remote.dto.IsiQrDto
+import com.epy.linespotv2.data.remote.dto.payment.PostParkingResponseDto
+import com.epy.linespotv2.data.remote.dto.payment.PembayaranOptionDto
+import com.epy.linespotv2.data.remote.dto.payment.PembayaranQrisSectionDto
+import com.epy.linespotv2.data.remote.dto.payment.PembayaranStatusCardDto
+import com.epy.linespotv2.data.remote.dto.payment.IsiQrDto
 import com.epy.linespotv2.domain.model.IsiQr
 import com.epy.linespotv2.domain.model.PembayaranModel
 import com.epy.linespotv2.domain.model.PembayaranOption
 import com.epy.linespotv2.domain.model.PembayaranOptionType
 import com.epy.linespotv2.domain.model.PembayaranQrisSection
 import com.epy.linespotv2.domain.model.PembayaranStatusCard
-import kotlin.Long
 
-fun PembayaranDto?.toDomain(): PembayaranModel {
+fun PostParkingResponseDto?.toDomain(): PembayaranModel {
     return PembayaranModel(
         title = this?.title ?: "Pembayaran",
         statusCard = this?.statusCard.toDomain(),

@@ -1,19 +1,19 @@
 package com.epy.linespotv2.data.remote.mapper
 
-import com.epy.linespotv2.data.remote.dto.LaporanChartBarDto
-import com.epy.linespotv2.data.remote.dto.LaporanDateRangeDto
-import com.epy.linespotv2.data.remote.dto.LaporanDto
-import com.epy.linespotv2.data.remote.dto.LaporanPaymentSummaryDto
-import com.epy.linespotv2.data.remote.dto.LaporanRecentTransactionDto
-import com.epy.linespotv2.data.remote.dto.LaporanSummaryDto
-import com.epy.linespotv2.domain.model.LaporanChartBar
-import com.epy.linespotv2.domain.model.LaporanDateRange
-import com.epy.linespotv2.domain.model.LaporanModel
-import com.epy.linespotv2.domain.model.LaporanPaymentSummary
-import com.epy.linespotv2.domain.model.LaporanRecentTransaction
-import com.epy.linespotv2.domain.model.LaporanSummary
+import com.epy.linespotv2.data.remote.dto.laporan.LaporanChartBarDto
+import com.epy.linespotv2.data.remote.dto.laporan.LaporanDateRangeDto
+import com.epy.linespotv2.data.remote.dto.laporan.LaporanResponseDto
+import com.epy.linespotv2.data.remote.dto.laporan.LaporanPaymentSummaryDto
+import com.epy.linespotv2.data.remote.dto.laporan.LaporanRecentTransactionDto
+import com.epy.linespotv2.data.remote.dto.laporan.LaporanSummaryDto
+import com.epy.linespotv2.domain.model.laporan.LaporanChartBar
+import com.epy.linespotv2.domain.model.laporan.LaporanDateRange
+import com.epy.linespotv2.domain.model.laporan.LaporanModel
+import com.epy.linespotv2.domain.model.laporan.LaporanPaymentSummary
+import com.epy.linespotv2.domain.model.laporan.LaporanRecentTransaction
+import com.epy.linespotv2.domain.model.laporan.LaporanSummary
 
-fun LaporanDto?.toDomain(): LaporanModel {
+fun LaporanResponseDto?.toDomain(): LaporanModel {
     return LaporanModel(
         tanggalTerpilih = this?.tanggalTerpilih.orEmpty(),
         periode = this?.periode.toDomain(),

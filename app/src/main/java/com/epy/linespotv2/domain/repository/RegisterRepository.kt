@@ -1,7 +1,7 @@
 package com.epy.linespotv2.domain.repository
 
 import com.epy.linespotv2.core.network.ApiCondition
-import com.epy.linespotv2.domain.model.RegisterModel
+import com.epy.linespotv2.domain.model.auth.RegisterModel
 
 interface RegisterRepository {
     suspend fun register(

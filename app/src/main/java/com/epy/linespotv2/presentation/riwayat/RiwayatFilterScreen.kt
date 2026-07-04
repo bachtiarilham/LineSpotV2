@@ -53,9 +53,9 @@ import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
 import com.epy.linespotv2.core.utils.parseIndonesiaDateOrNull
 import com.epy.linespotv2.core.utils.toIndonesiaDate
-import com.epy.linespotv2.domain.model.RiwayatPaymentFilter
-import com.epy.linespotv2.domain.model.RiwayatTransactionFilter
-import com.epy.linespotv2.domain.model.RiwayatVehicleFilter
+import com.epy.linespotv2.domain.model.riwayat.RiwayatPaymentFilter
+import com.epy.linespotv2.domain.model.riwayat.RiwayatTransactionFilter
+import com.epy.linespotv2.domain.model.riwayat.RiwayatVehicleFilter
 import java.util.Date
 
 @Composable

@@ -3,7 +3,7 @@ package com.epy.linespotv2.domain.usecase
 import com.epy.linespotv2.core.network.ApiCondition
 import com.epy.linespotv2.core.utils.Dispatcher
 import com.epy.linespotv2.core.utils.isValidEmail
-import com.epy.linespotv2.domain.model.RegisterModel
+import com.epy.linespotv2.domain.model.auth.RegisterModel
 import com.epy.linespotv2.domain.repository.RegisterRepository
 import kotlinx.coroutines.withContext
 import javax.inject.Inject

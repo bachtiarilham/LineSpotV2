@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.epy.linespotv2.core.base.BaseViewModel
 import com.epy.linespotv2.core.network.ApiCondition
 import com.epy.linespotv2.core.preferences.AppPreferences
-import com.epy.linespotv2.domain.model.UserModel
+import com.epy.linespotv2.domain.model.auth.UserModel
 import com.epy.linespotv2.domain.usecase.user.GetProfileUseCase
 import com.epy.linespotv2.domain.usecase.user.LogoutUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel

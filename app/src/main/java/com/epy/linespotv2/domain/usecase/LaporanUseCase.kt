@@ -3,7 +3,7 @@ package com.epy.linespotv2.domain.usecase
 import com.epy.linespotv2.core.network.ApiCondition
 import com.epy.linespotv2.core.utils.Dispatcher
 import com.epy.linespotv2.core.utils.parseIndonesiaDateOrNull
-import com.epy.linespotv2.domain.model.LaporanModel
+import com.epy.linespotv2.domain.model.laporan.LaporanModel
 import com.epy.linespotv2.domain.repository.LaporanRepository
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit

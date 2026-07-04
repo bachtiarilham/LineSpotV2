@@ -1,11 +1,11 @@
 package com.epy.linespotv2.data.remote.mapper
 
-import com.epy.linespotv2.data.remote.dto.HasilBayarParkirDetailItemDto
-import com.epy.linespotv2.data.remote.dto.HasilBayarParkirDto
+import com.epy.linespotv2.data.remote.dto.payment.PostPaymentParkingDetailItemDto
+import com.epy.linespotv2.data.remote.dto.payment.PostPaymentParkingResponseDto
 import com.epy.linespotv2.domain.model.HasilBayarParkirDetailItem
 import com.epy.linespotv2.domain.model.HasilBayarParkirModel
 
-fun HasilBayarParkirDto?.toDomain(): HasilBayarParkirModel {
+fun PostPaymentParkingResponseDto?.toDomain(): HasilBayarParkirModel {
     return HasilBayarParkirModel(
         title = this?.title.orEmpty().ifBlank { "Struk Pembayaran" },
         successTitle = this?.successTitle.orEmpty().ifBlank { "Pembayaran Berhasil!" },
@@ -25,13 +25,13 @@ fun HasilBayarParkirDto?.toDomain(): HasilBayarParkirModel {
     )
 }
 
-private fun List<HasilBayarParkirDetailItemDto>?.toDetailItems(): List<HasilBayarParkirDetailItem> {
+private fun List<PostPaymentParkingDetailItemDto>?.toDetailItems(): List<HasilBayarParkirDetailItem> {
     return this?.map { it.toDomain() }?.filter {
         it.label.isNotBlank() || it.value.isNotBlank()
     } ?: emptyList()
 }
 
-private fun HasilBayarParkirDetailItemDto?.toDomain(): HasilBayarParkirDetailItem {
+private fun PostPaymentParkingDetailItemDto?.toDomain(): HasilBayarParkirDetailItem {
     return HasilBayarParkirDetailItem(
         label = this?.label.orEmpty(),
         value = this?.value.orEmpty()

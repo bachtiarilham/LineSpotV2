@@ -2,14 +2,6 @@ package com.epy.linespotv2.data.remote.dto
 
 import com.google.gson.annotations.SerializedName
 
-data class InputManualRequestDto(
-    @SerializedName("nomor_polisi") val nomorPolisi: String,
-    @SerializedName("jenis_kendaraan") val jenisKendaraan: String,
-    @SerializedName("waktu_masuk") val waktuMasuk: String,
-    @SerializedName("zona_parkir") val zonaParkir: String,
-    @SerializedName("lokasi_parkir") val lokasiParkir: String
-)
-
 data class InputManualDto(
     @SerializedName("info_message") val infoMessage: String? = null,
     @SerializedName("nomor_polisi") val nomorPolisi: String? = null,

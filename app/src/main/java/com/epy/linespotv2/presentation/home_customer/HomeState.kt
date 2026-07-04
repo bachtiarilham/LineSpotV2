@@ -1,6 +1,6 @@
 package com.epy.linespotv2.presentation.home_customer
 
-import com.epy.linespotv2.domain.model.HomeModel
+import com.epy.linespotv2.domain.model.home.HomeModel
 
 data class HomeState (
     val isLoading: Boolean = false,

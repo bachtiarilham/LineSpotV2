@@ -1,6 +1,6 @@
 package com.epy.linespotv2.presentation.laporan
 
-import com.epy.linespotv2.domain.model.LaporanModel
+import com.epy.linespotv2.domain.model.laporan.LaporanModel
 
 data class LaporanState(
     val isLoading: Boolean = false,

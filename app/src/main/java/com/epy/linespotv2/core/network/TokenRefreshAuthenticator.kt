@@ -2,7 +2,7 @@ package com.epy.linespotv2.core.network
 
 import com.epy.linespotv2.core.preferences.AppPreferences
 import com.epy.linespotv2.data.remote.api.ApiService
-import com.epy.linespotv2.data.remote.dto.RefreshTokenRequestDto
+import com.epy.linespotv2.data.remote.dto.auth.RefreshTokenRequestDto
 import kotlinx.coroutines.runBlocking
 import okhttp3.Authenticator
 import okhttp3.Request

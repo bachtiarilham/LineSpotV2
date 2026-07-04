@@ -2,7 +2,7 @@
 package com.epy.linespotv2.data.remote.mapper
 
 import com.epy.linespotv2.data.remote.dto.UserProfileDto
-import com.epy.linespotv2.domain.model.UserModel
+import com.epy.linespotv2.domain.model.auth.UserModel
 
 fun UserProfileDto.toDomain(): UserModel = UserModel(
     userId     = userId ?: 0L,

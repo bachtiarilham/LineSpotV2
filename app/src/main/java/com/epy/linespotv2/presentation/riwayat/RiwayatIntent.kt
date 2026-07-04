@@ -1,8 +1,8 @@
 package com.epy.linespotv2.presentation.riwayat
 
-import com.epy.linespotv2.domain.model.RiwayatPaymentFilter
-import com.epy.linespotv2.domain.model.RiwayatTransactionFilter
-import com.epy.linespotv2.domain.model.RiwayatVehicleFilter
+import com.epy.linespotv2.domain.model.riwayat.RiwayatPaymentFilter
+import com.epy.linespotv2.domain.model.riwayat.RiwayatTransactionFilter
+import com.epy.linespotv2.domain.model.riwayat.RiwayatVehicleFilter
 
 sealed class RiwayatIntent {
     object loadPage : RiwayatIntent()

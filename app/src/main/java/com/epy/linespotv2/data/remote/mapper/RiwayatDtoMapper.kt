@@ -1,13 +1,13 @@
 package com.epy.linespotv2.data.remote.mapper
 
-import com.epy.linespotv2.data.remote.dto.RiwayatDto
-import com.epy.linespotv2.data.remote.dto.RiwayatItemDto
-import com.epy.linespotv2.data.remote.dto.RiwayatSectionDto
-import com.epy.linespotv2.domain.model.RiwayatItem
-import com.epy.linespotv2.domain.model.RiwayatModel
-import com.epy.linespotv2.domain.model.RiwayatSection
+import com.epy.linespotv2.data.remote.dto.riwayat.RiwayatResponseDto
+import com.epy.linespotv2.data.remote.dto.riwayat.RiwayatItemDto
+import com.epy.linespotv2.data.remote.dto.riwayat.RiwayatSectionDto
+import com.epy.linespotv2.domain.model.riwayat.RiwayatItem
+import com.epy.linespotv2.domain.model.riwayat.RiwayatModel
+import com.epy.linespotv2.domain.model.riwayat.RiwayatSection
 
-fun RiwayatDto?.toDomain(): RiwayatModel {
+fun RiwayatResponseDto?.toDomain(): RiwayatModel {
     return RiwayatModel(
         sections = this?.sections?.map { it.toDomain() }.orEmpty()
     )

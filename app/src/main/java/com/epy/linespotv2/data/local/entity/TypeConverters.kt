@@ -1,8 +1,8 @@
 package com.epy.linespotv2.data.local.entity
 
 import androidx.room.TypeConverter
-import com.epy.linespotv2.domain.model.HomeEventItem
-import com.epy.linespotv2.domain.model.HomeNewsItem
+import com.epy.linespotv2.domain.model.home.HomeEventItem
+import com.epy.linespotv2.domain.model.home.HomeNewsItem
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 

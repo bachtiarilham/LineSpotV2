@@ -53,12 +53,12 @@ import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
 import com.epy.linespotv2.core.utils.toRupiah
-import com.epy.linespotv2.domain.model.LaporanChartBar
-import com.epy.linespotv2.domain.model.LaporanDateRange
-import com.epy.linespotv2.domain.model.LaporanModel
-import com.epy.linespotv2.domain.model.LaporanPaymentSummary
-import com.epy.linespotv2.domain.model.LaporanRecentTransaction
-import com.epy.linespotv2.domain.model.LaporanSummary
+import com.epy.linespotv2.domain.model.laporan.LaporanChartBar
+import com.epy.linespotv2.domain.model.laporan.LaporanDateRange
+import com.epy.linespotv2.domain.model.laporan.LaporanModel
+import com.epy.linespotv2.domain.model.laporan.LaporanPaymentSummary
+import com.epy.linespotv2.domain.model.laporan.LaporanRecentTransaction
+import com.epy.linespotv2.domain.model.laporan.LaporanSummary
 
 @Composable
 fun LaporanScreen(

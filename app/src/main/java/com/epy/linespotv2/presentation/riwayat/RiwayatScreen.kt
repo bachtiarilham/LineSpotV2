@@ -47,9 +47,9 @@ import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
 import com.epy.linespotv2.core.utils.toRupiah
-import com.epy.linespotv2.domain.model.RiwayatItem
-import com.epy.linespotv2.domain.model.RiwayatModel
-import com.epy.linespotv2.domain.model.RiwayatSection
+import com.epy.linespotv2.domain.model.riwayat.RiwayatItem
+import com.epy.linespotv2.domain.model.riwayat.RiwayatModel
+import com.epy.linespotv2.domain.model.riwayat.RiwayatSection
 
 @Composable
 fun RiwayatScreen(
