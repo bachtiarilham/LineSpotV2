@@ -2,7 +2,7 @@ package com.epy.linespotv2.core.utils
 
 import android.graphics.Bitmap
 import android.graphics.Color
-import com.epy.linespotv2.domain.model.IsiQr
+import com.epy.linespotv2.domain.model.payment.IsiQr
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter

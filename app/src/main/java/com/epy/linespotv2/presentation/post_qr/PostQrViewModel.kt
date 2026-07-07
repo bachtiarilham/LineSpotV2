@@ -3,14 +3,16 @@ package com.epy.linespotv2.presentation.post_qr
 import androidx.lifecycle.viewModelScope
 import com.epy.linespotv2.core.base.BaseViewModel
 import com.epy.linespotv2.core.network.ApiCondition
-import com.epy.linespotv2.domain.usecase.PostQrUseCase
+import com.epy.linespotv2.domain.model.payment.PostPaymentParkingReqModel
+import com.epy.linespotv2.domain.usecase.payment.PostPaymentParkingUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import javax.inject.Inject
 
 @HiltViewModel
 class PostQrViewModel @Inject constructor(
-    private val postQrUseCase: PostQrUseCase,
+    private val postPaymentParkingUseCase: PostPaymentParkingUseCase,
 ) : BaseViewModel<PostQrIntent, PostQrState>(PostQrState()) {
 
     override fun onIntent(intent: PostQrIntent) {
@@ -38,7 +40,8 @@ class PostQrViewModel @Inject constructor(
                 error = null,
                 postQrEffect = null,
                 stage = PostQrStage.Scanning,
-                canProcessScan = true
+                canProcessScan = true,
+                rawQr = ""
             )
         }
     }
@@ -58,13 +61,26 @@ class PostQrViewModel @Inject constructor(
                 )
             }
 
-            when (val result = postQrUseCase(rawQr)) {
-                is ApiCondition.AppSuccess -> {
+            val reqModel = runCatching { rawQr.toPostPaymentParkingReqModel() }.getOrElse { error ->
+                val message = error.message ?: "Format QRIS tidak valid"
+                updateState {
+                    it.copy(
+                        isLoading = false,
+                        error = message,
+                        canProcessScan = true,
+                        stage = PostQrStage.Error(message)
+                    )
+                }
+                return@launch
+            }
 
+            when (val result = postPaymentParkingUseCase(reqModel = reqModel)) {
+                is ApiCondition.AppSuccess -> {
                     updateState {
                         it.copy(
                             isLoading = false,
-                            error = null
+                            error = null,
+                            stage = PostQrStage.Scanning
                         )
                     }
                     sendEffect(PostQrEffect.NavigateToHasilBayarParkir(rawQr))
@@ -122,7 +138,8 @@ class PostQrViewModel @Inject constructor(
                 error = null,
                 postQrEffect = null,
                 stage = PostQrStage.Scanning,
-                canProcessScan = true
+                canProcessScan = true,
+                rawQr = ""
             )
         }
     }
@@ -141,5 +158,27 @@ class PostQrViewModel @Inject constructor(
 
     private fun sendEffect(effect: PostQrEffect) {
         updateState { it.copy(postQrEffect = effect) }
+    }
+
+    private fun String.toPostPaymentParkingReqModel(): PostPaymentParkingReqModel {
+        val json = JSONObject(this)
+
+        return PostPaymentParkingReqModel(
+            sessionID = json.optLong("session_id", 0L),
+            platNomor = json.optString("plat_nomor"),
+            lokasi = json.optString("lokasi"),
+            waktuMasuk = json.optString("waktu_masuk"),
+            durasi = json.optString("durasi"),
+            nominal = json.optLong("nominal", 0L),
+            isPaid = json.optBoolean("sudah_bayar", false),
+            paymentStatus = json.optLong("payment_status", 0L),
+            isExpired = json.optBoolean("is_expired", false),
+            statusMessage = json.optString("status_message")
+        ).also { req ->
+            require(req.sessionID > 0L) { "Session pembayaran tidak valid" }
+            require(req.platNomor.isNotBlank()) { "Plat nomor tidak ditemukan pada QRIS" }
+            require(req.waktuMasuk.isNotBlank()) { "Waktu masuk tidak ditemukan pada QRIS" }
+            require(req.nominal > 0L) { "Nominal pembayaran tidak valid" }
+        }
     }
 }

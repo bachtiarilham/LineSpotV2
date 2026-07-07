@@ -4,7 +4,8 @@ package com.epy.linespotv2.presentation.auth.register
 import androidx.lifecycle.viewModelScope
 import com.epy.linespotv2.core.base.BaseViewModel
 import com.epy.linespotv2.core.network.ApiCondition
-import com.epy.linespotv2.domain.usecase.RegisterUseCase
+import com.epy.linespotv2.domain.model.auth.RegisterReqModel
+import com.epy.linespotv2.domain.usecase.auth.RegisterUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -53,17 +54,19 @@ class RegisterViewModel @Inject constructor(
     private fun performRegister() {
         viewModelScope.launch {
             updateState { it.copy(isLoading = true, error = null) }
-
             val s = state.value
             when (val result = doRegisterUseCase(
-                fullName        = s.fullName,
-                nik             = s.nik,
-                email           = s.email,
-                phone           = s.phone,
-                username        = s.username,
-                password        = s.password,
-                confirmPassword = s.confirmPassword
-            )) {
+                    reqModel = RegisterReqModel(
+                        fullName        = s.fullName,
+                        nik             = s.nik,
+                        email           = s.email,
+                        phone           = s.phone,
+                        username        = s.username,
+                        password        = s.password,
+                        confirmPassword = s.confirmPassword
+                    )
+                )
+            ) {
                 is ApiCondition.AppSuccess ->
                     updateState {
                         it.copy(
@@ -71,7 +74,6 @@ class RegisterViewModel @Inject constructor(
                             registerEffect = RegisterEffect.NavigateToLogin
                         )
                     }
-
                 is ApiCondition.AppFailure ->
                     updateState {
                         it.copy(
@@ -79,7 +81,6 @@ class RegisterViewModel @Inject constructor(
                             error     = result.exception.message
                         )
                     }
-
                 is ApiCondition.AppLoading -> {}
             }
         }

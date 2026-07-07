@@ -20,43 +20,65 @@ class SettingsViewModel @Inject constructor(
 ) : BaseViewModel<SettingsIntent, SettingsState>(
     // Tampil data lokal dari prefs dulu sebelum API selesai
     initialState = SettingsState(
-        profile = UserModel(
-            userId     = prefs.userId,
-            nik        = prefs.nik,
-            fullName   = prefs.fullName,
-            phone      = prefs.phone,
-            email      = prefs.email,
-            username   = prefs.username,
-            role       = prefs.roleId,
-            isVerified = false
+        userModel = UserModel(
+            userId = prefs.userId,
+            nik = prefs.nik,
+            fullName = prefs.fullName,
+            phone = prefs.phone,
+            avatar_url = prefs.avatarUrl,
+            email = prefs.email,
+            username = prefs.username,
+            role = prefs.roleId,
+            isVerified = false,
+            lokasi = prefs.lokasi,
+            zona = prefs.zona,
+            tarif = TODO(),
+            registeredAt = TODO(),
+            createdAt = TODO(),
+            updatedAt = TODO()
         )
     )
 ) {
     init {
-        onIntent(SettingsIntent.LoadProfile)
+        onIntent(SettingsIntent.LoadSettingsPage)
     }
 
     override fun onIntent(intent: SettingsIntent) {
         when (intent) {
-            is SettingsIntent.LoadProfile      -> loadProfile()
+            is SettingsIntent.LoadSettingsPage -> updateState { it.copy(isLoading = true, error = null) }
             is SettingsIntent.OnLogoutClicked  -> updateState { it.copy(showLogoutDialog = true) }
             is SettingsIntent.OnConfirmLogout  -> performLogout()
             is SettingsIntent.OnDismissLogout  -> updateState { it.copy(showLogoutDialog = false) }
             is SettingsIntent.OnBackClicked    -> sendEffect(SettingsEffect.NavigateBack)
+            is SettingsIntent.NavigateToProfil -> loadProfilPage()
+            is SettingsIntent.NavigateToBantuanFaq -> sendEffect(SettingsEffect.NavigateToBantuanFaq)
+            is SettingsIntent.NavigateToPrivasi -> sendEffect(SettingsEffect.NavigateToPrivasi)
+            is SettingsIntent.NavigateToMetodePembayaran -> sendEffect(SettingsEffect.NavigateToMetodePembayaran)
+            is SettingsIntent.NavigateToSyaratKetentuan -> sendEffect(SettingsEffect.NavigateToSyaratKetentuan)
+            is SettingsIntent.NavigateToTentangAplikasi -> sendEffect(SettingsEffect.NavigateToSyaratKetentuan)
+            is SettingsIntent.NavigateToKeamanan -> sendEffect(SettingsEffect.NavigateToKeamanan)
         }
     }
 
-    private fun loadProfile() {
-        viewModelScope.launch {
-            updateState { it.copy(isLoading = true, error = null) }
-            when (val result = getProfileUseCase()) {
-                is ApiCondition.AppSuccess ->
-                    updateState { it.copy(isLoading = false, profile = result.data) }
-                is ApiCondition.AppFailure ->
-                    updateState { it.copy(isLoading = false, error = result.exception.message) }
-                is ApiCondition.AppLoading -> {}
-            }
-        }
+    private fun loadProfilPage(){
+        updateState { it.copy(isLoading = true, error = null) }
+        sendEffect(SettingsEffect.NavigateToProfil)
+//        viewModelScope.launch {
+//
+//            when (val result = getProfileUseCase()) {
+//                is ApiCondition.AppSuccess -> {
+//                    updateState { it.copy(isLoading = false, userModel = result.data) }
+//
+//                }
+//                is ApiCondition.AppFailure ->
+//                    updateState { it.copy(isLoading = false, error = result.exception.message) }
+//                is ApiCondition.AppLoading -> {}
+//            }
+//        }
+    }
+
+    private fun loadSettingsPage() {
+        updateState { it.copy(isLoading = true, error = null) }
     }
 
     private fun performLogout() {

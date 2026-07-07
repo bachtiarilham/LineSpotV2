@@ -38,9 +38,10 @@ import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.Tangerine
 import com.epy.linespotv2.core.ui.theme.White
-import com.epy.linespotv2.domain.model.Promo
-import com.epy.linespotv2.domain.model.PromoTerpilih
-import com.epy.linespotv2.domain.model.SubscribeModel
+import com.epy.linespotv2.domain.model.subscription.Promo
+import com.epy.linespotv2.domain.model.subscription.PromoTerpilih
+import com.epy.linespotv2.domain.model.subscription.StatusCard
+import com.epy.linespotv2.domain.model.subscription.SubscribeResponseModel
 
 private data class PromoOfferUi(
     val code: String,
@@ -51,7 +52,7 @@ private data class PromoOfferUi(
 
 @Composable
 fun EnterPromoScreenPopUp(
-    model: SubscribeModel? = null,
+    model: SubscribeResponseModel? = null,
     onClose: () -> Unit = {},
     onApply: (String) -> Unit = {},
     onSelectPromo: (String) -> Unit = {}
@@ -321,8 +322,8 @@ private fun PromoTerpilih.toUiOffer(): PromoOfferUi {
 @Preview(showBackground = true)
 @Composable
 private fun EnterPromoScreenPopUpPreview() {
-    val model = SubscribeModel(
-        statusCard = com.epy.linespotv2.domain.model.StatusCard(
+    val model = SubscribeResponseModel(
+        statusCard = StatusCard(
             paketAktif = "Premium Gold",
             kadaluarsa = "20 Mei 2025",
             benefit = "Nikmati benefit parkir premium"

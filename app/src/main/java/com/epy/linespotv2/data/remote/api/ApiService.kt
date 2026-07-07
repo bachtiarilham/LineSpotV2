@@ -1,6 +1,7 @@
 package com.epy.linespotv2.data.remote.api
 
 import com.epy.linespotv2.core.network.ApiEnvelope
+import com.epy.linespotv2.data.remote.dto.auth.ChangePasswordRequestDto
 import com.epy.linespotv2.data.remote.dto.auth.LoginRequestDto
 import com.epy.linespotv2.data.remote.dto.auth.LoginResponseDto
 import com.epy.linespotv2.data.remote.dto.payment.PostPaymentParkingResponseDto
@@ -12,36 +13,88 @@ import com.epy.linespotv2.data.remote.dto.helper.LokasiDto
 import com.epy.linespotv2.data.remote.dto.payment.PostParkingResponseDto
 import com.epy.linespotv2.data.remote.dto.auth.RefreshTokenRequestDto
 import com.epy.linespotv2.data.remote.dto.auth.RegisterRequestDto
-import com.epy.linespotv2.data.remote.dto.auth.RegisterResultDto
+import com.epy.linespotv2.data.remote.dto.auth.TokenSetDto
+import com.epy.linespotv2.data.remote.dto.auth.UserDto
 import com.epy.linespotv2.data.remote.dto.riwayat.RiwayatResponseDto
 import com.epy.linespotv2.data.remote.dto.riwayat.RiwayatRequestDto
 import com.epy.linespotv2.data.remote.dto.payment.PostPaymentParkingRequestDto
 import com.epy.linespotv2.data.remote.dto.subscription.SubscribeResponseDto
-import com.epy.linespotv2.data.remote.dto.UserProfileDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface ApiService {
-
-    @GET ("api/v2/linespot/home")
-    suspend fun getHome() : ApiEnvelope<HomeResponseDto>
-
+    //auth
     @POST("api/v2/linespot/auth/login")
     suspend fun login(
         @Body request: LoginRequestDto
     ): ApiEnvelope<LoginResponseDto>
-
     @POST("api/v2/linespot/auth/refreshToken")
     suspend fun refreshToken(
         @Body request: RefreshTokenRequestDto
-    ): ApiEnvelope<LoginResponseDto>
-
+    ): ApiEnvelope<TokenSetDto>
     @POST("api/v2/linespot/auth/register")
     suspend fun register(
         @Body request: RegisterRequestDto
-    ): ApiEnvelope<RegisterResultDto>
+    ): ApiEnvelope<String>
+    @POST("/api/v2/linespot/auth/change-password")
+    suspend fun changePassword(
+        @Body request: ChangePasswordRequestDto
+    ): ApiEnvelope<String>
+
+    //home
+    @GET ("api/v2/linespot/home")
+    suspend fun getHomePage() : ApiEnvelope<HomeResponseDto>
+
+    //laporan
+    @POST("api/v2/linespot/laporan")
+    suspend fun getLaporanPage(
+        @Body request: LaporanRequestDto
+    ) : ApiEnvelope<LaporanResponseDto>
+
+    //riwayat
+    @POST("api/v2/linespot/riwayat")
+    suspend fun getRiwayatPage(
+        @Body request: RiwayatRequestDto
+    ) : ApiEnvelope<RiwayatResponseDto>
+
+    //subscription
+    @GET("api/v2/linespot/subscribe")
+    suspend fun getSubscriptionPage() : ApiEnvelope<SubscribeResponseDto>
+
+    //payment
+    @POST("api/v2/linespot/parking")
+    suspend fun postParking(
+        @Body body: PostParkingRequestDto
+    ) : ApiEnvelope<PostParkingResponseDto>
+    @GET("api/v2/linespot/parking/{sessionId}/status")
+    suspend fun getPembayaranStatus(
+        @Path("sessionId") sessionId: Long
+    ): ApiEnvelope<PostParkingResponseDto>
+    @POST("api/v2/linespot/parking/payment")
+    suspend fun postPaymentParking(
+        @Body body: PostPaymentParkingRequestDto
+    ) : ApiEnvelope<PostPaymentParkingResponseDto>
+
+    //settings
+    @GET("api/v2/linespot/users/me")
+    suspend fun getCurrentUser(): ApiEnvelope<UserDto>
+
+    //helper
+    @GET("api/v2/linespot/get_lokasi")
+    suspend fun getLokasi() : ApiEnvelope<LokasiDto>
+
+
+
+
+
+
+
+}
+
+//    @GET("api/v2/linespot/riwayat_filter")
+//    suspend fun getFilter() : ApiEnvelope<RiwayatFilterDto>
 
 //    @POST("api/v2/linespot/scan")
 //    suspend fun submitQr(
@@ -53,45 +106,6 @@ interface ApiService {
 //    suspend fun executePayment(
 //        @Body body: ExecutePaymentRequest
 //    ): ApiEnvelope<PaymentInfoDto?>   // null response body = member Rp0
-
-    @GET("api/v2/linespot/users/me")
-    suspend fun getCurrentUser(): ApiEnvelope<UserProfileDto>
-
-    @GET("api/v2/linespot/subscribe")
-    suspend fun getPage() : ApiEnvelope<SubscribeResponseDto>
-
-    @POST("api/v2/linespot/riwayat")
-    suspend fun getRiwayatPage(
-        @Body request: RiwayatRequestDto
-    ) : ApiEnvelope<RiwayatResponseDto>
-
-    @POST("api/v2/linespot/laporan")
-    suspend fun getLaporanPage(
-        @Body request: LaporanRequestDto
-    ) : ApiEnvelope<LaporanResponseDto>
-
-    @GET("api/v2/linespot/get_lokasi")
-    suspend fun getLokasi() : ApiEnvelope<LokasiDto>
-
-    @POST("api/v2/linespot/parking")
-    suspend fun postParking(
-        @Body body: PostParkingRequestDto
-    ) : ApiEnvelope<PostParkingResponseDto>
-
-    @GET("api/v2/linespot/parking/{sessionId}/status")
-    suspend fun getPembayaranStatus(
-        @Path("sessionId") sessionId: Long
-    ): ApiEnvelope<PostParkingResponseDto>
-
-    @POST("api/v2/linespot/parking/payment")
-    suspend fun postPaymentParking(
-        @Body body: PostPaymentParkingRequestDto
-    ) : ApiEnvelope<PostPaymentParkingResponseDto>
-
-//    @GET("api/v2/linespot/riwayat_filter")
-//    suspend fun getFilter() : ApiEnvelope<RiwayatFilterDto>
-
-}
 
 //    @POST("api/v2/linespot/auth/login")
 //    suspend fun login(

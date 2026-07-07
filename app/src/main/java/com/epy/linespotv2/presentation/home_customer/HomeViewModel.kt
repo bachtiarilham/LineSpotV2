@@ -3,7 +3,7 @@
 import androidx.lifecycle.viewModelScope
 import com.epy.linespotv2.core.base.BaseViewModel
 import com.epy.linespotv2.core.network.ApiCondition
-import com.epy.linespotv2.domain.usecase.HomeUseCase
+import com.epy.linespotv2.domain.usecase.home.HomeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -61,7 +61,7 @@ class HomeViewModel @Inject constructor(
                             it.copy(
                                 isLoading = false,
                                 isRefresh = false,
-                                homeModel = result.data,
+                                homeResponseModel = result.data,
                                 error = null
                             )
                         }

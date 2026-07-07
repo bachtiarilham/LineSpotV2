@@ -12,7 +12,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 
 
 @Composable
@@ -78,7 +77,7 @@ fun LoginScreenContent(
         Spacer(Modifier.height(32.dp))
 
         OutlinedTextField(
-            value = state.username,
+            value = state.identity,
             onValueChange = { onIntent(LoginIntent.onUsernameChanged(it)) },
             label = { Text("Email") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -136,7 +135,7 @@ fun LoginScreenPreviewNormal() {
     MaterialTheme {
         // Tampilan Kondisi Normal / Kosong
         LoginScreenContent(
-            state = LoginState(username = "", password = "", isLoading = false, error = null),
+            state = LoginState(identity = "", password = "", isLoading = false, error = null),
             onIntent = {},
             consumeEffect = {},
             onNavigateToCustomerHome = {},
@@ -153,7 +152,7 @@ fun LoginScreenPreviewEror() {
         // Kamu bisa ngetes simulasi kalau Jukir salah masukin password
         LoginScreenContent(
             state = LoginState(
-                username = "jukir@gmail.com",
+                identity = "jukir@gmail.com",
                 password = "123",
                 isLoading = false,
                 error = "Password yang kamu masukkan salah!" // <--- Muncul di preview otomatis!

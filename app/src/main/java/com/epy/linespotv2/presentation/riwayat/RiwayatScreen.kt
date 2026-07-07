@@ -48,7 +48,7 @@ import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
 import com.epy.linespotv2.core.utils.toRupiah
 import com.epy.linespotv2.domain.model.riwayat.RiwayatItem
-import com.epy.linespotv2.domain.model.riwayat.RiwayatModel
+import com.epy.linespotv2.domain.model.riwayat.RiwayatResponseModel
 import com.epy.linespotv2.domain.model.riwayat.RiwayatSection
 
 @Composable
@@ -74,9 +74,9 @@ fun RiwayatScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         when {
             state.isLoading -> FullScreenLoading()
-            state.riwayatModel != null -> {
+            state.riwayatResponseModel != null -> {
                 RiwayatScreenContent(
-                    riwayat = state.riwayatModel!!,
+                    riwayat = state.riwayatResponseModel!!,
                     onItemClick = { viewModel.onIntent(RiwayatIntent.clickRiwayatDetail) },
                     onBack = onBack
                 )
@@ -92,7 +92,7 @@ fun RiwayatScreen(
 
 @Composable
 fun RiwayatScreenContent(
-    riwayat: RiwayatModel,
+    riwayat: RiwayatResponseModel,
     onItemClick: () -> Unit = {},
     onBack: () -> Unit = {}
 ) {
@@ -253,7 +253,7 @@ private fun ErrorScreen(
 private fun RiwayatScreenPreview() {
     MaterialTheme {
         RiwayatScreenContent(
-            riwayat = RiwayatModel(
+            riwayat = RiwayatResponseModel(
                 sections = listOf(
                     RiwayatSection(
                         date = "30 Mei 2024",

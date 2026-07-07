@@ -1,6 +1,5 @@
 package com.epy.linespotv2.presentation.input_manual
 
-import androidx.collection.emptyLongSet
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -46,10 +45,10 @@ import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
 import com.epy.linespotv2.core.utils.toRupiah
-import com.epy.linespotv2.domain.model.InputManualModel
-import com.epy.linespotv2.domain.model.InputManualTarifSummary
-import com.epy.linespotv2.domain.model.InputManualVehicleOption
-import com.epy.linespotv2.domain.model.InputManualVehicleType
+import com.epy.linespotv2.domain.model.payment.InputManualModel
+import com.epy.linespotv2.domain.model.payment.InputManualTarifSummary
+import com.epy.linespotv2.domain.model.payment.InputManualVehicleOption
+import com.epy.linespotv2.domain.model.payment.InputManualVehicleType
 
 @Composable
 fun InputManualScreen(
@@ -109,16 +108,16 @@ private fun InputManualContent(
             title = "Input Manual",
             onBack = { onIntent(InputManualIntent.ClickBack) }
         )
-        InfoCard(model.infoMessage)
+        InfoCard(INPUT_MANUAL_INFO_MESSAGE)
         SectionLabel("Data Kendaraan")
         NomorPolisiField(
             value = model.nomorPolisi,
-            placeholder = model.placeholderNomorPolisi,
+            placeholder = INPUT_MANUAL_PLATE_PLACEHOLDER,
             onValueChange = { onIntent(InputManualIntent.ChangeNomorPolisi(it)) }
         )
         SectionLabel("Jenis Kendaraan")
         VehicleSelector(
-            vehicleOptions = model.vehicleOptions,
+            vehicleOptions = INPUT_MANUAL_VEHICLE_OPTIONS,
             selectedVehicle = model.selectedVehicle,
             onVehicleSelected = {
                 onIntent(InputManualIntent.SelectJenisKendaraan(it.label))
@@ -349,14 +348,8 @@ private fun InputManualScreenPreview() {
         InputManualContent(
             state = InputManualState(
                 inputManualModel = InputManualModel(
-                    infoMessage = "Masukkan data kendaraan secara manual jika tiket tidak tersedia atau rusak.",
                     nomorPolisi = "B 1234 ABC",
-                    placeholderNomorPolisi = "Contoh: B 1234 ABC",
                     selectedVehicle = InputManualVehicleType.MOTOR,
-                    vehicleOptions = listOf(
-                        InputManualVehicleOption(type = InputManualVehicleType.MOTOR),
-                        InputManualVehicleOption(type = InputManualVehicleType.MOBIL)
-                    ),
                     waktuMasuk = "30 Mei 2024, 08:15:00",
                     areaParkir = "Jl. Sudirman - Zona Biru",
                     tarifSummary = InputManualTarifSummary(
@@ -368,4 +361,11 @@ private fun InputManualScreenPreview() {
             onIntent = {}
         )
     }
+}
+
+private const val INPUT_MANUAL_INFO_MESSAGE =
+    "Masukkan data kendaraan secara manual jika tiket tidak tersedia atau rusak."
+private const val INPUT_MANUAL_PLATE_PLACEHOLDER = "Contoh: B 1234 ABC"
+private val INPUT_MANUAL_VEHICLE_OPTIONS = InputManualVehicleType.entries.map { type ->
+    InputManualVehicleOption(type = type)
 }

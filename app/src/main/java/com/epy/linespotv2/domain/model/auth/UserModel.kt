@@ -1,5 +1,7 @@
 package com.epy.linespotv2.domain.model.auth
 
+import com.epy.linespotv2.domain.model.helper.TarifModel
+
 data class UserModel(
     val userId: Long,
     val nik: String,
@@ -13,4 +15,7 @@ data class UserModel(
     val lokasi: String,
     val zona: String,
     val tarif: List<TarifModel>,
+    val registeredAt : String,
+    val createdAt : String,
+    val updatedAt : String,
 )

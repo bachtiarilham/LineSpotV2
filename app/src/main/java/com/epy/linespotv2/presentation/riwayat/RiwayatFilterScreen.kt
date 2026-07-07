@@ -19,8 +19,6 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MonetizationOn
-import androidx.compose.material.icons.filled.NorthEast
-import androidx.compose.material.icons.filled.SouthWest
 import androidx.compose.material.icons.filled.TwoWheeler
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
@@ -54,7 +52,6 @@ import com.epy.linespotv2.core.ui.theme.White
 import com.epy.linespotv2.core.utils.parseIndonesiaDateOrNull
 import com.epy.linespotv2.core.utils.toIndonesiaDate
 import com.epy.linespotv2.domain.model.riwayat.RiwayatPaymentFilter
-import com.epy.linespotv2.domain.model.riwayat.RiwayatTransactionFilter
 import com.epy.linespotv2.domain.model.riwayat.RiwayatVehicleFilter
 import java.util.Date
 
@@ -67,7 +64,6 @@ fun RiwayatFilterScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     var startDate by rememberSaveable { mutableStateOf(Date().toIndonesiaDate()) }
     var endDate by rememberSaveable { mutableStateOf(Date().toIndonesiaDate()) }
-    var selectedTransaction by rememberSaveable { mutableStateOf(RiwayatTransactionFilter.ALL) }
     var selectedPayment by rememberSaveable { mutableStateOf(RiwayatPaymentFilter.ALL) }
     var selectedVehicle by rememberSaveable { mutableStateOf(RiwayatVehicleFilter.ALL) }
 
@@ -91,13 +87,11 @@ fun RiwayatFilterScreen(
         state = state,
         startDate = startDate,
         endDate = endDate,
-        selectedTransaction = selectedTransaction,
         selectedPayment = selectedPayment,
         selectedVehicle = selectedVehicle,
         onReset = {
             startDate = Date().toIndonesiaDate()
             endDate = Date().toIndonesiaDate()
-            selectedTransaction = RiwayatTransactionFilter.ALL
             selectedPayment = RiwayatPaymentFilter.ALL
             selectedVehicle = RiwayatVehicleFilter.ALL
             viewModel.onIntent(RiwayatIntent.selectLokasi("Semua Area"))
@@ -106,7 +100,6 @@ fun RiwayatFilterScreen(
         onStartDateClick = { startDate = it },
         onEndDateClick = { endDate = it },
         onSelectLokasi = { viewModel.onIntent(RiwayatIntent.selectLokasi(it)) },
-        onSelectTransaction = { selectedTransaction = it },
         onSelectPayment = { selectedPayment = it },
         onSelectVehicle = { selectedVehicle = it },
         onApply = {
@@ -114,9 +107,8 @@ fun RiwayatFilterScreen(
                 RiwayatIntent.submitFilter(
                     startDate = startDate,
                     endDate = endDate,
-                    transaction = selectedTransaction,
-                    payment = selectedPayment,
-                    vehicle = selectedVehicle,
+                    payment = state.selectedPayment,
+                    vehicle = state.selectedVehicle,
                     lokasi = state.selectedLokasi
                 )
             )
@@ -129,7 +121,6 @@ fun RiwayatFilterContent(
     state: RiwayatState,
     startDate: String,
     endDate: String,
-    selectedTransaction: RiwayatTransactionFilter,
     selectedPayment: RiwayatPaymentFilter,
     selectedVehicle: RiwayatVehicleFilter,
     onReset: () -> Unit,
@@ -137,7 +128,6 @@ fun RiwayatFilterContent(
     onStartDateClick: (String) -> Unit,
     onEndDateClick: (String) -> Unit,
     onSelectLokasi: (String) -> Unit,
-    onSelectTransaction: (RiwayatTransactionFilter) -> Unit,
     onSelectPayment: (RiwayatPaymentFilter) -> Unit,
     onSelectVehicle: (RiwayatVehicleFilter) -> Unit,
     onApply: () -> Unit
@@ -192,27 +182,27 @@ fun RiwayatFilterContent(
                 )
             }
 
-            FilterSection("Jenis Transaksi") {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    FilterChip("Semua", null, selectedTransaction == RiwayatTransactionFilter.ALL, Modifier.weight(1f)) {
-                        onSelectTransaction(RiwayatTransactionFilter.ALL)
-                    }
-                    FilterChip("Masuk", Icons.Default.SouthWest, selectedTransaction == RiwayatTransactionFilter.MASUK, Modifier.weight(1f)) {
-                        onSelectTransaction(RiwayatTransactionFilter.MASUK)
-                    }
-                    FilterChip("Keluar", Icons.Default.NorthEast, selectedTransaction == RiwayatTransactionFilter.KELUAR, Modifier.weight(1f)) {
-                        onSelectTransaction(RiwayatTransactionFilter.KELUAR)
-                    }
-                }
-            }
+//            FilterSection("Jenis Transaksi") {
+//                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+//                    FilterChip("Semua", null, selectedTransaction == RiwayatTransactionFilter.ALL, Modifier.weight(1f)) {
+//                        onSelectTransaction(RiwayatTransactionFilter.ALL)
+//                    }
+//                    FilterChip("Masuk", Icons.Default.SouthWest, selectedTransaction == RiwayatTransactionFilter.MASUK, Modifier.weight(1f)) {
+//                        onSelectTransaction(RiwayatTransactionFilter.MASUK)
+//                    }
+//                    FilterChip("Keluar", Icons.Default.NorthEast, selectedTransaction == RiwayatTransactionFilter.KELUAR, Modifier.weight(1f)) {
+//                        onSelectTransaction(RiwayatTransactionFilter.KELUAR)
+//                    }
+//                }
+//            }
 
             FilterSection("Metode Pembayaran") {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     FilterChip("Semua", null, selectedPayment == RiwayatPaymentFilter.ALL, Modifier.weight(1f)) {
                         onSelectPayment(RiwayatPaymentFilter.ALL)
                     }
-                    FilterChip("Tunai", Icons.Default.MonetizationOn, selectedPayment == RiwayatPaymentFilter.TUNAI, Modifier.weight(1f)) {
-                        onSelectPayment(RiwayatPaymentFilter.TUNAI)
+                    FilterChip("Tunai", Icons.Default.MonetizationOn, selectedPayment == RiwayatPaymentFilter.QRIS, Modifier.weight(1f)) {
+                        onSelectPayment(RiwayatPaymentFilter.QRIS)
                     }
                     FilterChip("Non Tunai", Icons.Default.CalendarMonth, selectedPayment == RiwayatPaymentFilter.NON_TUNAI, Modifier.weight(1f)) {
                         onSelectPayment(RiwayatPaymentFilter.NON_TUNAI)
@@ -573,7 +563,6 @@ private fun RiwayatFilterScreenPreview() {
                 ),
                 startDate = Date().toIndonesiaDate(),
                 endDate = Date().toIndonesiaDate(),
-                selectedTransaction = RiwayatTransactionFilter.ALL,
                 selectedPayment = RiwayatPaymentFilter.ALL,
                 selectedVehicle = RiwayatVehicleFilter.ALL,
                 onReset = {},
@@ -581,7 +570,6 @@ private fun RiwayatFilterScreenPreview() {
                 onStartDateClick = {},
                 onEndDateClick = {},
                 onSelectLokasi = {},
-                onSelectTransaction = {},
                 onSelectPayment = {},
                 onSelectVehicle = {},
                 onApply = {}

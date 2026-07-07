@@ -58,7 +58,7 @@ import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
 import com.epy.linespotv2.core.utils.toIndonesiaDate
-import com.epy.linespotv2.domain.model.home.HomeModel
+import com.epy.linespotv2.domain.model.home.HomeResponseModel
 import com.epy.linespotv2.domain.model.home.HomeSummaryInfo
 import com.epy.linespotv2.domain.model.home.HomeWarnings
 import com.epy.linespotv2.domain.model.home.JukirSummaryInfo
@@ -96,10 +96,10 @@ fun HomeJukirScreen(
                 .background(PageBg)
         ) {
             when {
-                state.isLoading && state.homeModel == null -> FullScreenLoading()
-                state.homeModel != null -> {
+                state.isLoading && state.homeResponseModel == null -> FullScreenLoading()
+                state.homeResponseModel != null -> {
                     HomeScreenContent(
-                        home = state.homeModel!!,
+                        home = state.homeResponseModel!!,
                         state = state,
                         onIntent = viewModel::onIntent,
                         onNavigateToSettings = onNavigateToSettings,
@@ -125,7 +125,7 @@ fun HomeJukirScreen(
 
 @Composable
 fun HomeScreenContent(
-    home: HomeModel,
+    home: HomeResponseModel,
     state: HomeState,
     onIntent: (HomeIntent) -> Unit,
 
@@ -568,7 +568,7 @@ private fun ErrorScreen(message: String, onRetry: () -> Unit) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun HomeScreenPreview() {
-    val mockHome = HomeModel(
+    val mockHome = HomeResponseModel(
         profile = Profile(id = 1, name = "Petugas Dishub", photoUrl = null),
         summary = HomeSummaryInfo(saldo = 2_750_000, expiredDate = ""),
         jukirSummary = JukirSummaryInfo(pendapatan = 125000, lokasi = "Jl Purnawarman", area = "B", zona = "Bluechip"),
@@ -582,7 +582,7 @@ private fun HomeScreenPreview() {
             home = mockHome,
             state = HomeState(
                 isLoading = false,
-                homeModel = mockHome
+                homeResponseModel = mockHome
             ),
             onIntent = {},
 

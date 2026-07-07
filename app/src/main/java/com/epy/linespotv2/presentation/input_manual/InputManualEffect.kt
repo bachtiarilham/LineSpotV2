@@ -1,6 +1,6 @@
 package com.epy.linespotv2.presentation.input_manual
 
-import com.epy.linespotv2.domain.model.PembayaranOptionType
+import com.epy.linespotv2.domain.model.payment.PembayaranOptionType
 
 sealed class InputManualEffect {
     object NavigateBack : InputManualEffect()

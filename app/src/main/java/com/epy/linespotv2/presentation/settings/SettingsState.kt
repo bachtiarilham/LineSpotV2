@@ -4,8 +4,8 @@ import com.epy.linespotv2.domain.model.auth.UserModel
 
 data class SettingsState(
     val isLoading: Boolean         = false,
-    val profile: UserModel?        = null,
+    val userModel: UserModel?        = null,
     val error: String?             = null,
     val showLogoutDialog: Boolean  = false,
-    val settingsEffect: SettingsEffect? = null
+    val settingsEffect: SettingsEffect? = null,
 )

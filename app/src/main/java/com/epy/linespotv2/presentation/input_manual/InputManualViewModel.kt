@@ -5,10 +5,11 @@ import com.epy.linespotv2.core.base.BaseViewModel
 import com.epy.linespotv2.core.network.ApiCondition
 import com.epy.linespotv2.core.preferences.AppPreferences
 import com.epy.linespotv2.core.utils.toIndonesiaDateTime
-import com.epy.linespotv2.domain.model.InputManualVehicleType
-import com.epy.linespotv2.domain.model.PembayaranModel
-import com.epy.linespotv2.domain.usecase.GetPembayaranStatusUseCase
-import com.epy.linespotv2.domain.usecase.InputManualUseCase
+import com.epy.linespotv2.domain.model.payment.InputManualVehicleType
+import com.epy.linespotv2.domain.model.payment.PostParkingReqModel
+import com.epy.linespotv2.domain.model.payment.PostParkingRespModel
+import com.epy.linespotv2.domain.usecase.payment.GetPembayaranStatusUseCase
+import com.epy.linespotv2.domain.usecase.payment.PostParkingUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -19,7 +20,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class InputManualViewModel @Inject constructor(
-    private val doInputManualUseCase: InputManualUseCase,
+    private val doPostParkingUseCase: PostParkingUseCase,
     private val doGetPembayaranStatusUseCase: GetPembayaranStatusUseCase,
     private val prefs: AppPreferences
 ) : BaseViewModel<InputManualIntent, InputManualState>(InputManualState()) {
@@ -33,8 +34,6 @@ class InputManualViewModel @Inject constructor(
             is InputManualIntent.ChangeNomorPolisi -> updateNomorPolisi(intent.nomorPolisi)
             is InputManualIntent.SelectJenisKendaraan -> updateJenisKendaraan(intent.jenisKendaraan)
             is InputManualIntent.ChangeWaktuMasuk -> updateWaktuMasuk(intent.waktuMasuk)
-            is InputManualIntent.SelectZonaParkir -> updateZonaParkir(intent.zonaParkir)
-            is InputManualIntent.SelectLokasiParkir -> updateLokasiParkir(intent.lokasiParkir)
             InputManualIntent.SubmitInputManual -> submitInputManual()
             InputManualIntent.StartPolling -> startPolling()
             InputManualIntent.StopPolling -> stopPolling()
@@ -52,19 +51,20 @@ class InputManualViewModel @Inject constructor(
     }
 
     private fun loadPage() {
+        val zona = prefs.zona
+        val lokasi = prefs.lokasi
+
         updateState { current ->
             current.copy(
                 inputManualModel = current.inputManualModel.copy(
                     waktuMasuk = current.inputManualModel.waktuMasuk.ifBlank { Date().toIndonesiaDateTime() },
                     areaParkir = buildAreaParkirText(
-                        lokasi = prefs.lokasi,
-                        zona = prefs.zona
+                        lokasi = lokasi,
+                        zona = zona
                     )
-                ),
-                selectedZonaParkir = current.selectedZonaParkir.ifBlank { prefs.zona },
-                selectedLokasiParkir = current.selectedLokasiParkir.ifBlank { prefs.lokasi }
+                )
             ).withSelectedVehicleTarif(
-                tarifItems = prefs.tarif,
+                totalTarif = resolveTarif(current.inputManualModel.selectedVehicle),
                 selectedVehicle = current.inputManualModel.selectedVehicle
             )
         }
@@ -86,6 +86,7 @@ class InputManualViewModel @Inject constructor(
 
         updateState {
             it.withSelectedVehicleTarif(
+                totalTarif = resolveTarif(selectedVehicle),
                 selectedVehicle = selectedVehicle
             )
         }
@@ -99,55 +100,31 @@ class InputManualViewModel @Inject constructor(
         }
     }
 
-    private fun updateZonaParkir(zonaParkir: String) {
-        updateState {
-            it.copy(
-                selectedZonaParkir = zonaParkir,
-                inputManualModel = it.inputManualModel.copy(
-                    areaParkir = buildAreaParkirText(
-                        lokasi = it.selectedLokasiParkir,
-                        zona = zonaParkir
-                    )
-                )
-            )
-        }
-    }
-
-    private fun updateLokasiParkir(lokasiParkir: String) {
-        updateState {
-            it.copy(
-                selectedLokasiParkir = lokasiParkir,
-                inputManualModel = it.inputManualModel.copy(
-                    areaParkir = buildAreaParkirText(
-                        lokasi = lokasiParkir,
-                        zona = it.selectedZonaParkir
-                    )
-                )
-            )
-        }
-    }
-
     private fun submitInputManual() {
         val current = state.value
         val model = current.inputManualModel
+        val zonaParkir = prefs.zona
+        val lokasiParkir = prefs.lokasi
 
         viewModelScope.launch {
             updateState { it.copy(isLoading = true, error = null) }
 
             when (
-                val result = doInputManualUseCase(
-                    nomorPolisi = model.nomorPolisi,
-                    jenisKendaraan = model.selectedVehicle.label,
-                    waktuMasuk = model.waktuMasuk,
-                    zonaParkir = current.selectedZonaParkir,
-                    lokasiParkir = current.selectedLokasiParkir
+                val result = doPostParkingUseCase(
+                    reqModel = PostParkingReqModel(
+                        nomorPolisi = model.nomorPolisi,
+                        jenisKendaraan = model.selectedVehicle.label,
+                        waktuMasuk = model.waktuMasuk,
+                        zonaParkir = zonaParkir,
+                        lokasiParkir = lokasiParkir
+                    )
                 )
             ) {
                 is ApiCondition.AppSuccess -> {
                     updateState {
                         it.copy(
                             isLoading = false,
-                            pembayaranModel = mergePembayaranDefaults(result.data)
+                            postParkingRespModel = mergePembayaranDefaults(result.data)
                         )
                     }
                     sendEffect(InputManualEffect.NavigateToPembayaran)
@@ -170,12 +147,12 @@ class InputManualViewModel @Inject constructor(
         }
     }
 
-    private fun mergePembayaranDefaults(pembayaran: PembayaranModel): PembayaranModel {
-        val current = state.value.pembayaranModel
+    private fun mergePembayaranDefaults(pembayaran: PostParkingRespModel): PostParkingRespModel {
+        val current = state.value.postParkingRespModel
         val currentQr = current?.qrisSection?.qrContent
         val resultQr = pembayaran.qrisSection.qrContent
 
-        return PembayaranModel(
+        return PostParkingRespModel(
             title = pembayaran.title.ifBlank {
                 current?.title ?: "Pembayaran"
             },
@@ -206,7 +183,7 @@ class InputManualViewModel @Inject constructor(
                         currentQr?.plat_nomor ?: state.value.inputManualModel.nomorPolisi
                     },
                     lokasi = resultQr.lokasi.ifBlank {
-                        currentQr?.lokasi ?: state.value.selectedLokasiParkir
+                        currentQr?.lokasi ?: prefs.lokasi
                     },
                     waktu_masuk = resultQr.waktu_masuk.ifBlank {
                         currentQr?.waktu_masuk ?: state.value.inputManualModel.waktuMasuk
@@ -248,14 +225,14 @@ class InputManualViewModel @Inject constructor(
 
     private fun startPolling() {
         if (pollingJob?.isActive == true) return
-        val sessionId = state.value.pembayaranModel?.qrisSection?.qrContent?.sessionId ?: 0L
+        val sessionId = state.value.postParkingRespModel?.qrisSection?.qrContent?.sessionId ?: 0L
         if (sessionId <= 0L) return
 
         pollingJob = viewModelScope.launch {
             while (true) {
                 refreshStatus()
 
-                val qrState = state.value.pembayaranModel?.qrisSection?.qrContent
+                val qrState = state.value.postParkingRespModel?.qrisSection?.qrContent
                 val isFinal = qrState?.isPaid == true ||
                     qrState?.isExpired == true ||
                     (qrState?.paymentStatus ?: 0L) < 0L
@@ -276,7 +253,7 @@ class InputManualViewModel @Inject constructor(
     }
 
     private fun refreshStatus() {
-        val sessionId = state.value.pembayaranModel?.qrisSection?.qrContent?.sessionId ?: 0L
+        val sessionId = state.value.postParkingRespModel?.qrisSection?.qrContent?.sessionId ?: 0L
         if (sessionId <= 0L) {
             updateState {
                 it.copy(
@@ -298,9 +275,7 @@ class InputManualViewModel @Inject constructor(
                         updateState {
                             it.copy(
                                 isCheckingPaymentStatus = false,
-                                pembayaranModel = merged,
-                                paymentStatus = merged.qrisSection.qrContent.paymentStatus,
-                                statusMessage = merged.qrisSection.qrContent.statusMessage,
+                                postParkingRespModel = merged,
                                 error = null
                             )
                         }
@@ -330,12 +305,12 @@ class InputManualViewModel @Inject constructor(
         }
     }
 
-    private fun mergePembayaranStatus(statusResult: PembayaranModel): PembayaranModel {
-        val current = state.value.pembayaranModel
+    private fun mergePembayaranStatus(statusResult: PostParkingRespModel): PostParkingRespModel {
+        val current = state.value.postParkingRespModel
         val currentQr = current?.qrisSection?.qrContent
         val resultQr = statusResult.qrisSection.qrContent
 
-        return PembayaranModel(
+        return PostParkingRespModel(
             title = statusResult.title.ifBlank {
                 current?.title ?: "Pembayaran"
             },
@@ -369,7 +344,7 @@ class InputManualViewModel @Inject constructor(
                         currentQr?.plat_nomor ?: state.value.inputManualModel.nomorPolisi
                     },
                     lokasi = resultQr.lokasi.ifBlank {
-                        currentQr?.lokasi ?: state.value.selectedLokasiParkir
+                        currentQr?.lokasi ?: prefs.lokasi
                     },
                     waktu_masuk = resultQr.waktu_masuk.ifBlank {
                         currentQr?.waktu_masuk ?: state.value.inputManualModel.waktuMasuk
@@ -413,6 +388,12 @@ class InputManualViewModel @Inject constructor(
         val left = lokasi.ifBlank { "Pilih Lokasi Parkir" }
         val right = zona.ifBlank { "Pilih Zona Parkir" }
         return "$left - $right"
+    }
+
+    private fun resolveTarif(selectedVehicle: InputManualVehicleType): Long {
+        return prefs.tarif.firstOrNull {
+            it.kendaraan.equals(selectedVehicle.label, ignoreCase = true)
+        }?.nominal?.toLong() ?: 0L
     }
 
     private fun sendEffect(effect: InputManualEffect) {

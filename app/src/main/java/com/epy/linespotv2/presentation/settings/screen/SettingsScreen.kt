@@ -67,6 +67,7 @@ import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
 import com.epy.linespotv2.domain.model.auth.UserModel
+import com.epy.linespotv2.domain.model.helper.TarifModel
 import com.epy.linespotv2.presentation.settings.SettingsEffect
 import com.epy.linespotv2.presentation.settings.SettingsIntent
 import com.epy.linespotv2.presentation.settings.SettingsState
@@ -76,6 +77,12 @@ import com.epy.linespotv2.presentation.settings.SettingsViewModel
 fun SettingsScreen(
     onNavigateToLogin: () -> Unit = {},
     onNavigateBack: () -> Unit = {},
+    onNavigateToMetodePembayaran: () -> Unit = {},
+    onNavigateToKeamanan: () -> Unit = {},
+    onNavigateToPrivasi: () -> Unit = {},
+    onNavigateToBantuanFaq : () -> Unit = {},
+    onNavigateToSyaratKetentuan : () -> Unit = {},
+    onNavigateToTentangAplikasi : () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -84,6 +91,12 @@ fun SettingsScreen(
         when (state.settingsEffect) {
             is SettingsEffect.NavigateToLogin -> { onNavigateToLogin(); viewModel.consumeEffect() }
             is SettingsEffect.NavigateBack -> { onNavigateBack(); viewModel.consumeEffect() }
+            is SettingsEffect.NavigateToKeamanan -> {onNavigateToKeamanan(); viewModel.consumeEffect()}
+            is SettingsEffect.NavigateToMetodePembayaran -> {onNavigateToMetodePembayaran(); viewModel.consumeEffect()}
+            is SettingsEffect.NavigateToPrivasi -> {onNavigateToPrivasi(); viewModel.consumeEffect()}
+            is SettingsEffect.NavigateToBantuanFaq -> {onNavigateToBantuanFaq(); viewModel.consumeEffect()}
+            is SettingsEffect.NavigateToSyaratKetentuan -> {onNavigateToSyaratKetentuan(); viewModel.consumeEffect()}
+            is SettingsEffect.NavigateToTentangAplikasi -> {onNavigateToTentangAplikasi(); viewModel.consumeEffect()}
             null -> Unit
         }
     }
@@ -136,7 +149,7 @@ fun SettingsScreenContent(
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (state.isLoading && state.profile == null) {
+            if (state.isLoading && state.userModel == null) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -146,7 +159,7 @@ fun SettingsScreenContent(
                     CircularProgressIndicator(color = DarkBlue)
                 }
             } else {
-                state.profile?.let { SettingsProfileCard(it) }
+                state.userModel?.let { SettingsProfileCard(it) }
             }
 
             if (!state.error.isNullOrBlank()) {
@@ -430,7 +443,7 @@ fun SettingsScreenPreview() {
     MaterialTheme {
         SettingsScreenContent(
             state = SettingsState(
-                profile = UserModel(
+                userModel = UserModel(
                     userId = 1L,
                     nik = "3201234567890001",
                     fullName = "John Doe",
@@ -438,7 +451,17 @@ fun SettingsScreenPreview() {
                     email = "john.doe@email.com",
                     username = "johndoe",
                     role = 1,
-                    isVerified = true
+                    isVerified = true,
+                    avatar_url = "",
+                    lokasi = "",
+                    zona = "",
+                    tarif = listOf(
+                        TarifModel(kendaraan = "Motor", nominal = 2_000L),
+                        TarifModel(kendaraan = "Mobil", nominal = 5_000L)
+                    ),
+                    registeredAt = "",
+                    createdAt = "",
+                    updatedAt = ""
                 )
             ),
             onIntent = {}

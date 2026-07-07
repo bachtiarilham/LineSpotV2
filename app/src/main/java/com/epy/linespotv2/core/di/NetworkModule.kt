@@ -1,31 +1,18 @@
 package com.epy.linespotv2.core.di
 
-import androidx.navigation.Navigator
 import com.epy.linespotv2.core.network.TokenRefreshAuthenticator
 import com.epy.linespotv2.core.preferences.AppPreferences
 import com.epy.linespotv2.data.remote.api.ApiService
-//import com.epy.linespotv2.data.remote.api.HomeApi
-//import com.epy.linespotv2.data.remote.api.LoginApi
-//import com.epy.linespotv2.data.remote.api.RefreshTokenApi
-//import com.epy.linespotv2.data.remote.api.RegisterApi
-//import com.epy.linespotv2.data.remote.api.ScanApi
-//import com.epy.linespotv2.data.remote.api.UserApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.runBlocking
-import okhttp3.Authenticator
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
-import okhttp3.Route
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
-import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
 
@@ -115,7 +102,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit =
         Retrofit.Builder()
-            .baseUrl(com.epy.linespotv2.core.di.NetworkModule.BASE_URL)
+            .baseUrl(BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -125,35 +112,4 @@ object NetworkModule {
     @Singleton
     fun provideApiService(retrofit: Retrofit): ApiService =
         retrofit.create(ApiService::class.java)
-
-//    @Provides
-//    @Singleton
-//    fun provideHomeApiService(retrofit: Retrofit): HomeApi =
-//        retrofit.create(HomeApi::class.java)
-//
-//    @Provides
-//    @Singleton
-//    fun provideLoginApiService(retrofit: Retrofit): LoginApi =
-//        retrofit.create(LoginApi::class.java)
-//
-//    @Provides
-//    @Singleton
-//    fun provideRefreshTokenApiService(retrofit: Retrofit): RefreshTokenApi =
-//        retrofit.create(RefreshTokenApi::class.java)
-//
-//    @Provides
-//    @Singleton
-//    fun provideRegisterApiService(retrofit: Retrofit): RegisterApi =
-//        retrofit.create(RegisterApi::class.java)
-//
-//    @Provides
-//    @Singleton
-//    fun provideScanApiService(retrofit: Retrofit): ScanApi =
-//        retrofit.create(ScanApi::class.java)
-//
-//    @Provides
-//    @Singleton
-//    fun provideUserApiService(retrofit: Retrofit): UserApi =
-//        retrofit.create(UserApi::class.java)
-
 }

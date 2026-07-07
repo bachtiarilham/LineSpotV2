@@ -37,13 +37,13 @@ import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.Tangerine
 import com.epy.linespotv2.core.ui.theme.White
 import com.epy.linespotv2.core.utils.toRupiah
-import com.epy.linespotv2.domain.model.PackageCard
-import com.epy.linespotv2.domain.model.StatusCard
-import com.epy.linespotv2.domain.model.SubscribeModel
+import com.epy.linespotv2.domain.model.subscription.PackageCard
+import com.epy.linespotv2.domain.model.subscription.StatusCard
+import com.epy.linespotv2.domain.model.subscription.SubscribeResponseModel
 
 @Composable
 fun SubscribeScreenPopUpScreen(
-    model: SubscribeModel ?= null,
+    model: SubscribeResponseModel ?= null,
     onClose: () -> Unit = {},
     onSubscribeNow: (PackageCard) -> Unit = {}
 ) {
@@ -218,7 +218,7 @@ private fun BenefitRow(text: String) {
 @Preview(showBackground = true)
 @Composable
 private fun SubscribeScreenPopUpPreview() {
-    val model = SubscribeModel(
+    val model = SubscribeResponseModel(
         statusCard = StatusCard(
             paketAktif = "Premium Gold",
             kadaluarsa = "20 Mei 2025",

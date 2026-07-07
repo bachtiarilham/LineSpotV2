@@ -56,7 +56,7 @@ import com.epy.linespotv2.core.ui.theme.SoftGreen
 import com.epy.linespotv2.core.ui.theme.SoftGreenText
 import com.epy.linespotv2.core.ui.theme.Success
 import com.epy.linespotv2.core.ui.theme.White
-import com.epy.linespotv2.domain.model.HasilBayarParkirModel
+import com.epy.linespotv2.domain.model.payment.PostPaymentParkingRespModel
 
 
 @Composable
@@ -65,7 +65,7 @@ fun HasilBayarParkirScreen(
     onShare: () -> Unit = {},
     onDownloadReceipt: () -> Unit = {},
     onBackToHome: () -> Unit = {},
-    model: HasilBayarParkirModel = HasilBayarParkirModel()
+    model: PostPaymentParkingRespModel = PostPaymentParkingRespModel()
 ) {
     val receipt = remember { model }
 
@@ -197,7 +197,7 @@ private fun SuccessBadge() {
 }
 
 @Composable
-private fun ReceiptDetailCard(receipt: HasilBayarParkirModel) {
+private fun ReceiptDetailCard(receipt: PostPaymentParkingRespModel) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
@@ -341,7 +341,7 @@ private fun ReceiptDetailRow(
 }
 
 @Composable
-private fun ThankYouCard(model: HasilBayarParkirModel) {
+private fun ThankYouCard(model: PostPaymentParkingRespModel) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),

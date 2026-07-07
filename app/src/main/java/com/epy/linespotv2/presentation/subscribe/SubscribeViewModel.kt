@@ -3,7 +3,7 @@
 import androidx.lifecycle.viewModelScope
 import com.epy.linespotv2.core.base.BaseViewModel
 import com.epy.linespotv2.core.network.ApiCondition
-import com.epy.linespotv2.domain.usecase.SubscribeUseCase
+import com.epy.linespotv2.domain.usecase.subscription.SubscribeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -45,7 +45,7 @@ class SubscribeViewModel @Inject constructor(
                             it.copy(
                                 isLoading = false,
                                 isRefresh = false,
-                                subscribeModel = result.data,
+                                subscribeResponseModel = result.data,
                                 error = null
                             )
                         }

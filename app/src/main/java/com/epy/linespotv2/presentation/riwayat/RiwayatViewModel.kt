@@ -7,10 +7,10 @@ import com.epy.linespotv2.core.preferences.AppPreferences
 import com.epy.linespotv2.core.utils.toIndonesiaDate
 import com.epy.linespotv2.domain.model.helper.LokasiModel
 import com.epy.linespotv2.domain.model.riwayat.RiwayatPaymentFilter
-import com.epy.linespotv2.domain.model.riwayat.RiwayatTransactionFilter
+import com.epy.linespotv2.domain.model.riwayat.RiwayatRequestModel
 import com.epy.linespotv2.domain.model.riwayat.RiwayatVehicleFilter
-import com.epy.linespotv2.domain.usecase.GetLokasiUseCase
-import com.epy.linespotv2.domain.usecase.RiwayatUseCase
+import com.epy.linespotv2.domain.usecase.helper.GetLokasiUseCase
+import com.epy.linespotv2.domain.usecase.riwayat.RiwayatUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -26,14 +26,15 @@ class RiwayatViewModel @Inject constructor(
 
     override fun onIntent(intent: RiwayatIntent) {
         when (intent) {
-            RiwayatIntent.loadPage -> loadRiwayatPage(isRefresh = false)
+            RiwayatIntent.loadPage -> loadRiwayatPage()
             RiwayatIntent.loadFilterPage -> loadFilterPage()
             RiwayatIntent.clickRiwayatDetail -> sendEffect(RiwayatEffect.NavigateToDetail)
-            is RiwayatIntent.selectLokasi -> updateSelectedLokasi(intent.lokasi)
+            is RiwayatIntent.selectVehicle -> updateState { it.copy(selectedVehicle = intent.vehicle, error = null) }
+            is RiwayatIntent.selectPayment -> updateState { it.copy(selectedPayment = intent.payment, error = null) }
+            is RiwayatIntent.selectLokasi -> updateState { it.copy(selectedLokasi = intent.lokasi, error = null) }
             is RiwayatIntent.submitFilter -> submitFilter(
                 startDate = intent.startDate,
                 endDate = intent.endDate,
-                transaction = intent.transaction,
                 payment = intent.payment,
                 vehicle = intent.vehicle,
                 lokasi = intent.lokasi
@@ -43,56 +44,68 @@ class RiwayatViewModel @Inject constructor(
 
     fun consumeEffect() {
         updateState { it.copy(riwayatEffect = null) }
+
     }
 
-    private fun loadRiwayatPage(isRefresh: Boolean = false) {
-        viewModelScope.launch {
-            updateState {
-                it.copy(
-                    isLoading = !isRefresh,
-                    isRefresh = isRefresh,
-                    error = null
-                )
-            }
-
-            when (
-                val result = doRiwayatUseCase(
-                    userId = prefs.userId,
-                    username = prefs.username,
-                    roleId = prefs.roleId,
-                    startDate = Date().toIndonesiaDate(),
-                    endDate = Date().toIndonesiaDate(),
-                    transaction = RiwayatTransactionFilter.ALL,
-                    payment = RiwayatPaymentFilter.ALL,
-                    vehicle = RiwayatVehicleFilter.ALL,
-                    lokasi = state.value.selectedLokasi
-                )
-            ) {
-                is ApiCondition.AppSuccess -> {
-                    updateState {
-                        it.copy(
-                            isLoading = false,
-                            isRefresh = false,
-                            riwayatModel = result.data,
-                            error = null
-                        )
-                    }
-                }
-
-                is ApiCondition.AppFailure -> {
-                    updateState {
-                        it.copy(
-                            isLoading = false,
-                            isRefresh = false,
-                            error = result.exception.message ?: "Terjadi kesalahan"
-                        )
-                    }
-                }
-
-                is ApiCondition.AppLoading -> Unit
-            }
+    private fun loadRiwayatPage() {
+        updateState {
+            it.copy(
+                isLoading = false,
+                error = null
+            )
         }
     }
+
+//    private fun loadRiwayatPage(isRefresh: Boolean = false) {
+//        viewModelScope.launch {
+//            updateState {
+//                it.copy(
+//                    isLoading = !isRefresh,
+//                    isRefresh = isRefresh,
+//                    error = null
+//                )
+//            }
+//
+//            when (
+//                val result = doRiwayatUseCase( reqModel = RiwayatRequestModel(
+//                    userId = prefs.userId,
+//                    username = prefs.username,
+//                    roleId = prefs.roleId,
+//                    startDate = Date().toIndonesiaDate(),
+//                    endDate = Date().toIndonesiaDate(),
+//                    payment = state.value.selectedPayment,
+//                    vehicle = state.value.selectedVehicle,
+//                    lokasi = state.value.selectedLokasi
+//                    )
+//                )
+//            ) {
+//                is ApiCondition.AppSuccess -> {
+//                    updateState {
+//                        it.copy(
+//                            isLoading = false,
+//                            isRefresh = false,
+//                            riwayatResponseModel = result.data,
+//                            error = null,
+//                            selectedPayment = RiwayatPaymentFilter.ALL.name,
+//                            selectedVehicle = RiwayatVehicleFilter.ALL.name
+//                        )
+//                    }
+//                }
+//
+//                is ApiCondition.AppFailure -> {
+//                    updateState {
+//                        it.copy(
+//                            isLoading = false,
+//                            isRefresh = false,
+//                            error = result.exception.message ?: "Terjadi kesalahan"
+//                        )
+//                    }
+//                }
+//
+//                is ApiCondition.AppLoading -> Unit
+//            }
+//        }
+//    }
 
     private fun loadFilterPage() {
         viewModelScope.launch {
@@ -137,18 +150,11 @@ class RiwayatViewModel @Inject constructor(
         updateState { it.copy(riwayatEffect = effect) }
     }
 
-    private fun updateSelectedLokasi(lokasi: String) {
-        updateState { currentState ->
-            currentState.copy(selectedLokasi = lokasi)
-        }
-    }
-
     private fun submitFilter(
         startDate: String,
         endDate: String,
-        transaction: RiwayatTransactionFilter,
-        payment: RiwayatPaymentFilter,
-        vehicle: RiwayatVehicleFilter,
+        payment: String,
+        vehicle: String,
         lokasi: String
     ) {
         viewModelScope.launch {
@@ -156,29 +162,34 @@ class RiwayatViewModel @Inject constructor(
                 it.copy(
                     isLoading = true,
                     error = null,
-                    selectedLokasi = lokasi
+                    selectedLokasi = lokasi,
+                    selectedPayment = payment,
+                    selectedVehicle = vehicle
                 )
             }
 
             when (
-                val result = doRiwayatUseCase(
+                val result = doRiwayatUseCase( reqModel = RiwayatRequestModel(
                     userId = prefs.userId,
                     username = prefs.username,
                     roleId = prefs.roleId,
                     startDate = startDate,
                     endDate = endDate,
-                    transaction = transaction,
                     payment = payment,
                     vehicle = vehicle,
                     lokasi = lokasi
+                    ),
                 )
             ) {
                 is ApiCondition.AppSuccess -> {
                     updateState {
                         it.copy(
                             isLoading = false,
-                            riwayatModel = result.data,
-                            error = null
+                            riwayatResponseModel = result.data,
+                            error = null,
+                            selectedLokasi = lokasi,
+                            selectedPayment = payment,
+                            selectedVehicle = vehicle
                         )
                     }
                     sendEffect(RiwayatEffect.NavigateToRiwayat)

@@ -1,28 +1,24 @@
 package com.epy.linespotv2.core.di
 
 import com.epy.linespotv2.core.utils.Dispatcher
-import com.epy.linespotv2.data.repository_impl.HomeJukirRepositoryImpl
-import com.epy.linespotv2.data.repository_impl.LoginRepositoryImpl
-import com.epy.linespotv2.data.repository_impl.RegisterRepositoryImpl
-import com.epy.linespotv2.data.repository_impl.GetLokasiRepositoryImpl
-import com.epy.linespotv2.data.repository_impl.InputManualRepositoryImpl
-import com.epy.linespotv2.data.repository_impl.LaporanRepositoryImpl
-import com.epy.linespotv2.data.repository_impl.PembayaranStatusRepositoryImpl
-import com.epy.linespotv2.data.repository_impl.RiwayatRepositoryImpl
-import com.epy.linespotv2.data.repository_impl.PostQrRepositoryImpl
-import com.epy.linespotv2.data.repository_impl.SubscribeRepositoryImpl
-import com.epy.linespotv2.data.repository_impl.UserRepositoryImpl
-import com.epy.linespotv2.domain.repository.HomeRepository
-import com.epy.linespotv2.domain.repository.LoginRepository
-import com.epy.linespotv2.domain.repository.RegisterRepository
-import com.epy.linespotv2.domain.repository.GetLokasiRepository
-import com.epy.linespotv2.domain.repository.InputManualRepository
-import com.epy.linespotv2.domain.repository.LaporanRepository
-import com.epy.linespotv2.domain.repository.PembayaranStatusRepository
-import com.epy.linespotv2.domain.repository.PostQrRepository
-import com.epy.linespotv2.domain.repository.SubscribeRepository
-import com.epy.linespotv2.domain.repository.UserRepository
-import com.epy.linespotv2.domain.repository.RiwayatRepository
+import com.epy.linespotv2.data.repository_impl.home.HomeRepositoryImpl
+import com.epy.linespotv2.data.repository_impl.auth.AuthRepositoryImpl
+import com.epy.linespotv2.data.repository_impl.helper.GetLokasiRepositoryImpl
+import com.epy.linespotv2.data.repository_impl.payment.PostParkingRepositoryImpl
+import com.epy.linespotv2.data.repository_impl.laporan.LaporanRepositoryImpl
+import com.epy.linespotv2.data.repository_impl.payment.GetPembayaranStatusRepositoryImpl
+import com.epy.linespotv2.data.repository_impl.riwayat.RiwayatRepositoryImpl
+import com.epy.linespotv2.data.repository_impl.payment.PostPaymentParkingRepositoryImpl
+import com.epy.linespotv2.data.repository_impl.subscription.SubscribeRepositoryImpl
+import com.epy.linespotv2.domain.repository.auth.AuthRepository
+import com.epy.linespotv2.domain.repository.home.HomeRepository
+import com.epy.linespotv2.domain.repository.helper.GetLokasiRepository
+import com.epy.linespotv2.domain.repository.payment.PostParkingRepository
+import com.epy.linespotv2.domain.repository.laporan.LaporanRepository
+import com.epy.linespotv2.domain.repository.payment.GetPembayaranStatusRepository
+import com.epy.linespotv2.domain.repository.payment.PostPaymentParkingRepository
+import com.epy.linespotv2.domain.repository.subcription.SubscribeRepository
+import com.epy.linespotv2.domain.repository.riwayat.RiwayatRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -37,15 +33,11 @@ abstract class AppModule {
 
     @Binds
     @Singleton
-    abstract fun bindLoginRepository(impl: LoginRepositoryImpl): LoginRepository
+    abstract fun bindAuthRepository(impl: AuthRepositoryImpl): AuthRepository
     @Binds @Singleton
-    abstract fun bindUserRepository(impl: UserRepositoryImpl): UserRepository
+    abstract fun bindHomeRepository(impl: HomeRepositoryImpl): HomeRepository
     @Binds @Singleton
-    abstract fun bindHomeRepository(impl: HomeJukirRepositoryImpl): HomeRepository
-    @Binds @Singleton
-    abstract fun bindRegisterRepository(impl: RegisterRepositoryImpl): RegisterRepository
-    @Binds @Singleton
-    abstract fun bindScanRepository(impl: PostQrRepositoryImpl): PostQrRepository
+    abstract fun bindScanRepository(impl: PostPaymentParkingRepositoryImpl): PostPaymentParkingRepository
     @Binds @Singleton
     abstract fun bindSubscribeRepository(impl: SubscribeRepositoryImpl): SubscribeRepository
     @Binds @Singleton
@@ -55,9 +47,9 @@ abstract class AppModule {
     @Binds @Singleton
     abstract fun bindLaporanRepository(impl: LaporanRepositoryImpl): LaporanRepository
     @Binds @Singleton
-    abstract fun bindInputManualRepository(impl: InputManualRepositoryImpl): InputManualRepository
+    abstract fun bindInputManualRepository(impl: PostParkingRepositoryImpl): PostParkingRepository
     @Binds @Singleton
-    abstract fun bindPembayaranStatusRepository(impl: PembayaranStatusRepositoryImpl): PembayaranStatusRepository
+    abstract fun bindPembayaranStatusRepository(impl: GetPembayaranStatusRepositoryImpl): GetPembayaranStatusRepository
 
     companion object {
         @Provides

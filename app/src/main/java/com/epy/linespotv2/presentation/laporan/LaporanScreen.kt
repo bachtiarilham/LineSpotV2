@@ -55,7 +55,7 @@ import com.epy.linespotv2.core.ui.theme.White
 import com.epy.linespotv2.core.utils.toRupiah
 import com.epy.linespotv2.domain.model.laporan.LaporanChartBar
 import com.epy.linespotv2.domain.model.laporan.LaporanDateRange
-import com.epy.linespotv2.domain.model.laporan.LaporanModel
+import com.epy.linespotv2.domain.model.laporan.LaporanResponseModel
 import com.epy.linespotv2.domain.model.laporan.LaporanPaymentSummary
 import com.epy.linespotv2.domain.model.laporan.LaporanRecentTransaction
 import com.epy.linespotv2.domain.model.laporan.LaporanSummary
@@ -94,9 +94,9 @@ fun LaporanScreen(
         ) {
             when {
                 state.isLoading -> FullScreenLoading()
-                state.laporanModel != null -> {
+                state.laporanResponseModel != null -> {
                     LaporanScreenContent(
-                        laporan = state.laporanModel!!,
+                        laporan = state.laporanResponseModel!!,
                         onBack = onBack,
                         onOpenFilter = onOpenFilter
                     )
@@ -112,7 +112,7 @@ fun LaporanScreen(
 
 @Composable
 private fun LaporanScreenContent(
-    laporan: LaporanModel,
+    laporan: LaporanResponseModel,
     onBack: () -> Unit,
     onOpenFilter: () -> Unit
 ) {
@@ -593,7 +593,7 @@ private fun Long.toChartAmountLabel(): String {
 private fun LaporanScreenPreview() {
     MaterialTheme {
         LaporanScreenContent(
-            laporan = LaporanModel(
+            laporan = LaporanResponseModel(
                 tanggalTerpilih = "30 Mei 2024",
                 periode = LaporanDateRange(
                     startDate = "01 Mei 2024",

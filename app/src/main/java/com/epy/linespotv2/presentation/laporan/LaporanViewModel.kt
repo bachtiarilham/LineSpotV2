@@ -6,8 +6,9 @@ import com.epy.linespotv2.core.network.ApiCondition
 import com.epy.linespotv2.core.preferences.AppPreferences
 import com.epy.linespotv2.core.utils.toIndonesiaDate
 import com.epy.linespotv2.domain.model.helper.LokasiModel
-import com.epy.linespotv2.domain.usecase.GetLokasiUseCase
-import com.epy.linespotv2.domain.usecase.LaporanUseCase
+import com.epy.linespotv2.domain.model.laporan.LaporanRequestModel
+import com.epy.linespotv2.domain.usecase.helper.GetLokasiUseCase
+import com.epy.linespotv2.domain.usecase.laporan.LaporanUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -24,7 +25,7 @@ class LaporanViewModel @Inject constructor(
     override fun onIntent(intent: LaporanIntent) {
         when (intent) {
             LaporanIntent.loadFilterPage -> loadFilterPage()
-            LaporanIntent.loadPage -> loadLaporanPage(isRefresh = false)
+            LaporanIntent.loadPage -> loadLaporanPage()
             is LaporanIntent.submitFilter -> submitFilter(
                 startDate = intent.startDate,
                 endDate = intent.endDate,
@@ -43,51 +44,61 @@ class LaporanViewModel @Inject constructor(
         }
     }
 
-    private fun loadLaporanPage(isRefresh: Boolean = false) {
-        viewModelScope.launch {
-            updateState {
-                it.copy(
-                    isLoading = !isRefresh,
-                    isRefresh = isRefresh,
-                    error = null
-                )
-            }
-
-            when (
-                val result = doLaporanUseCase(
-                    userId = prefs.userId,
-                    username = prefs.username,
-                    roleId = prefs.roleId,
-                    startDate = Date().toIndonesiaDate(),
-                    endDate = Date().toIndonesiaDate(),
-                    lokasi = state.value.selectedLokasi
-                )
-            ) {
-                is ApiCondition.AppSuccess -> {
-                    updateState {
-                        it.copy(
-                            isLoading = false,
-                            isRefresh = false,
-                            laporanModel = result.data,
-                            error = null
-                        )
-                    }
-                }
-
-                is ApiCondition.AppFailure -> {
-                    updateState {
-                        it.copy(
-                            isLoading = false,
-                            isRefresh = false,
-                            error = result.exception.message ?: "Terjadi kesalahan"
-                        )
-                    }
-                }
-
-                is ApiCondition.AppLoading -> Unit
-            }
+    private fun loadLaporanPage() {
+        updateState {
+            it.copy(
+                isLoading = false,
+                error = null
+            )
         }
     }
+
+//    private fun loadLaporanPage(isRefresh: Boolean = false) {
+//        viewModelScope.launch {
+//            updateState {
+//                it.copy(
+//                    isLoading = !isRefresh,
+//                    isRefresh = isRefresh,
+//                    error = null
+//                )
+//            }
+//
+//            val reqModel = LaporanRequestModel(
+//                userId = prefs.userId,
+//                username = prefs.username,
+//                roleId = prefs.roleId,
+//                startDate = Date().toIndonesiaDate(),
+//                endDate = Date().toIndonesiaDate(),
+//                lokasi = state.value.selectedLokasi
+//            )
+//
+//            when (val result = doLaporanUseCase(reqModel = reqModel)
+//            ) {
+//                is ApiCondition.AppSuccess -> {
+//                    updateState {
+//                        it.copy(
+//                            isLoading = false,
+//                            isRefresh = false,
+//                            laporanResponseModel = result.data,
+//                            error = null
+//                        )
+//                    }
+//                }
+//
+//                is ApiCondition.AppFailure -> {
+//                    updateState {
+//                        it.copy(
+//                            isLoading = false,
+//                            isRefresh = false,
+//                            error = result.exception.message ?: "Terjadi kesalahan"
+//                        )
+//                    }
+//                }
+//
+//                is ApiCondition.AppLoading -> Unit
+//            }
+//        }
+//    }
 
     private fun loadFilterPage() {
         viewModelScope.launch {
@@ -141,21 +152,25 @@ class LaporanViewModel @Inject constructor(
                 )
             }
 
+            val reqModel = LaporanRequestModel(
+                userId = prefs.userId,
+                username = prefs.username,
+                roleId = prefs.roleId,
+                startDate = startDate,
+                endDate = endDate,
+                lokasi = lokasi
+            )
+
             when (
                 val result = doLaporanUseCase(
-                    userId = prefs.userId,
-                    username = prefs.username,
-                    roleId = prefs.roleId,
-                    startDate = startDate,
-                    endDate = endDate,
-                    lokasi = lokasi
+                    reqModel = reqModel
                 )
             ) {
                 is ApiCondition.AppSuccess -> {
                     updateState {
                         it.copy(
                             isLoading = false,
-                            laporanModel = result.data,
+                            laporanResponseModel = result.data,
                             error = null
                         )
                     }

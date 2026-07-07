@@ -1,0 +1,50 @@
+package com.epy.linespotv2.data.remote.mapper.home
+
+import com.epy.linespotv2.data.local.entity.HomeEntity
+import com.epy.linespotv2.domain.model.home.HomeResponseModel
+import com.epy.linespotv2.domain.model.home.HomeSummaryInfo
+import com.epy.linespotv2.domain.model.home.HomeWarnings
+import com.epy.linespotv2.domain.model.home.JukirSummaryInfo
+import com.epy.linespotv2.domain.model.home.Profile
+
+fun HomeEntity.toDomain(): HomeResponseModel = HomeResponseModel(
+    profile = Profile(
+        id = profileId,
+        name = profileName,
+        photoUrl = photoUrl
+    ),
+    summary = HomeSummaryInfo(
+        saldo = saldo,
+        expiredDate = expiredDate
+    ),
+    jukirSummary = JukirSummaryInfo(
+        pendapatan = pendapatan,
+        lokasi = lokasi,
+        area = area,
+        zona = zona
+    ),
+    events           = events,
+    news             = news,
+    warnings = HomeWarnings(
+        profile = warningProfile,
+        parking = warningParking,
+        finance = warningFinance
+    )
+)
+
+fun HomeResponseModel.toEntity(): HomeEntity = HomeEntity(
+    profileId = profile.id,
+    profileName = profile.name,
+    photoUrl = profile.photoUrl,
+    saldo = summary.saldo,
+    expiredDate = summary.expiredDate,
+    pendapatan = jukirSummary.pendapatan,
+    lokasi = jukirSummary.lokasi,
+    area = jukirSummary.area,
+    zona = jukirSummary.zona,
+    events = events,
+    news = news,
+    warningProfile = warnings.profile,
+    warningParking = warnings.parking,
+    warningFinance = warnings.finance
+)

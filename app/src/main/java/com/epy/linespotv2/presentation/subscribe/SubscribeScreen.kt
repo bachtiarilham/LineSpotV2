@@ -37,7 +37,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,7 +55,9 @@ import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.Tangerine
 import com.epy.linespotv2.core.ui.theme.White
 import com.epy.linespotv2.core.utils.toRupiah
-import com.epy.linespotv2.domain.model.SubscribeModel
+import com.epy.linespotv2.domain.model.subscription.PackageCard
+import com.epy.linespotv2.domain.model.subscription.StatusCard
+import com.epy.linespotv2.domain.model.subscription.SubscribeResponseModel
 import com.epy.linespotv2.presentation.home_customer.FullScreenLoading
 
 private data class PackageOption(
@@ -70,7 +71,7 @@ private data class PackageOption(
 
 @Composable
 fun SubscribeScreen(
-    model: SubscribeModel? = null,
+    model: SubscribeResponseModel? = null,
     onBack: () -> Unit = {},
     onChoosePackage: (String) -> Unit = {},
     onOpenBenefit: () -> Unit = {},
@@ -95,7 +96,7 @@ fun SubscribeScreen(
 
 @Composable
 fun SubscribeScreenContent(
-    model: SubscribeModel? = null,
+    model: SubscribeResponseModel? = null,
     consumeEffect: () -> Unit = {},
     state: SubscribeState = SubscribeState(),
     onBack: () -> Unit = {},
@@ -224,7 +225,7 @@ fun SubscribeScreenContent(
 
 @Composable
 private fun StatusCard(
-    statusCard: com.epy.linespotv2.domain.model.StatusCard,
+    statusCard: StatusCard,
     onOpenBenefit: () -> Unit
 ) {
     Card(
@@ -631,7 +632,7 @@ private fun BenefitItem(text: String) {
     }
 }
 
-private fun com.epy.linespotv2.domain.model.PackageCard.toUiOption(): PackageOption {
+private fun PackageCard.toUiOption(): PackageOption {
     val highlighted = namaPaket.equals("Premium", ignoreCase = true)
     val badge = if (highlighted) "Populer" else null
     return PackageOption(
@@ -644,7 +645,7 @@ private fun com.epy.linespotv2.domain.model.PackageCard.toUiOption(): PackageOpt
     )
 }
 
-private fun com.epy.linespotv2.domain.model.PackageCard.matchesTab(tabIndex: Int): Boolean {
+private fun PackageCard.matchesTab(tabIndex: Int): Boolean {
     val period = masaBerlaku.lowercase()
     return when (tabIndex) {
         0 -> period.contains("bulan") && !period.contains("6")
@@ -660,21 +661,21 @@ private fun SubscribeScreenPreview() {
     val mockState = SubscribeState(
         isLoading = false,
         error = null,
-        subscribeModel = null,
+        subscribeResponseModel = null,
         selectedTabIndex = 2
     )
 
     MaterialTheme {
         SubscribeScreenContent(
             state = mockState,
-            model = SubscribeModel(
-                statusCard = com.epy.linespotv2.domain.model.StatusCard(
+            model = SubscribeResponseModel(
+                statusCard = StatusCard(
                     paketAktif = "Premium Gold",
                     kadaluarsa = "20 Mei 2025",
                     benefit = "Nikmati benefit parkir premium"
                 ),
                 packageCard = listOf(
-                    com.epy.linespotv2.domain.model.PackageCard(
+                    PackageCard(
                         namaPaket = "VIP",
                         harga = 990_000L,
                         masaBerlaku = "tahun",

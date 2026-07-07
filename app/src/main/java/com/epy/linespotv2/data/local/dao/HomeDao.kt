@@ -8,7 +8,27 @@ import com.epy.linespotv2.data.local.entity.HomeEntity
 
 @Dao
 interface HomeDao {
-    @Query("SELECT * FROM home_cache")
+    @Query(
+        """
+        SELECT
+            profileId,
+            profileName,
+            photoUrl,
+            0 AS saldo,
+            expiredDate,
+            0 AS pendapatan,
+            lokasi,
+            area,
+            zona,
+            events,
+            news,
+            warningProfile,
+            warningParking,
+            warningFinance,
+            cachedAt
+        FROM home_cache
+        """
+    )
     suspend fun getHomeCache(): HomeEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

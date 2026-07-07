@@ -20,33 +20,37 @@ class TokenRefreshAuthenticator @Inject constructor(
 ) : Authenticator {
     override fun authenticate(route: Route?, response: Response): Request? {
         if (responseCount(response) >= 2) return null
-        if (response.request.url.encodedPath.contains("/api/v2/linespot/auth/refresh")) return null
+        if (response.request.url.encodedPath == ("/api/v2/linespot/auth/refreshToken")) return null
 
         val requestToken = response.request.header("Authorization")
             ?.removePrefix("Bearer ")
             ?.trim()
             .orEmpty()
         val currentToken = prefs.token
-        val refreshToken = prefs.refreshtoken
+        val currentRefreshToken = prefs.refreshtoken
 
-        if (refreshToken.isBlank()) return null
+        if (currentRefreshToken.isBlank()) return null
 
         synchronized(this) {
-            if (prefs.token.isNotBlank() && prefs.token != requestToken) {
+            val latestToken = prefs.token
+            if (currentToken.isNotBlank() && latestToken.isNotBlank() && latestToken != requestToken) {
                 return response.request.newBuilder()
-                    .header("Authorization", "Bearer ${prefs.token}")
+                    .header("Authorization", "Bearer $latestToken")
                     .build()
             }
+
+            val refreshTokenToUse = prefs.refreshtoken.ifBlank { currentRefreshToken }
+            if (refreshTokenToUse.isBlank()) return null
 
             val refreshed = runBlocking {
                 runCatching {
                     authApiService.refreshToken(
-                        RefreshTokenRequestDto(refreshToken = refreshToken)
+                        RefreshTokenRequestDto(refreshToken = refreshTokenToUse)
                     )
                 }.getOrNull()
             } ?: return null
 
-            val tokenSet = refreshed.data?.tokens
+            val tokenSet = refreshed.data
             if (!refreshed.success || tokenSet == null || tokenSet.accessToken.isBlank()) {
                 prefs.token = ""
                 prefs.refreshtoken = ""
@@ -54,7 +58,9 @@ class TokenRefreshAuthenticator @Inject constructor(
             }
 
             prefs.token = tokenSet.accessToken
-            prefs.refreshtoken = tokenSet.refreshToken
+            if (tokenSet.refreshToken.isNotBlank()) {
+                prefs.refreshtoken = tokenSet.refreshToken
+            }
 
             return response.request.newBuilder()
                 .header("Authorization", "Bearer ${tokenSet.accessToken}")

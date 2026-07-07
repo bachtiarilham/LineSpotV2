@@ -61,7 +61,7 @@ import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.Tangerine
 import com.epy.linespotv2.core.ui.theme.White
 import com.epy.linespotv2.domain.model.home.HomeEventItem
-import com.epy.linespotv2.domain.model.home.HomeModel
+import com.epy.linespotv2.domain.model.home.HomeResponseModel
 import com.epy.linespotv2.domain.model.home.HomeNewsItem
 import com.epy.linespotv2.domain.model.home.HomeSummaryInfo
 import com.epy.linespotv2.domain.model.home.HomeWarnings
@@ -109,9 +109,9 @@ fun HomeScreen(
         ) {
             when {
                 state.isLoading -> FullScreenLoading()
-                state.homeModel != null -> {
+                state.homeResponseModel != null -> {
                     HomeScreenContent(
-                        home = state.homeModel!!,
+                        home = state.homeResponseModel!!,
                         state = state,
                         onIntent = viewModel::onIntent,
                         consumeEffect = { viewModel.consumeEffect() },
@@ -136,7 +136,7 @@ fun HomeScreen(
 
 @Composable
 fun HomeScreenContent(
-    home: HomeModel,
+    home: HomeResponseModel,
     state: HomeState,
     onIntent: (HomeIntent) -> Unit,
     consumeEffect: () -> Unit,
@@ -693,7 +693,7 @@ private fun Long.toRupiah(): String {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun HomeScreenContentPreview() {
-    val mockHomeModel = HomeModel(
+    val mockHomeResponseModel = HomeResponseModel(
         profile = Profile(
             id = 1,
             name = "Andi",
@@ -736,10 +736,10 @@ fun HomeScreenContentPreview() {
     )
 
     HomeScreenContent(
-        home = mockHomeModel,
+        home = mockHomeResponseModel,
         state = HomeState(
             isLoading = false,
-            homeModel = mockHomeModel
+            homeResponseModel = mockHomeResponseModel
         ),
         onIntent = {},
         consumeEffect = {},

@@ -63,12 +63,12 @@ import com.epy.linespotv2.core.ui.theme.White
 import com.epy.linespotv2.core.utils.QrCodeMaker
 import com.epy.linespotv2.core.utils.toCountdownText
 import com.epy.linespotv2.core.utils.toRupiah
-import com.epy.linespotv2.domain.model.IsiQr
-import com.epy.linespotv2.domain.model.PembayaranModel
-import com.epy.linespotv2.domain.model.PembayaranOption
-import com.epy.linespotv2.domain.model.PembayaranOptionType
-import com.epy.linespotv2.domain.model.PembayaranQrisSection
-import com.epy.linespotv2.domain.model.PembayaranStatusCard
+import com.epy.linespotv2.domain.model.payment.IsiQr
+import com.epy.linespotv2.domain.model.payment.PostParkingRespModel
+import com.epy.linespotv2.domain.model.payment.PembayaranOption
+import com.epy.linespotv2.domain.model.payment.PembayaranOptionType
+import com.epy.linespotv2.domain.model.payment.PembayaranQrisSection
+import com.epy.linespotv2.domain.model.payment.PembayaranStatusCard
 import kotlinx.coroutines.delay
 
 @Composable
@@ -79,7 +79,7 @@ fun PembayaranScreen(
     viewModel: InputManualViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val pembayaran = state.pembayaranModel ?: return
+    val pembayaran = state.postParkingRespModel ?: return
 
     LaunchedEffect(Unit) {
         viewModel.onIntent(InputManualIntent.StartPolling)
@@ -126,7 +126,7 @@ fun PembayaranScreen(
 
 @Composable
 private fun PembayaranContent(
-    pembayaran: PembayaranModel,
+    pembayaran: PostParkingRespModel,
     onBack: () -> Unit,
     onDetailClick: () -> Unit,
     onPrintClick: () -> Unit
@@ -669,7 +669,7 @@ private fun PrintReceiptButton(
 private fun PembayaranScreenPreview() {
     MaterialTheme {
         PembayaranContent(
-            pembayaran = PembayaranModel(
+            pembayaran = PostParkingRespModel(
                 statusCard = PembayaranStatusCard(
                     title = "Tiket berhasil dibuat!",
                     message = "Silakan tunjukkan QRIS ini kepada pengguna untuk melakukan pembayaran.",

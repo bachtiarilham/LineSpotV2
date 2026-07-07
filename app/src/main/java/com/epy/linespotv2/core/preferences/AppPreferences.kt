@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import dagger.hilt.android.qualifiers.ApplicationContext
+import com.epy.linespotv2.data.local.prefs.UserPrefsModel
 import javax.inject.Inject
 import javax.inject.Singleton
 import androidx.core.content.edit
@@ -40,6 +41,7 @@ class AppPreferences @Inject constructor(
         private const val KEY_USERNAME      = "user_username"
         private const val KEY_USER_ID       = "user_id"
         private const val KEY_FULL_NAME     = "user_full_name"
+        private const val KEY_AVATAR        = "avatar"
         private const val KEY_EMAIL         = "user_email"
         private const val KEY_PHONE         = "user_phone"
         private const val KEY_NIK           = "user_nik"
@@ -72,6 +74,10 @@ class AppPreferences @Inject constructor(
         get() = prefs.getString(KEY_FULL_NAME, "") ?: ""
         set(value) = prefs.edit { putString(KEY_FULL_NAME, value) }
 
+    var avatarUrl : String
+        get() = prefs.getString(KEY_AVATAR, "") ?: ""
+        set(value) = prefs.edit { putString(KEY_AVATAR, value) }
+
     var email: String
         get() = prefs.getString(KEY_EMAIL, "") ?: ""
         set(value) = prefs.edit { putString(KEY_EMAIL, value) }
@@ -99,6 +105,26 @@ class AppPreferences @Inject constructor(
     var tarif: List<TarifItem>
         get() = prefs.getString(KEY_TARIF, null).toTarifList()
         set(value) = prefs.edit { putString(KEY_TARIF, value.toJson()) }
+
+    fun saveUser(user: UserPrefsModel) {
+        token = user.token
+        refreshtoken = user.refreshToken
+        userId = user.userId
+        username = user.username
+        fullName = user.fullName
+        email = user.email
+        phone = user.phone
+        nik = user.nik
+        roleId = user.roleId
+        zona = user.zona
+        lokasi = user.lokasi
+        tarif = user.tarif.map { item ->
+            TarifItem(
+                kendaraan = item.kendaraan,
+                nominal = item.nominal.toInt()
+            )
+        }
+    }
 
     fun isLoggedIn(): Boolean = token.isNotBlank()
     fun clear()= prefs.edit().clear().apply()
@@ -133,4 +159,3 @@ class AppPreferences @Inject constructor(
         }.getOrDefault(emptyList())
     }
 }
-
