@@ -55,6 +55,11 @@ import com.epy.linespotv2.domain.model.riwayat.RiwayatPaymentFilter
 import com.epy.linespotv2.domain.model.riwayat.RiwayatVehicleFilter
 import java.util.Date
 
+private enum class RiwayatDateField {
+    START,
+    END
+}
+
 @Composable
 fun RiwayatFilterScreen(
     onCancel: () -> Unit = {},
@@ -107,8 +112,8 @@ fun RiwayatFilterScreen(
                 RiwayatIntent.submitFilter(
                     startDate = startDate,
                     endDate = endDate,
-                    payment = state.selectedPayment,
-                    vehicle = state.selectedVehicle,
+                    payment = selectedPayment,
+                    vehicle = selectedVehicle,
                     lokasi = state.selectedLokasi
                 )
             )
@@ -132,8 +137,7 @@ fun RiwayatFilterContent(
     onSelectVehicle: (RiwayatVehicleFilter) -> Unit,
     onApply: () -> Unit
 ) {
-    var showStartDatePicker by remember { mutableStateOf(false) }
-    var showEndDatePicker by remember { mutableStateOf(false) }
+    var activeDateField by remember { mutableStateOf<RiwayatDateField?>(null) }
 
     Surface(
         color = White,
@@ -177,8 +181,8 @@ fun RiwayatFilterContent(
                 DateRangeField(
                     startDate = startDate,
                     endDate = endDate,
-                    onStartDateClick = { showStartDatePicker = true },
-                    onEndDateClick = { showEndDatePicker = true }
+                    onStartDateClick = { activeDateField = RiwayatDateField.START },
+                    onEndDateClick = { activeDateField = RiwayatDateField.END }
                 )
             }
 
@@ -251,24 +255,19 @@ fun RiwayatFilterContent(
         }
     }
 
-    if (showStartDatePicker) {
+    if (activeDateField != null) {
         RiwayatDatePickerDialog(
-            initialDate = startDate,
-            onDismiss = { showStartDatePicker = false },
+            initialDate = if (activeDateField == RiwayatDateField.START) startDate else endDate,
+            title = if (activeDateField == RiwayatDateField.START) "Pilih tanggal mulai" else "Pilih tanggal akhir",
+            onDismiss = { activeDateField = null },
             onConfirm = {
-                onStartDateClick(it)
-                showStartDatePicker = false
-            }
-        )
-    }
-
-    if (showEndDatePicker) {
-        RiwayatDatePickerDialog(
-            initialDate = endDate,
-            onDismiss = { showEndDatePicker = false },
-            onConfirm = {
-                onEndDateClick(it)
-                showEndDatePicker = false
+                if (activeDateField == RiwayatDateField.START) {
+                    onStartDateClick(it)
+                    activeDateField = RiwayatDateField.END
+                } else {
+                    onEndDateClick(it)
+                    activeDateField = null
+                }
             }
         )
     }
@@ -302,43 +301,48 @@ private fun DateRangeField(
         border = BorderStroke(1.dp, Color(0xFFE3E8F0)),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.CalendarMonth,
-                contentDescription = null,
-                tint = SmartBlue,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.size(10.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CalendarMonth,
+                    contentDescription = null,
+                    tint = SmartBlue,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.size(10.dp))
+                Text(
+                    text = "Pilih tanggal mulai dan akhir",
+                    color = DarkBlue,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                DateSelectionChip(
+                    label = "Mulai",
+                    value = startDate,
+                    modifier = Modifier.weight(1f),
+                    onClick = onStartDateClick
+                )
+                DateSelectionChip(
+                    label = "Selesai",
+                    value = endDate,
+                    modifier = Modifier.weight(1f),
+                    onClick = onEndDateClick
+                )
+            }
+
             Text(
-                text = startDate,
-                color = DarkBlue,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.clickable { onStartDateClick() }
-            )
-            Spacer(modifier = Modifier.size(10.dp))
-            Text(
-                text = " - ",
+                text = "Tip: pilih tanggal mulai dulu, lalu tanggal akhir akan terbuka otomatis.",
                 color = GreyText,
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(modifier = Modifier.size(10.dp))
-            Text(
-                text = endDate,
-                color = DarkBlue,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable { onEndDateClick() }
-            )
-            Icon(
-                imageVector = Icons.Default.KeyboardArrowDown,
-                contentDescription = null,
-                tint = GreyText,
-                modifier = Modifier.clickable { onEndDateClick() }
+                style = MaterialTheme.typography.bodySmall
             )
         }
     }
@@ -347,6 +351,7 @@ private fun DateRangeField(
 @Composable
 private fun RiwayatDatePickerDialog(
     initialDate: String,
+    title: String,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
@@ -375,7 +380,60 @@ private fun RiwayatDatePickerDialog(
             }
         }
     ) {
-        DatePicker(state = datePickerState)
+        Column {
+            Text(
+                text = title,
+                color = DarkBlue,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
+            )
+            DatePicker(state = datePickerState)
+        }
+    }
+}
+
+@Composable
+private fun DateSelectionChip(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Surface(
+        color = Color(0xFFF8FAFE),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, Color(0xFFE3E8F0)),
+        modifier = modifier
+            .clickable { onClick() }
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = label,
+                    color = GreyText,
+                    style = MaterialTheme.typography.labelMedium
+                )
+                Text(
+                    text = value,
+                    color = DarkBlue,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowDown,
+                contentDescription = null,
+                tint = GreyText,
+                modifier = Modifier.size(18.dp)
+            )
+        }
     }
 }
 

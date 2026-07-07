@@ -9,29 +9,29 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(
+class HomeCustomerViewModel @Inject constructor(
     private val doHomeUseCase: HomeUseCase
-) : BaseViewModel<HomeIntent, HomeState>(HomeState()) {
+) : BaseViewModel<HomeCustomerIntent, HomeCustomerState>(HomeCustomerState()) {
 
-    override fun onIntent(intent: HomeIntent) {
+    override fun onIntent(intent: HomeCustomerIntent) {
         when (intent) {
-            is HomeIntent.LoadHome -> loadHome(isRefresh = false)
-            is HomeIntent.clickProfile -> sendEffect(HomeEffect.NavigateToSettings)
-            is HomeIntent.clickSubscribe -> sendEffect(HomeEffect.NavigateToSubscription)
-            is HomeIntent.clickTopUp -> sendEffect(HomeEffect.NavigateToTopUp)
-            is HomeIntent.clickPayment -> sendEffect(HomeEffect.NavigateToPayment)
-            is HomeIntent.clickBooking -> sendEffect(HomeEffect.NavigateToBooking)
-            is HomeIntent.clickPromo -> sendEffect(HomeEffect.NavigateToPromo)
-            is HomeIntent.clickLayananLain -> sendEffect(HomeEffect.NavigateToLayananLain)
-            is HomeIntent.clickNotification -> sendEffect(
-                HomeEffect.ShowToast(message = "Notifikasi diklik")
+            is HomeCustomerIntent.LoadHomeCustomer -> loadHome(isRefresh = false)
+            is HomeCustomerIntent.clickProfile -> sendEffect(HomeCustomerEffect.NavigateToSettings)
+            is HomeCustomerIntent.clickSubscribe -> sendEffect(HomeCustomerEffect.NavigateToSubscription)
+            is HomeCustomerIntent.clickTopUp -> sendEffect(HomeCustomerEffect.NavigateToTopUp)
+            is HomeCustomerIntent.clickPayment -> sendEffect(HomeCustomerEffect.NavigateToPayment)
+            is HomeCustomerIntent.clickBooking -> sendEffect(HomeCustomerEffect.NavigateToBooking)
+            is HomeCustomerIntent.clickPromo -> sendEffect(HomeCustomerEffect.NavigateToPromo)
+            is HomeCustomerIntent.clickLayananLain -> sendEffect(HomeCustomerEffect.NavigateToLayananLain)
+            is HomeCustomerIntent.clickNotification -> sendEffect(
+                HomeCustomerEffect.ShowToast(message = "Notifikasi diklik")
             )
-            is HomeIntent.dismissError -> updateState { it.copy(error = null) }
+            is HomeCustomerIntent.dismissError -> updateState { it.copy(error = null) }
         }
     }
 
     fun consumeEffect() {
-        updateState { it.copy(homeEffect = null) }
+        updateState { it.copy(homeCustomerEffect = null) }
     }
 
     private fun loadHome(isRefresh: Boolean = false) {
@@ -71,7 +71,7 @@ class HomeViewModel @Inject constructor(
                         val errorMessage = result.exception.message ?: "Terjadi kesalahan"
 
                         if (errorMessage.isSessionExpiredMessage()) {
-                            sendEffect(HomeEffect.SessionExpired)
+                            sendEffect(HomeCustomerEffect.SessionExpired)
                         }
 
                         updateState {
@@ -87,8 +87,8 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun sendEffect(effect: HomeEffect) {
-        updateState { it.copy(homeEffect = effect) }
+    private fun sendEffect(effect: HomeCustomerEffect) {
+        updateState { it.copy(homeCustomerEffect = effect) }
     }
 
     private fun String.isSessionExpiredMessage(): Boolean {

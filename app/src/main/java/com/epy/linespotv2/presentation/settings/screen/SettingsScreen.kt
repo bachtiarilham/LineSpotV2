@@ -77,6 +77,7 @@ import com.epy.linespotv2.presentation.settings.SettingsViewModel
 fun SettingsScreen(
     onNavigateToLogin: () -> Unit = {},
     onNavigateBack: () -> Unit = {},
+    onNavigateToProfil : () -> Unit = {},
     onNavigateToMetodePembayaran: () -> Unit = {},
     onNavigateToKeamanan: () -> Unit = {},
     onNavigateToPrivasi: () -> Unit = {},
@@ -91,6 +92,7 @@ fun SettingsScreen(
         when (state.settingsEffect) {
             is SettingsEffect.NavigateToLogin -> { onNavigateToLogin(); viewModel.consumeEffect() }
             is SettingsEffect.NavigateBack -> { onNavigateBack(); viewModel.consumeEffect() }
+            is SettingsEffect.NavigateToProfil -> {onNavigateToProfil(); viewModel.consumeEffect()}
             is SettingsEffect.NavigateToKeamanan -> {onNavigateToKeamanan(); viewModel.consumeEffect()}
             is SettingsEffect.NavigateToMetodePembayaran -> {onNavigateToMetodePembayaran(); viewModel.consumeEffect()}
             is SettingsEffect.NavigateToPrivasi -> {onNavigateToPrivasi(); viewModel.consumeEffect()}

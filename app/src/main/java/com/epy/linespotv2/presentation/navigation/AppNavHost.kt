@@ -1,22 +1,33 @@
 package com.epy.linespotv2.presentation.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.epy.linespotv2.presentation.riwayat.RiwayatViewModel
 import com.epy.linespotv2.presentation.auth.login.LoginScreen
 import com.epy.linespotv2.presentation.auth.register.RegisterScreen
-import com.epy.linespotv2.presentation.home_customer.HomeScreen
+import com.epy.linespotv2.presentation.hasil_bayar_parkir.HasilBayarParkirScreen
+import com.epy.linespotv2.presentation.home_customer.HomeCustomerScreen
 import com.epy.linespotv2.presentation.home_jukir.HomeJukirScreen
 import com.epy.linespotv2.presentation.input_manual.InputManualScreen
 import com.epy.linespotv2.presentation.input_manual.PembayaranScreen
 import com.epy.linespotv2.presentation.laporan.LaporanFilterScreen
 import com.epy.linespotv2.presentation.laporan.LaporanScreen
+import com.epy.linespotv2.presentation.post_qr.ScanScreen
 import com.epy.linespotv2.presentation.riwayat.DetilRiwayatScreen
 import com.epy.linespotv2.presentation.riwayat.RiwayatFilterScreen
 import com.epy.linespotv2.presentation.riwayat.RiwayatScreen
-import com.epy.linespotv2.presentation.post_qr.ScanScreen
+import com.epy.linespotv2.presentation.settings.screen.BantuanFaqScreen
+import com.epy.linespotv2.presentation.settings.screen.KeamananScreen
+import com.epy.linespotv2.presentation.settings.screen.MetodePembayaranScreen
+import com.epy.linespotv2.presentation.settings.screen.PrivasiScreen
+import com.epy.linespotv2.presentation.settings.screen.ProfilScreen
 import com.epy.linespotv2.presentation.settings.screen.SettingsScreen
+import com.epy.linespotv2.presentation.settings.screen.SyaratKetentuanScreen
+import com.epy.linespotv2.presentation.settings.screen.TentangAplikasiScreen
 import com.epy.linespotv2.presentation.splash.SplashScreen
 import com.epy.linespotv2.presentation.subscribe.BenefitScreenPopUp
 import com.epy.linespotv2.presentation.subscribe.EnterPromoScreenPopUp
@@ -28,22 +39,21 @@ fun AppNavHost() {
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = "splash") {
-
-        composable ("splash"){
+        composable("splash") {
             SplashScreen(
                 onNavigateToCustomerHome = {
                     navController.navigate("home_customer") {
-                        popUpTo("splash") {inclusive = true}
+                        popUpTo("splash") { inclusive = true }
                     }
                 },
                 onNavigateToJukirHome = {
                     navController.navigate("home_jukir") {
-                        popUpTo("splash") {inclusive = true}
+                        popUpTo("splash") { inclusive = true }
                     }
                 },
                 onNavigateToLogin = {
                     navController.navigate("login") {
-                        popUpTo("splash") {inclusive = true}
+                        popUpTo("splash") { inclusive = true }
                     }
                 }
             )
@@ -51,18 +61,15 @@ fun AppNavHost() {
 
         composable("login") {
             LoginScreen(
-
                 onNavigateToRegister = {
                     navController.navigate("register")
                 },
                 onNavigateToCustomerHome = {
-                    // Pop up to login agar user tidak bisa back ke login
                     navController.navigate("home_customer") {
                         popUpTo("login") { inclusive = true }
                     }
                 },
                 onNavigateToJukirHome = {
-                    // Pop up to login
                     navController.navigate("home_jukir") {
                         popUpTo("login") { inclusive = true }
                     }
@@ -73,36 +80,35 @@ fun AppNavHost() {
         composable("register") {
             RegisterScreen(
                 onNavigateToLogin = {
-                    // kembali ke login, hapus register dari backstack
                     navController.popBackStack()
                 }
             )
         }
 
         composable("home_customer") {
-            HomeScreen(
+            HomeCustomerScreen(
                 onNavigateToPayment = { navController.navigate("scan") },
                 onNavigateToSettings = { navController.navigate("settings") },
-                onNavigateToTopUp = { navController.navigate("topup")},
-                onNavigateToSubscription = { navController.navigate("subscribe")},
-                onNavigateToBooking = {navController.navigate("booking")},
-                onNavigateToLogin = {navController.navigate("login")},
-                onNavigateToLayananLain = {navController.navigate("layananlain")},
-                onNavigateToPromo = {navController.navigate("promo")},
+                onNavigateToTopUp = { navController.navigate("topup") },
+                onNavigateToSubscription = { navController.navigate("subscribe") },
+                onNavigateToBooking = { navController.navigate("booking") },
+                onNavigateToLogin = { navController.navigate("login") },
+                onNavigateToLayananLain = { navController.navigate("layananlainnya") },
+                onNavigateToPromo = { navController.navigate("promo") }
             )
         }
 
         composable("home_jukir") {
             HomeJukirScreen(
                 onNavigateToSettings = { navController.navigate("settings") },
-                onNavigateToNotification = { navController.navigate("notification")},
-                onNavigateToRiwayat = { navController.navigate("RiwayatFilter") },
-                onNavigateToScanTicket = { navController.navigate("ScanTicket")},
-                onNavigateToInputManual = {navController.navigate("inputmanual")},
+                onNavigateToNotification = { navController.navigate("notifikasi") },
+                onNavigateToRiwayat = { navController.navigate("riwayat_filter") },
+                onNavigateToScanTicket = { navController.navigate("scan") },
+                onNavigateToInputManual = { navController.navigate("inputmanual") },
                 onNavigateToLaporan = { navController.navigate("laporanFilter") },
-                onNavigateToBantuan = { navController.navigate("bantuan")},
-                onNavigateToTopUp = {navController.navigate("topup")},
-                onNavigateToLogin = {navController.navigate("login")},
+                onNavigateToBantuan = { navController.navigate("bantuan") },
+                onNavigateToTopUp = { navController.navigate("topup") },
+                onNavigateToLogin = { navController.navigate("login") }
             )
         }
 
@@ -110,106 +116,140 @@ fun AppNavHost() {
             SettingsScreen(
                 onNavigateToLogin = {
                     navController.navigate("login") {
-                        popUpTo(0) { inclusive = true }  // clear seluruh backstack
+                        popUpTo(0) { inclusive = true }
                     }
                 },
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToProfil = { navController.navigate("profil") },
+                onNavigateToMetodePembayaran = { navController.navigate("metode_pembayaran") },
+                onNavigateToKeamanan = { navController.navigate("keamanan") },
+                onNavigateToPrivasi = { navController.navigate("privasi") },
+                onNavigateToBantuanFaq = { navController.navigate("bantuan_faq") },
+                onNavigateToSyaratKetentuan = { navController.navigate("syarat_ketentuan") },
+                onNavigateToTentangAplikasi = { navController.navigate("tentang_aplikasi") }
             )
         }
 
-        // ── Scanner ───────────────────────────────────────────────────────────
+        composable("profil") {
+            ProfilScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("keamanan") {
+            KeamananScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("metode_pembayaran") {
+            MetodePembayaranScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("privasi") {
+            PrivasiScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("bantuan_faq") {
+            BantuanFaqScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("syarat_ketentuan") {
+            SyaratKetentuanScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("tentang_aplikasi") {
+            TentangAplikasiScreen(onBack = { navController.popBackStack() })
+        }
+
         composable("scan") {
             ScanScreen(
+                onNavigateBack = { navController.popBackStack() },
                 onNavigateToHasilBayarParkir = {
-                    // ScanResultHolder sudah diisi ScanViewModel sebelum ini dipanggil
-                    navController.navigate("payment")
+                    navController.navigate("hasil_bayar_parkir")
                 }
             )
         }
 
-        // ── Payment (struk + eksekusi) ────────────────────────────────────────
-//        composable("payment") {
-//            PaymentScreen(
-//                onNavigateBackToScan = {
-//                    // kembali ke scan, hapus payment dari backstack
-//                    navController.popBackStack("scan", inclusive = false)
-//                }
-//            )
-//        }
-
-        composable ("topup") {
-            //isi sama top up screen
-        }
-        // ── Subscribe ───────────────────────────────────────────────────────────
-        composable ("subscribe") {
-            SubscribeScreen (
+        composable("hasil_bayar_parkir") {
+            HasilBayarParkirScreen(
                 onBack = { navController.popBackStack() },
-                onChoosePackage = { navController.navigate("subscribepopup")},
-                onOpenBenefit = {navController.navigate("benefitpaket")},
-                onOpenPromoCode = {navController.navigate("promoberlangganan")},
+                onBackToHome = {
+                    navController.navigate("home_customer") {
+                        popUpTo("scan") { inclusive = true }
+                    }
+                }
             )
         }
 
-        composable ("subscribepopup"){
+        composable("topup") {
+        }
+
+        composable("subscribe") {
+            SubscribeScreen(
+                onBack = { navController.popBackStack() },
+                onChoosePackage = { navController.navigate("subscribepopup") },
+                onOpenBenefit = { navController.navigate("benefitpaket") },
+                onOpenPromoCode = { navController.navigate("promoberlangganan") }
+            )
+        }
+
+        composable("subscribepopup") {
             SubscribeScreenPopUpScreen(
-                onClose = {navController.popBackStack()},
-                onSubscribeNow = {navController.navigate("")}
+                onClose = { navController.popBackStack() },
+                onSubscribeNow = {}
             )
         }
 
-        composable ("benefitpaket"){
-            BenefitScreenPopUp (
-                onClose = {navController.popBackStack()},
-                onAcknowledge = {navController.popBackStack()},
+        composable("benefitpaket") {
+            BenefitScreenPopUp(
+                onClose = { navController.popBackStack() },
+                onAcknowledge = { navController.popBackStack() }
             )
         }
 
-        composable ("promoberlangganan"){
-            EnterPromoScreenPopUp (
-                onClose = {navController.popBackStack()},
-                onApply = {navController.navigate("")},
-                onSelectPromo = {navController.navigate("")}
+        composable("promoberlangganan") {
+            EnterPromoScreenPopUp(
+                onClose = { navController.popBackStack() },
+                onApply = {},
+                onSelectPromo = {}
             )
         }
 
-        composable ("layananlainnya") {
-            // isi sama layanan lainnya screen
+        composable("layananlainnya") {
         }
 
-        composable ("promo") {
-            //isi sama promo screen
+        composable("promo") {
         }
 
-        composable ("booking") {
-            //isi sama booking screen
+        composable("booking") {
         }
 
-        composable ("notifikasi") {
-            //isi sama notif screen
+        composable("notifikasi") {
         }
 
-        // ── Riwayat ──────────────────────────────────────────────────────────
-        composable ("riwayat"){
-            RiwayatScreen (
-                onBack = {navController.popBackStack()},
-                onNavigateToDetail = {navController.navigate("DetailRiwayat")},
+        composable("riwayat") {
+            val parentEntry = remember(it) {
+                navController.getBackStackEntry("riwayat_filter")
+            }
+            val riwayatViewModel: RiwayatViewModel = hiltViewModel(parentEntry)
+            RiwayatScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToDetail = { navController.navigate("detail_riwayat") },
+                viewModel = riwayatViewModel
             )
         }
 
-        composable ("RiwayatFilter"){
-            RiwayatFilterScreen (
+        composable("riwayat_filter") {
+            RiwayatFilterScreen(
                 onCancel = { navController.popBackStack() },
-                onNavigateToRiwayat = { navController.navigate("riwayat") }
+                onNavigateToRiwayat = {
+                    navController.navigate("riwayat") {
+                        launchSingleTop = true
+                    }
+                }
             )
         }
 
-        composable ("DetailRiwayat"){
-            DetilRiwayatScreen (
-                //nanti diisi yah
-            )
+        composable("detail_riwayat") {
+            DetilRiwayatScreen()
         }
-
-        // ── Laporan ──────────────────────────────────────────────────────────
 
         composable("laporanFilter") {
             LaporanFilterScreen(
@@ -225,16 +265,16 @@ fun AppNavHost() {
             )
         }
 
-        //── Input Manual ──────────────────────────────────────────────────────────
-
-        composable("inputmanual"){
+        composable("inputmanual") {
             InputManualScreen(
-            onNavigateToPembayaran = {navController.navigate("pembayaran")},
+                onBack = { navController.popBackStack() },
+                onNavigateToPembayaran = { navController.navigate("pembayaran") }
             )
         }
 
-        composable("pembayaran"){
+        composable("pembayaran") {
             PembayaranScreen(
+                onBack = { navController.popBackStack() }
             )
         }
     }

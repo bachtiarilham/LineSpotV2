@@ -1,53 +1,45 @@
 package com.epy.linespotv2.domain.model.home
 
 data class HomeResponseModel(
-    val profile: Profile,
-    val summary: HomeSummaryInfo,
-    val jukirSummary : JukirSummaryInfo,
-    val events: List<HomeEventItem>,
-    val news: List<HomeNewsItem>,
-    val warnings: HomeWarnings
+    val profile: Profile = Profile(),
+    val events: List<HomeEventItem> = emptyList(),
+    val news: List<HomeNewsItem> = emptyList(),
+    val warnings: HomeWarnings = HomeWarnings()
 )
 
 data class Profile(
-    val id: Long,
-    val name: String,
-    val photoUrl: String? = null
-)
-
-data class HomeSummaryInfo(
-    val saldo : Long,
-    val expiredDate: String,
-)
-
-data class JukirSummaryInfo(
-    val pendapatan: Long,
-    val lokasi: String,
-    val area: String,
-    val zona: String,
+    val id: Long = 0L,
+    val name: String = "",
+    val photoUrl: String? = null,
+    val saldo : Long = 0L,
+    val expiredDate: String = "",
+    val pendapatan: Long = 0L,
+    val lokasi: String = "",
+    val area: String = "",
+    val zona: String = "",
 )
 
 data class HomeEventItem(
-    val id: String,
-    val title: String,
-    val description: String,
-    val date: String,
+    val id: String = "",
+    val title: String = "",
+    val description: String = "",
+    val date: String = "",
     val imageUrl: String? = null,
     val tag: String = "EVENT"
 )
 
 data class HomeNewsItem(
-    val id: String,
-    val title: String,
-    val description: String,
-    val date: String,
+    val id: String = "",
+    val title: String = "",
+    val description: String = "",
+    val date: String = "",
     val imageUrl: String? = null,
     val tag: String = "Info Parkir"
 )
 
 data class HomeWarnings(
-    val profile: String?,
-    val parking: String?,
-    val finance: String?
+    val profile: String? = null,
+    val parking: String? = null,
+    val finance: String? = null
 )
 

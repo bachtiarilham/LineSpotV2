@@ -4,7 +4,6 @@ import androidx.lifecycle.viewModelScope
 import com.epy.linespotv2.core.base.BaseViewModel
 import com.epy.linespotv2.core.network.ApiCondition
 import com.epy.linespotv2.core.preferences.AppPreferences
-import com.epy.linespotv2.core.utils.toIndonesiaDate
 import com.epy.linespotv2.domain.model.helper.LokasiModel
 import com.epy.linespotv2.domain.model.riwayat.RiwayatPaymentFilter
 import com.epy.linespotv2.domain.model.riwayat.RiwayatRequestModel
@@ -14,7 +13,6 @@ import com.epy.linespotv2.domain.usecase.riwayat.RiwayatUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
@@ -44,68 +42,17 @@ class RiwayatViewModel @Inject constructor(
 
     fun consumeEffect() {
         updateState { it.copy(riwayatEffect = null) }
-
     }
 
     private fun loadRiwayatPage() {
         updateState {
             it.copy(
                 isLoading = false,
+                isRefresh = false,
                 error = null
             )
         }
     }
-
-//    private fun loadRiwayatPage(isRefresh: Boolean = false) {
-//        viewModelScope.launch {
-//            updateState {
-//                it.copy(
-//                    isLoading = !isRefresh,
-//                    isRefresh = isRefresh,
-//                    error = null
-//                )
-//            }
-//
-//            when (
-//                val result = doRiwayatUseCase( reqModel = RiwayatRequestModel(
-//                    userId = prefs.userId,
-//                    username = prefs.username,
-//                    roleId = prefs.roleId,
-//                    startDate = Date().toIndonesiaDate(),
-//                    endDate = Date().toIndonesiaDate(),
-//                    payment = state.value.selectedPayment,
-//                    vehicle = state.value.selectedVehicle,
-//                    lokasi = state.value.selectedLokasi
-//                    )
-//                )
-//            ) {
-//                is ApiCondition.AppSuccess -> {
-//                    updateState {
-//                        it.copy(
-//                            isLoading = false,
-//                            isRefresh = false,
-//                            riwayatResponseModel = result.data,
-//                            error = null,
-//                            selectedPayment = RiwayatPaymentFilter.ALL.name,
-//                            selectedVehicle = RiwayatVehicleFilter.ALL.name
-//                        )
-//                    }
-//                }
-//
-//                is ApiCondition.AppFailure -> {
-//                    updateState {
-//                        it.copy(
-//                            isLoading = false,
-//                            isRefresh = false,
-//                            error = result.exception.message ?: "Terjadi kesalahan"
-//                        )
-//                    }
-//                }
-//
-//                is ApiCondition.AppLoading -> Unit
-//            }
-//        }
-//    }
 
     private fun loadFilterPage() {
         viewModelScope.launch {
@@ -127,7 +74,10 @@ class RiwayatViewModel @Inject constructor(
                             it.copy(
                                 isLoadingLokasi = false,
                                 lokasiList = lokasiList,
-                                selectedLokasi = lokasiList.firstOrNull() ?: "Semua Area",
+                                selectedLokasi = it.selectedLokasi
+                                    .takeIf { selected -> lokasiList.contains(selected) }
+                                    ?: lokasiList.firstOrNull()
+                                    ?: "Semua Area",
                                 errorLokasi = null
                             )
                         }
@@ -153,8 +103,8 @@ class RiwayatViewModel @Inject constructor(
     private fun submitFilter(
         startDate: String,
         endDate: String,
-        payment: String,
-        vehicle: String,
+        payment: RiwayatPaymentFilter,
+        vehicle: RiwayatVehicleFilter,
         lokasi: String
     ) {
         viewModelScope.launch {
@@ -163,13 +113,14 @@ class RiwayatViewModel @Inject constructor(
                     isLoading = true,
                     error = null,
                     selectedLokasi = lokasi,
-                    selectedPayment = payment,
-                    selectedVehicle = vehicle
+                    selectedPayment = payment.name,
+                    selectedVehicle = vehicle.name
                 )
             }
 
             when (
-                val result = doRiwayatUseCase( reqModel = RiwayatRequestModel(
+                val result = doRiwayatUseCase(
+                    reqModel = RiwayatRequestModel(
                     userId = prefs.userId,
                     username = prefs.username,
                     roleId = prefs.roleId,
@@ -185,11 +136,12 @@ class RiwayatViewModel @Inject constructor(
                     updateState {
                         it.copy(
                             isLoading = false,
+                            isRefresh = false,
                             riwayatResponseModel = result.data,
                             error = null,
                             selectedLokasi = lokasi,
-                            selectedPayment = payment,
-                            selectedVehicle = vehicle
+                            selectedPayment = payment.name,
+                            selectedVehicle = vehicle.name
                         )
                     }
                     sendEffect(RiwayatEffect.NavigateToRiwayat)
@@ -199,12 +151,20 @@ class RiwayatViewModel @Inject constructor(
                     updateState {
                         it.copy(
                             isLoading = false,
+                            isRefresh = false,
                             error = result.exception.message ?: "Terjadi kesalahan"
                         )
                     }
                 }
 
-                is ApiCondition.AppLoading -> Unit
+                is ApiCondition.AppLoading -> {
+                    updateState {
+                        it.copy(
+                            isLoading = true,
+                            error = null
+                        )
+                    }
+                }
             }
         }
     }

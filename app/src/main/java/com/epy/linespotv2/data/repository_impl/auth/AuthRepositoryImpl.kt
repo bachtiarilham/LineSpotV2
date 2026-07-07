@@ -2,6 +2,7 @@ package com.epy.linespotv2.data.repository_impl.auth
 
 import com.epy.linespotv2.core.network.ApiCondition
 import com.epy.linespotv2.core.preferences.AppPreferences
+import com.epy.linespotv2.core.preferences.TarifItem
 import com.epy.linespotv2.data.remote.api.ApiService
 import com.epy.linespotv2.data.remote.mapper.auth.prefs.toPrefs
 import com.epy.linespotv2.data.remote.mapper.auth.toDomain
@@ -54,22 +55,23 @@ class AuthRepositoryImpl @Inject constructor(
         try {
             val data = api.getCurrentUser().data?.toDomain()
                 ?: throw Exception("Data profil tidak ditemukan")
-            // Sinkron ke prefs supaya data lokal selalu fresh
+
             prefs.fullName = data.fullName
-            prefs.email    = data.email
-            prefs.phone    = data.phone
+            prefs.email = data.email
+            prefs.phone = data.phone
             prefs.username = data.username
             prefs.nik = data.nik
             prefs.userId = data.userId
             prefs.roleId = data.role
             prefs.zona = data.zona
             prefs.lokasi = data.lokasi
-//            prefs.tarif = data.tarif.map { tarif ->
-//                TarifItem(
-//                    kendaraan = tarif.kendaraan,
-//                    nominal = tarif.nominal.toInt()
-//                )
-//            }
+            prefs.tarif = data.tarif.map { tarif ->
+                TarifItem(
+                    kendaraan = tarif.kendaraan,
+                    nominal = tarif.nominal.toInt()
+                )
+            }
+
             ApiCondition.AppSuccess(data)
         } catch (e: Exception) {
             ApiCondition.AppFailure(e)

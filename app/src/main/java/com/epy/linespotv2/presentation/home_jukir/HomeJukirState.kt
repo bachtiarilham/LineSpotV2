@@ -1,12 +1,12 @@
-package com.epy.linespotv2.presentation.home_customer
+package com.epy.linespotv2.presentation.home_jukir
 
 import com.epy.linespotv2.domain.model.home.HomeResponseModel
 
-data class HomeState (
+data class HomeJukirState (
     val isLoading: Boolean = false,
     val isRefresh: Boolean = false,
     val error: String? = null,
-    val homeEffect: HomeEffect? = null,
+    val homeJukirEffect: HomeJukirEffect? = null,
     val homeResponseModel: HomeResponseModel? = null
 )
 

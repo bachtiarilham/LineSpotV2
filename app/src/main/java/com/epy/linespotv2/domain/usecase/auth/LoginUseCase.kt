@@ -21,8 +21,8 @@ class LoginUseCase @Inject constructor(
             return@withContext ApiCondition.AppFailure(errorEmailKosong)
         }
 
-        if (!reqModel.identity.isValidEmail())
-            return@withContext ApiCondition.AppFailure(Exception("Format email tidak valid"))
+//        if (!reqModel.identity.isValidEmail())
+//            return@withContext ApiCondition.AppFailure(Exception("Format email tidak valid"))
 
         if (reqModel.password.isBlank()){
             val errorPasswordKosong = Exception("Password tidak boleh kosong")

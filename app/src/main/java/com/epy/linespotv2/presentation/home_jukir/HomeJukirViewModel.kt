@@ -9,37 +9,35 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(
+class HomeJukirViewModel @Inject constructor(
     private val doHomeUseCase: HomeUseCase
-) : BaseViewModel<HomeIntent, HomeState>(HomeState()) {
+) : BaseViewModel<HomeJukirIntent, HomeJukirState>(HomeJukirState()) {
 
-    override fun onIntent(intent: HomeIntent) {
+    override fun onIntent(intent: HomeJukirIntent) {
         when (intent) {
-            is HomeIntent.loadHome -> loadHome(isRefresh = false)
-            is HomeIntent.clickProfile -> sendEffect(HomeEffect.NavigateToSettings)
-            is HomeIntent.clickBantuan -> sendEffect(HomeEffect.NavigateToBantuan)
-            is HomeIntent.clickTopUp -> sendEffect(HomeEffect.NavigateToTopUp)
-            is HomeIntent.clickInputManual -> sendEffect(HomeEffect.NavigateToInputManual)
-            is HomeIntent.clickLaporan -> sendEffect(HomeEffect.NavigateToLaporan)
-            is HomeIntent.clickRiwayat -> sendEffect(HomeEffect.NavigateToRiwayat)
-            is HomeIntent.clickScanTiket -> sendEffect(HomeEffect.NavigateToScanTicket)
-            is HomeIntent.clickNotification -> sendEffect(
-                HomeEffect.ShowToast(message = "Notifikasi diklik")
-            )
-            is HomeIntent.dismissError -> updateState { it.copy(error = null) }
+            is HomeJukirIntent.loadHomeJukir -> loadHome()
+            is HomeJukirIntent.clickProfile -> sendEffect(HomeJukirEffect.NavigateToSettings)
+            is HomeJukirIntent.clickBantuan -> sendEffect(HomeJukirEffect.NavigateToBantuan)
+            is HomeJukirIntent.clickTopUp -> sendEffect(HomeJukirEffect.NavigateToTopUp)
+            is HomeJukirIntent.clickInputManual -> sendEffect(HomeJukirEffect.NavigateToInputManual)
+            is HomeJukirIntent.clickLaporan -> sendEffect(HomeJukirEffect.NavigateToLaporan)
+            is HomeJukirIntent.clickRiwayat -> sendEffect(HomeJukirEffect.NavigateToRiwayat)
+            is HomeJukirIntent.clickScanTiket -> sendEffect(HomeJukirEffect.NavigateToScanTicket)
+            is HomeJukirIntent.clickNotification -> sendEffect(HomeJukirEffect.NavigateToNotification)
+            is HomeJukirIntent.dismissError -> updateState { it.copy(error = null) }
         }
     }
 
     fun consumeEffect() {
-        updateState { it.copy(homeEffect = null) }
+        updateState { it.copy(homeJukirEffect = null) }
     }
 
-    private fun loadHome(isRefresh: Boolean = false) {
+    private fun loadHome() {
         viewModelScope.launch {
             updateState {
                 it.copy(
-                    isLoading = !isRefresh,
-                    isRefresh = isRefresh,
+                    isLoading = true,
+                    isRefresh = false,
                     error = null
                 )
             }
@@ -49,8 +47,8 @@ class HomeViewModel @Inject constructor(
                     is ApiCondition.AppLoading -> {
                         updateState {
                             it.copy(
-                                isLoading = !isRefresh,
-                                isRefresh = isRefresh,
+                                isLoading = true,
+                                isRefresh = false,
                                 error = null
                             )
                         }
@@ -71,7 +69,7 @@ class HomeViewModel @Inject constructor(
                         val errorMessage = result.exception.message ?: "Terjadi kesalahan"
 
                         if (errorMessage.isSessionExpiredMessage()) {
-                            sendEffect(HomeEffect.SessionExpired)
+                            sendEffect(HomeJukirEffect.SessionExpired)
                         }
 
                         updateState {
@@ -87,8 +85,8 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun sendEffect(effect: HomeEffect) {
-        updateState { it.copy(homeEffect = effect) }
+    private fun sendEffect(effect: HomeJukirEffect) {
+        updateState { it.copy(homeJukirEffect = effect) }
     }
 
     private fun String.isSessionExpiredMessage(): Boolean {

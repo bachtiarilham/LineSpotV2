@@ -15,7 +15,7 @@ import com.epy.linespotv2.data.local.entity.HomeEntity
         HomeEntity::class
 
        ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

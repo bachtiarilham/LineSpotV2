@@ -63,9 +63,7 @@ import com.epy.linespotv2.core.ui.theme.White
 import com.epy.linespotv2.domain.model.home.HomeEventItem
 import com.epy.linespotv2.domain.model.home.HomeResponseModel
 import com.epy.linespotv2.domain.model.home.HomeNewsItem
-import com.epy.linespotv2.domain.model.home.HomeSummaryInfo
 import com.epy.linespotv2.domain.model.home.HomeWarnings
-import com.epy.linespotv2.domain.model.home.JukirSummaryInfo
 import com.epy.linespotv2.domain.model.home.Profile
 import java.text.NumberFormat
 import java.util.Locale
@@ -79,7 +77,7 @@ private data class QuickActionItem(
 )
 
 @Composable
-fun HomeScreen(
+fun HomeCustomerScreen(
     onNavigateToSettings: () -> Unit = {},
     onNavigateToPayment: () -> Unit = {},
     onNavigateToSubscription: () -> Unit = {},
@@ -88,13 +86,13 @@ fun HomeScreen(
     onNavigateToPromo: () -> Unit = {},
     onNavigateToBooking: () -> Unit = {},
     onNavigateToLayananLain: () -> Unit = {},
-    viewModel: HomeViewModel = hiltViewModel(),
+    viewModel: HomeCustomerViewModel = hiltViewModel(),
     bottomBar: @Composable () -> Unit = {}
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        viewModel.onIntent(HomeIntent.LoadHome)
+        viewModel.onIntent(HomeCustomerIntent.LoadHomeCustomer)
     }
 
     Scaffold(
@@ -127,7 +125,7 @@ fun HomeScreen(
                 }
                 else -> ErrorScreen(
                     message = state.error ?: "Terjadi kesalahan",
-                    onRetry = { viewModel.onIntent(HomeIntent.LoadHome) }
+                    onRetry = { viewModel.onIntent(HomeCustomerIntent.LoadHomeCustomer) }
                 )
             }
         }
@@ -137,8 +135,8 @@ fun HomeScreen(
 @Composable
 fun HomeScreenContent(
     home: HomeResponseModel,
-    state: HomeState,
-    onIntent: (HomeIntent) -> Unit,
+    state: HomeCustomerState,
+    onIntent: (HomeCustomerIntent) -> Unit,
     consumeEffect: () -> Unit,
     onNavigateToTopUp: () -> Unit,
     onNavigateToPayment: () -> Unit,
@@ -149,17 +147,17 @@ fun HomeScreenContent(
     onNavigateToBooking: () -> Unit,
     onNavigateToPromo: () -> Unit,
 ) {
-    LaunchedEffect(state.homeEffect) {
-        when (state.homeEffect) {
-            is HomeEffect.NavigateToTopUp -> { onNavigateToTopUp(); consumeEffect() }
-            is HomeEffect.NavigateToSettings -> { onNavigateToSettings(); consumeEffect() }
-            is HomeEffect.NavigateToPayment -> { onNavigateToPayment(); consumeEffect() }
-            is HomeEffect.NavigateToSubscription -> { onNavigateToSubscription(); consumeEffect() }
-            is HomeEffect.ShowToast -> consumeEffect()
-            is HomeEffect.SessionExpired -> { onNavigateToLogin(); consumeEffect() }
-            is HomeEffect.NavigateToLayananLain -> { onNavigateToLayananLain(); consumeEffect() }
-            is HomeEffect.NavigateToPromo -> { onNavigateToPromo(); consumeEffect() }
-            is HomeEffect.NavigateToBooking -> { onNavigateToBooking(); consumeEffect() }
+    LaunchedEffect(state.homeCustomerEffect) {
+        when (state.homeCustomerEffect) {
+            is HomeCustomerEffect.NavigateToTopUp -> { onNavigateToTopUp(); consumeEffect() }
+            is HomeCustomerEffect.NavigateToSettings -> { onNavigateToSettings(); consumeEffect() }
+            is HomeCustomerEffect.NavigateToPayment -> { onNavigateToPayment(); consumeEffect() }
+            is HomeCustomerEffect.NavigateToSubscription -> { onNavigateToSubscription(); consumeEffect() }
+            is HomeCustomerEffect.ShowToast -> consumeEffect()
+            is HomeCustomerEffect.SessionExpired -> { onNavigateToLogin(); consumeEffect() }
+            is HomeCustomerEffect.NavigateToLayananLain -> { onNavigateToLayananLain(); consumeEffect() }
+            is HomeCustomerEffect.NavigateToPromo -> { onNavigateToPromo(); consumeEffect() }
+            is HomeCustomerEffect.NavigateToBooking -> { onNavigateToBooking(); consumeEffect() }
             null -> Unit
         }
     }
@@ -174,27 +172,27 @@ fun HomeScreenContent(
     ) {
         HomeHeader(
             profile = home.profile,
-            onProfileClick = { onIntent(HomeIntent.clickProfile) },
-            onNotificationClick = { onIntent(HomeIntent.clickNotification(0)) }
+            onProfileClick = { onIntent(HomeCustomerIntent.clickProfile) },
+            onNotificationClick = { onIntent(HomeCustomerIntent.clickNotification(0)) }
         )
 
         BalanceCard(
-            balance = home.summary.saldo,
-            onTopUp = { onIntent(HomeIntent.clickTopUp) }
+            balance = home.profile.saldo,
+            onTopUp = { onIntent(HomeCustomerIntent.clickTopUp) }
         )
 
         PremiumCard(
-            expiredDate = home.summary.expiredDate,
-            onSubscribe = { onIntent(HomeIntent.clickSubscribe) }
+            expiredDate = home.profile.expiredDate,
+            onSubscribe = { onIntent(HomeCustomerIntent.clickSubscribe) }
         )
 
         QuickActions(
-            onTopUpSaldo = { onIntent(HomeIntent.clickPayment) },
-            onMembership = { onIntent(HomeIntent.clickSubscribe) },
-            onParkirOnStreet = { onIntent(HomeIntent.clickPayment) },
-            onBookingParkir = { onIntent(HomeIntent.clickBooking) },
-            onPromo = { onIntent(HomeIntent.clickPromo) },
-            onLayananLain = { onIntent(HomeIntent.clickLayananLain) }
+            onTopUpSaldo = { onIntent(HomeCustomerIntent.clickPayment) },
+            onMembership = { onIntent(HomeCustomerIntent.clickSubscribe) },
+            onParkirOnStreet = { onIntent(HomeCustomerIntent.clickPayment) },
+            onBookingParkir = { onIntent(HomeCustomerIntent.clickBooking) },
+            onPromo = { onIntent(HomeCustomerIntent.clickPromo) },
+            onLayananLain = { onIntent(HomeCustomerIntent.clickLayananLain) }
         )
 
         SectionTitle(
@@ -699,17 +697,6 @@ fun HomeScreenContentPreview() {
             name = "Andi",
             photoUrl = null
         ),
-        summary = HomeSummaryInfo(
-            saldo = 125_000L,
-            expiredDate = "31 Desember 2026",
-        ),
-        jukirSummary = JukirSummaryInfo(
-            pendapatan = 125000,
-            lokasi = "Jl Purnawarman",
-            area = "B",
-            zona = "Bluechip"
-
-        ),
         events = listOf(
             HomeEventItem(
                 id = "ev-1",
@@ -737,7 +724,7 @@ fun HomeScreenContentPreview() {
 
     HomeScreenContent(
         home = mockHomeResponseModel,
-        state = HomeState(
+        state = HomeCustomerState(
             isLoading = false,
             homeResponseModel = mockHomeResponseModel
         ),

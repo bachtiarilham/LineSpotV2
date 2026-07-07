@@ -23,11 +23,11 @@ fun UserDto.toDomain(): UserModel = UserModel(
     updatedAt = updatedAt
 )
 
-private fun List<TarifDto>.toDomain(): List<TarifModel> {
-    return map { tarif ->
+private fun List<TarifDto?>?.toDomain(): List<TarifModel> {
+    return this.orEmpty().filterNotNull().map { tarif ->
         TarifModel(
             kendaraan = tarif.kendaraan,
-            nominal = tarif.nominal.toLongOrNull() ?: 0L
+            nominal = tarif.nominal
         )
     }
 }

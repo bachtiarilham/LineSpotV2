@@ -75,16 +75,56 @@ fun RiwayatScreen(
         when {
             state.isLoading -> FullScreenLoading()
             state.riwayatResponseModel != null -> {
-                RiwayatScreenContent(
-                    riwayat = state.riwayatResponseModel!!,
-                    onItemClick = { viewModel.onIntent(RiwayatIntent.clickRiwayatDetail) },
-                    onBack = onBack
-                )
+                val riwayat = state.riwayatResponseModel!!
+                if (riwayat.sections.isEmpty()) {
+                    EmptyRiwayatScreen(onBack = onBack)
+                } else {
+                    RiwayatScreenContent(
+                        riwayat = riwayat,
+                        onItemClick = { viewModel.onIntent(RiwayatIntent.clickRiwayatDetail) },
+                        onBack = onBack
+                    )
+                }
             }
 
             else -> ErrorScreen(
                 message = state.error ?: "Terjadi kesalahan",
                 onRetry = { viewModel.onIntent(RiwayatIntent.loadPage) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun EmptyRiwayatScreen(onBack: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(PageBg)
+            .systemBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        HeaderBar(title = "Riwayat", onBack = onBack)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Tidak ada riwayat transaksi",
+                color = DarkBlue,
+                style = MaterialTheme.typography.headlineSmall,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Riwayat transaksi akan muncul setelah ada aktivitas parkir.",
+                color = GreyText,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center
             )
         }
     }

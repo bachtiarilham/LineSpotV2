@@ -19,8 +19,8 @@ sealed class RiwayatIntent {
     data class submitFilter(
         val startDate: String,
         val endDate: String,
-        val payment: String,
-        val vehicle: String,
+        val payment: RiwayatPaymentFilter,
+        val vehicle: RiwayatVehicleFilter,
         val lokasi: String
     ) : RiwayatIntent()
 }

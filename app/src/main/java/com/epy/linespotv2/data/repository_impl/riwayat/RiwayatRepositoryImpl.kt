@@ -1,5 +1,6 @@
 package com.epy.linespotv2.data.repository_impl.riwayat
 
+import androidx.datastore.preferences.protobuf.LazyStringArrayList.emptyList
 import com.epy.linespotv2.core.network.ApiCondition
 import com.epy.linespotv2.data.remote.api.ApiService
 import com.epy.linespotv2.data.remote.dto.riwayat.RiwayatRequestDto
@@ -18,21 +19,22 @@ class RiwayatRepositoryImpl @Inject constructor(
 
     override suspend fun getRiwayatPage(
         reqModel: RiwayatRequestModel
-    ): ApiCondition<RiwayatResponseModel> =
-        try {
+    ): ApiCondition<RiwayatResponseModel> {
+        return try {
             val response = api.getRiwayatPage(reqModel.toDto())
             val message = response.message?.takeIf { it.isNotBlank() }
+
             if (!response.success) {
-                ApiCondition.AppFailure(
+                return ApiCondition.AppFailure(
                     IllegalStateException(message ?: "Permintaan riwayat gagal")
                 )
             }
+
             val body = response.data
-            if (body == null) {
-                ApiCondition.AppFailure(
-                    IllegalStateException(message ?: "Data riwayat kosong")
-                )
+            if (body?.sections == emptyList()) {
+                return ApiCondition.AppSuccess(body.toDomain())
             }
+
             ApiCondition.AppSuccess(body.toDomain())
         } catch (e: HttpException) {
             val errorMessage = when (e.code()) {
@@ -48,4 +50,5 @@ class RiwayatRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             ApiCondition.AppFailure(e)
         }
+    }
 }

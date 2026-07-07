@@ -1,14 +1,14 @@
 package com.epy.linespotv2.domain.model.riwayat
 
 data class RiwayatRequestModel(
-    val userId : Long,
-    val username : String,
-    val roleId : Long,
-    val startDate : String,
-    val endDate : String,
-    val payment : String,
-    val vehicle : String,
-    val lokasi : String,
+    val userId: Long,
+    val username: String,
+    val roleId: Long,
+    val startDate: String,
+    val endDate: String,
+    val payment: RiwayatPaymentFilter,
+    val vehicle: RiwayatVehicleFilter,
+    val lokasi: String,
 )
 
 enum class RiwayatPaymentFilter {
