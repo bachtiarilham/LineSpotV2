@@ -27,7 +27,4 @@ object DatabaseModule {
     fun provideHomeDao(database: AppDatabase): HomeDao {
         return database.homeDao()
     }
-
-//    @Provides
-//    fun provideLoginDao(db : AppDatabase) : LoginDao = db.loginDao()
 }

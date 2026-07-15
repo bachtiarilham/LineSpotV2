@@ -107,15 +107,6 @@ class AppPreferences @Inject constructor(
         set(value) = prefs.edit { putString(KEY_TARIF, value.toJson()) }
 
     fun saveUser(user: UserPrefsModel) {
-        token = user.token
-        refreshtoken = user.refreshToken
-        userId = user.userId
-        username = user.username
-        fullName = user.fullName
-        email = user.email
-        phone = user.phone
-        nik = user.nik
-        roleId = user.roleId
         zona = user.zona
         lokasi = user.lokasi
         tarif = user.tarif.map { item ->

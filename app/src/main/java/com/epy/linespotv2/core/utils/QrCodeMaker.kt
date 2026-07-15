@@ -2,7 +2,7 @@ package com.epy.linespotv2.core.utils
 
 import android.graphics.Bitmap
 import android.graphics.Color
-import com.epy.linespotv2.domain.model.payment.IsiQr
+import com.epy.linespotv2.domain.model.parking.PostParkingRespModel
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
@@ -11,24 +11,18 @@ import androidx.core.graphics.set
 
 object QrCodeMaker {
 
-    fun buildPayload(isiQr: IsiQr): String {
+    fun buildPayload(Qr: PostParkingRespModel): String {
         return JSONObject().apply {
-            put("session_id", isiQr.sessionId)
-            put("plat_nomor", isiQr.plat_nomor)
-            put("lokasi", isiQr.lokasi)
-            put("waktu_masuk", isiQr.waktu_masuk)
-            put("durasi", isiQr.durasi)
-            put("nominal", isiQr.nominal)
-            put("sudah_bayar", isiQr.isPaid)
+            put("session_id", Qr.qrString)
         }.toString()
     }
 
     fun createBitmap(
-        isiQr: IsiQr,
+        Qr: PostParkingRespModel,
         size: Int = 768
     ): Bitmap {
         return createBitmapFromText(
-            content = buildPayload(isiQr),
+            content = buildPayload(Qr),
             size = size
         )
     }

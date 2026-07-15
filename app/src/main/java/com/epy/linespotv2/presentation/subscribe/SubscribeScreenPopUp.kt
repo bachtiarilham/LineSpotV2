@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -51,6 +52,7 @@ fun SubscribeScreenPopUpScreen(
 
     Box(
         modifier = Modifier
+            .fillMaxSize()
             .fillMaxWidth()
             .background(Color(0xFF000000).copy(alpha = 0.35f))
             .padding(top = 12.dp)
@@ -102,7 +104,7 @@ fun SubscribeScreenPopUpScreen(
                 )
 
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    selectedPackage.benefit.forEach { benefit ->
+                    selectedPackage.benefit.orEmpty().forEach { benefit ->
                         BenefitRow(text = benefit)
                     }
                 }
@@ -116,7 +118,7 @@ fun SubscribeScreenPopUpScreen(
                         style = MaterialTheme.typography.bodySmall
                     )
                     Text(
-                        text = "${selectedPackage.harga.toRupiah()} /${selectedPackage.masaBerlaku}",
+                        text = "${(selectedPackage.harga ?: 0L).toRupiah()} /${selectedPackage.masaBerlaku.orEmpty()}",
                         color = DarkBlue,
                         style = MaterialTheme.typography.headlineMedium
                     )
@@ -158,7 +160,7 @@ private fun PackageSummaryCard(selectedPackage: PackageCard) {
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = selectedPackage.namaPaket,
+                    text = selectedPackage.namaPaket.orEmpty(),
                     color = DarkBlue,
                     style = MaterialTheme.typography.headlineSmall
                 )
@@ -177,12 +179,12 @@ private fun PackageSummaryCard(selectedPackage: PackageCard) {
             }
 
             Text(
-                text = "${selectedPackage.harga.toRupiah()} /${selectedPackage.masaBerlaku}",
+                text = "${(selectedPackage.harga ?: 0L).toRupiah()} /${selectedPackage.masaBerlaku.orEmpty()}",
                 color = DarkBlue,
                 style = MaterialTheme.typography.titleLarge
             )
             Text(
-                text = "Diskon ${selectedPackage.jumlahDiskon}%  •  ${selectedPackage.deskripsi}",
+                text = "Diskon ${selectedPackage.jumlahDiskon ?: 0L}%  •  ${selectedPackage.deskripsi.orEmpty()}",
                 color = DarkBlue,
                 style = MaterialTheme.typography.bodyMedium
             )

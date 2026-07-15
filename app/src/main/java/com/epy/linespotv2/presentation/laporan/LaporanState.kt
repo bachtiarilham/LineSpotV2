@@ -1,6 +1,7 @@
 package com.epy.linespotv2.presentation.laporan
 
 import com.epy.linespotv2.domain.model.laporan.LaporanResponseModel
+import com.epy.linespotv2.presentation.laporan.ui_model.LaporanScreenUiModel
 
 data class LaporanState(
     val isLoading: Boolean = false,
@@ -8,8 +9,5 @@ data class LaporanState(
     val error: String? = null,
     val laporanEffect: LaporanEffect? = null,
     val laporanResponseModel: LaporanResponseModel? = null,
-    val isLoadingLokasi: Boolean = false,
-    val lokasiList: List<String> = listOf("Semua Area"),
-    val selectedLokasi: String = "Semua Area",
-    val errorLokasi: String? = null,
+    val screenUiModel: LaporanScreenUiModel? = null,
 )

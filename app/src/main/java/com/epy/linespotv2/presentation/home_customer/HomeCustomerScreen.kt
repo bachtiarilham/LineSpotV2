@@ -1,4 +1,4 @@
-﻿package com.epy.linespotv2.presentation.home_customer
+package com.epy.linespotv2.presentation.home_customer
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,12 +21,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Badge
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.LocalParking
 import androidx.compose.material.icons.filled.NotificationsNone
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -58,15 +54,12 @@ import com.epy.linespotv2.core.ui.theme.GreyText
 import com.epy.linespotv2.core.ui.theme.LightGold
 import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
-import com.epy.linespotv2.core.ui.theme.Tangerine
 import com.epy.linespotv2.core.ui.theme.White
-import com.epy.linespotv2.domain.model.home.HomeEventItem
-import com.epy.linespotv2.domain.model.home.HomeResponseModel
-import com.epy.linespotv2.domain.model.home.HomeNewsItem
-import com.epy.linespotv2.domain.model.home.HomeWarnings
-import com.epy.linespotv2.domain.model.home.Profile
-import java.text.NumberFormat
-import java.util.Locale
+import com.epy.linespotv2.domain.model.home.CustomerHomeModel
+import com.epy.linespotv2.presentation.home_customer.ui_model.HomeCustomerActivityUi
+import com.epy.linespotv2.presentation.home_customer.ui_model.HomeCustomerPromoUi
+import com.epy.linespotv2.presentation.home_customer.ui_model.HomeCustomerQuickActionUi
+import com.epy.linespotv2.presentation.home_customer.ui_model.HomeCustomerUiModel
 
 private data class QuickActionItem(
     val title: String,
@@ -107,12 +100,12 @@ fun HomeCustomerScreen(
         ) {
             when {
                 state.isLoading -> FullScreenLoading()
-                state.homeResponseModel != null -> {
+                state.customerHomeModel != null && state.uiModel != null -> {
                     HomeScreenContent(
-                        home = state.homeResponseModel!!,
+                        uiModel = state.uiModel!!,
                         state = state,
                         onIntent = viewModel::onIntent,
-                        consumeEffect = { viewModel.consumeEffect() },
+                        consumeEffect = viewModel::consumeEffect,
                         onNavigateToPayment = onNavigateToPayment,
                         onNavigateToSettings = onNavigateToSettings,
                         onNavigateToSubscription = onNavigateToSubscription,
@@ -120,7 +113,7 @@ fun HomeCustomerScreen(
                         onNavigateToLogin = onNavigateToLogin,
                         onNavigateToPromo = onNavigateToPromo,
                         onNavigateToBooking = onNavigateToBooking,
-                        onNavigateToLayananLain = onNavigateToLayananLain,
+                        onNavigateToLayananLain = onNavigateToLayananLain
                     )
                 }
                 else -> ErrorScreen(
@@ -134,7 +127,7 @@ fun HomeCustomerScreen(
 
 @Composable
 fun HomeScreenContent(
-    home: HomeResponseModel,
+    uiModel: HomeCustomerUiModel,
     state: HomeCustomerState,
     onIntent: (HomeCustomerIntent) -> Unit,
     consumeEffect: () -> Unit,
@@ -145,10 +138,10 @@ fun HomeScreenContent(
     onNavigateToLogin: () -> Unit,
     onNavigateToLayananLain: () -> Unit,
     onNavigateToBooking: () -> Unit,
-    onNavigateToPromo: () -> Unit,
+    onNavigateToPromo: () -> Unit
 ) {
-    LaunchedEffect(state.homeCustomerEffect) {
-        when (state.homeCustomerEffect) {
+    LaunchedEffect(state.customerHomeEffect) {
+        when (state.customerHomeEffect) {
             is HomeCustomerEffect.NavigateToTopUp -> { onNavigateToTopUp(); consumeEffect() }
             is HomeCustomerEffect.NavigateToSettings -> { onNavigateToSettings(); consumeEffect() }
             is HomeCustomerEffect.NavigateToPayment -> { onNavigateToPayment(); consumeEffect() }
@@ -171,22 +164,24 @@ fun HomeScreenContent(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         HomeHeader(
-            profile = home.profile,
+            uiModel = uiModel,
             onProfileClick = { onIntent(HomeCustomerIntent.clickProfile) },
             onNotificationClick = { onIntent(HomeCustomerIntent.clickNotification(0)) }
         )
 
         BalanceCard(
-            balance = home.profile.saldo,
+            balanceText = uiModel.balanceText,
             onTopUp = { onIntent(HomeCustomerIntent.clickTopUp) }
         )
 
         PremiumCard(
-            expiredDate = home.profile.expiredDate,
+            title = uiModel.membershipTitle,
+            expiredDate = uiModel.membershipExpiredText,
             onSubscribe = { onIntent(HomeCustomerIntent.clickSubscribe) }
         )
 
         QuickActions(
+            items = uiModel.quickActions,
             onTopUpSaldo = { onIntent(HomeCustomerIntent.clickPayment) },
             onMembership = { onIntent(HomeCustomerIntent.clickSubscribe) },
             onParkirOnStreet = { onIntent(HomeCustomerIntent.clickPayment) },
@@ -201,10 +196,10 @@ fun HomeScreenContent(
         )
 
         ActivityCard(
-            title = "Sedang parkir di",
-            subtitle = "Jl. Sudirman No. 45",
-            detail = "Durasi 1 jam 20 menit",
-            actionText = "Lihat Detail"
+            title = uiModel.latestActivity.title,
+            subtitle = uiModel.latestActivity.subtitle,
+            detail = uiModel.latestActivity.detail,
+            actionText = uiModel.latestActivity.actionText
         )
 
         SectionTitle(
@@ -213,9 +208,9 @@ fun HomeScreenContent(
         )
 
         PromoCard(
-            title = "Diskon 20% Top Up Akhir Pekan",
-            description = "Isi saldo sekarang dan dapatkan bonus khusus pengguna aktif.",
-            badge = "Promo"
+            title = uiModel.promo.title,
+            description = uiModel.promo.description,
+            badge = uiModel.promo.badge
         )
 
         Spacer(modifier = Modifier.height(72.dp))
@@ -224,7 +219,7 @@ fun HomeScreenContent(
 
 @Composable
 private fun HomeHeader(
-    profile: Profile,
+    uiModel: HomeCustomerUiModel,
     onProfileClick: () -> Unit,
     onNotificationClick: () -> Unit
 ) {
@@ -235,7 +230,7 @@ private fun HomeHeader(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Hi, ${profile.name.ifBlank { "Unknown Customer" }} 👋",
+                text = "Hi, ${uiModel.greetingName} 👋",
                 color = DarkBlue,
                 style = MaterialTheme.typography.headlineLarge
             )
@@ -272,29 +267,18 @@ private fun HomeHeader(
                     .clip(CircleShape)
                     .clickable { onProfileClick() }
                     .background(
-                        Brush.linearGradient(
-                            listOf(DarkBlue, SmartBlue)
-                        )
+                        Brush.linearGradient(listOf(DarkBlue, SmartBlue))
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                if (profile.photoUrl != null) {
-                    AsyncImage(
-                        model = profile.photoUrl,
-                        contentDescription = "Foto Profil",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(46.dp)
-                            .clip(CircleShape)
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Foto Profil Tidak Ke Load",
-                        tint = White,
-                        modifier = Modifier.size(26.dp)
-                    )
-                }
+                AsyncImage(
+                    model = uiModel.photoUrl,
+                    contentDescription = "Foto Profil",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(CircleShape)
+                )
             }
         }
     }
@@ -302,7 +286,7 @@ private fun HomeHeader(
 
 @Composable
 private fun BalanceCard(
-    balance: Long,
+    balanceText: String,
     onTopUp: () -> Unit
 ) {
     Card(
@@ -321,66 +305,59 @@ private fun BalanceCard(
                 )
                 .padding(20.dp)
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(34.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.14f)),
-                        contentAlignment = Alignment.Center
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(34.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.14f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AccountBalanceWallet,
+                        contentDescription = "Saldo",
+                        tint = White,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Column {
+                    Text(
+                        text = "Saldo Anda",
+                        color = White.copy(alpha = 0.75f),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = balanceText,
+                        color = White,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Surface(
+                        color = White,
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier.clickable { onTopUp() }
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.AccountBalanceWallet,
-                            contentDescription = "Saldo",
-                            tint = White,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column {
                         Text(
-                            text = "Saldo Anda",
-                            color = White.copy(alpha = 0.75f),
-                            style = MaterialTheme.typography.bodyMedium
+                            text = "Top Up",
+                            color = SmartBlue,
+                            style = MaterialTheme.typography.labelLarge,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
                         )
-                        Text(
-                            text = balance.toRupiah(),
-                            color = White,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        Surface(
-                            color = White,
-                            shape = RoundedCornerShape(14.dp),
-                            modifier = Modifier.clickable { onTopUp() }
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "Top Up",
-                                    color = SmartBlue,
-                                    style = MaterialTheme.typography.labelLarge
-                                )
-                            }
-                        }
                     }
                 }
             }
-
-
         }
     }
 }
 
 @Composable
 private fun PremiumCard(
+    title: String,
     expiredDate: String,
     onSubscribe: () -> Unit
 ) {
@@ -423,7 +400,7 @@ private fun PremiumCard(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = "Premium Gold",
+                            text = title,
                             color = White,
                             style = MaterialTheme.typography.titleLarge
                         )
@@ -434,26 +411,17 @@ private fun PremiumCard(
                         )
                     }
                 }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                Surface(
+                    color = Color(0xFF6A3E00).copy(alpha = 0.35f),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.clickable { onSubscribe() }
                 ) {
-                    Surface(
-                        color = Color(0xFF6A3E00).copy(alpha = 0.35f),
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier.clickable { onSubscribe() }
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Daftar",
-                                color = White,
-                                style = MaterialTheme.typography.labelLarge
-                            )
-                        }
-                    }
+                    Text(
+                        text = "Daftar",
+                        color = White,
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                    )
                 }
             }
         }
@@ -462,6 +430,7 @@ private fun PremiumCard(
 
 @Composable
 private fun QuickActions(
+    items: List<HomeCustomerQuickActionUi>,
     onTopUpSaldo: () -> Unit,
     onMembership: () -> Unit,
     onParkirOnStreet: () -> Unit,
@@ -469,14 +438,22 @@ private fun QuickActions(
     onPromo: () -> Unit,
     onLayananLain: () -> Unit
 ) {
-    val items = listOf(
-//        QuickActionItem("Top Up Saldo", Icons.Default.CreditCard, Color(0xFFEAF2FF), SmartBlue, onTopUpSaldo),
-//        QuickActionItem("Membership", Icons.Default.Star, Color(0xFFFFF0E3), Tangerine, onMembership),
-//        QuickActionItem("Parkir On Street", Icons.Default.LocalParking, Color(0xFFE3F1EB), Color(0xFF4CAF90), onParkirOnStreet),
-        QuickActionItem("Booking Parkir", Icons.Default.GridView, Color(0xFFEAF2FF), SmartBlue, onBookingParkir),
-        QuickActionItem("Promo", Icons.Default.Storefront, Color(0xFFFFF0E3), Tangerine, onPromo),
-        QuickActionItem("Semua Layanan", Icons.Default.Build, Color(0xFFE8ECF6), GreyText, onLayananLain)
-    )
+    val actionItems = items.map { item ->
+        QuickActionItem(
+            title = item.title,
+            icon = item.icon,
+            iconBg = item.iconBg,
+            iconTint = item.iconTint,
+            onClick = when (item.key) {
+                "topup" -> onTopUpSaldo
+                "membership" -> onMembership
+                "parkir" -> onParkirOnStreet
+                "booking" -> onBookingParkir
+                "promo" -> onPromo
+                else -> onLayananLain
+            }
+        )
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -489,14 +466,8 @@ private fun QuickActions(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                items.take(3).forEach { item -> ServiceShortcut(item = item) }
+                actionItems.take(3).forEach { item -> ServiceShortcut(item = item) }
             }
-//            Row(
-//                modifier = Modifier.fillMaxWidth(),
-//                horizontalArrangement = Arrangement.SpaceBetween
-//            ) {
-//                items.drop(3).forEach { item -> ServiceShortcut(item = item) }
-//            }
         }
     }
 }
@@ -504,7 +475,9 @@ private fun QuickActions(
 @Composable
 private fun ServiceShortcut(item: QuickActionItem) {
     Column(
-        modifier = Modifier.width(82.dp).clickable { item.onClick() },
+        modifier = Modifier
+            .width(82.dp)
+            .clickable { item.onClick() },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -599,10 +572,7 @@ private fun ActivityCard(
                     Text(text = detail, color = GreyText, style = MaterialTheme.typography.labelSmall)
                 }
             }
-            Surface(
-                color = SmartBlue,
-                shape = RoundedCornerShape(12.dp)
-            ) {
+            Surface(color = SmartBlue, shape = RoundedCornerShape(12.dp)) {
                 Text(
                     text = actionText,
                     color = White,
@@ -632,10 +602,7 @@ private fun PromoCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Surface(
-                color = LightGold,
-                shape = RoundedCornerShape(10.dp)
-            ) {
+            Surface(color = LightGold, shape = RoundedCornerShape(10.dp)) {
                 Text(
                     text = badge,
                     color = DarkBlue,
@@ -673,9 +640,18 @@ private fun ErrorScreen(message: String, onRetry: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Terjadi kendala", color = DarkBlue, style = MaterialTheme.typography.headlineMedium)
+        Text(
+            text = "Terjadi kendala",
+            color = DarkBlue,
+            style = MaterialTheme.typography.headlineMedium
+        )
         Spacer(modifier = Modifier.height(12.dp))
-        Text(text = message, color = GreyText, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
+        Text(
+            text = message,
+            color = GreyText,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center
+        )
         Spacer(modifier = Modifier.height(20.dp))
         TextButton(onClick = onRetry) {
             Text("Coba Lagi", color = DarkBlue, style = MaterialTheme.typography.labelLarge)
@@ -683,50 +659,34 @@ private fun ErrorScreen(message: String, onRetry: () -> Unit) {
     }
 }
 
-private fun Long.toRupiah(): String {
-    val formatter = NumberFormat.getNumberInstance(Locale.forLanguageTag("id-ID"))
-    return "Rp ${formatter.format(this)}"
-}
-
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun HomeScreenContentPreview() {
-    val mockHomeResponseModel = HomeResponseModel(
-        profile = Profile(
-            id = 1,
-            name = "Andi",
-            photoUrl = null
+    val mockHome = CustomerHomeModel()
+    val mockUiModel = HomeCustomerUiModel(
+        greetingName = "Andi",
+        balanceText = "Rp 125.000",
+        membershipTitle = "Premium Gold",
+        membershipExpiredText = "20 Mei 2026",
+        latestActivity = HomeCustomerActivityUi(
+            title = "Sedang parkir di",
+            subtitle = "Jl. Sudirman No. 45",
+            detail = "Durasi 1 jam 20 menit",
+            actionText = "Lihat Detail"
         ),
-        events = listOf(
-            HomeEventItem(
-                id = "ev-1",
-                title = "Promo Parkir Akhir Pekan",
-                description = "Diskon khusus untuk pengguna aktif.",
-                date = "02 Juni 2026",
-                tag = "PROMO"
-            )
-        ),
-        news = listOf(
-            HomeNewsItem(
-                id = "news-1",
-                title = "Titik Parkir Baru",
-                description = "Area parkir baru telah tersedia.",
-                date = "01 Juni 2026",
-                tag = "INFO"
-            )
-        ),
-        warnings = HomeWarnings(
-            profile = null,
-            parking = "Area parkir utama hampir penuh!",
-            finance = null
+        promo = HomeCustomerPromoUi(
+            title = "Diskon 20% Top Up Akhir Pekan",
+            description = "Isi saldo sekarang dan dapatkan bonus khusus pengguna aktif.",
+            badge = "Promo"
         )
     )
 
     HomeScreenContent(
-        home = mockHomeResponseModel,
+        uiModel = mockUiModel,
         state = HomeCustomerState(
             isLoading = false,
-            homeResponseModel = mockHomeResponseModel
+            customerHomeModel = mockHome,
+            uiModel = mockUiModel
         ),
         onIntent = {},
         consumeEffect = {},
@@ -737,7 +697,6 @@ fun HomeScreenContentPreview() {
         onNavigateToLogin = {},
         onNavigateToBooking = {},
         onNavigateToLayananLain = {},
-        onNavigateToPromo ={}
-
+        onNavigateToPromo = {}
     )
 }

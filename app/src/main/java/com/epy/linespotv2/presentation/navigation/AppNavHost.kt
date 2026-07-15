@@ -9,13 +9,14 @@ import androidx.navigation.compose.rememberNavController
 import com.epy.linespotv2.presentation.riwayat.RiwayatViewModel
 import com.epy.linespotv2.presentation.auth.login.LoginScreen
 import com.epy.linespotv2.presentation.auth.register.RegisterScreen
-import com.epy.linespotv2.presentation.hasil_bayar_parkir.HasilBayarParkirScreen
+//import com.epy.linespotv2.presentation.hasil_bayar_parkir.HasilBayarParkirScreen
 import com.epy.linespotv2.presentation.home_customer.HomeCustomerScreen
 import com.epy.linespotv2.presentation.home_jukir.HomeJukirScreen
 import com.epy.linespotv2.presentation.input_manual.InputManualScreen
 import com.epy.linespotv2.presentation.input_manual.PembayaranScreen
 import com.epy.linespotv2.presentation.laporan.LaporanFilterScreen
 import com.epy.linespotv2.presentation.laporan.LaporanScreen
+import com.epy.linespotv2.presentation.laporan.LaporanViewModel
 import com.epy.linespotv2.presentation.post_qr.ScanScreen
 import com.epy.linespotv2.presentation.riwayat.DetilRiwayatScreen
 import com.epy.linespotv2.presentation.riwayat.RiwayatFilterScreen
@@ -167,16 +168,16 @@ fun AppNavHost() {
             )
         }
 
-        composable("hasil_bayar_parkir") {
-            HasilBayarParkirScreen(
-                onBack = { navController.popBackStack() },
-                onBackToHome = {
-                    navController.navigate("home_customer") {
-                        popUpTo("scan") { inclusive = true }
-                    }
-                }
-            )
-        }
+//        composable("hasil_bayar_parkir") {
+//            HasilBayarParkirScreen(
+//                onBack = { navController.popBackStack() },
+//                onBackToHome = {
+//                    navController.navigate("home_customer") {
+//                        popUpTo("scan") { inclusive = true }
+//                    }
+//                }
+//            )
+//        }
 
         composable("topup") {
         }
@@ -254,14 +255,24 @@ fun AppNavHost() {
         composable("laporanFilter") {
             LaporanFilterScreen(
                 onBack = { navController.popBackStack() },
-                onSubmit = { navController.navigate("laporan") }
+                onSubmit = { navController.navigate("laporan") {
+                    launchSingleTop = true
+                } }
             )
         }
 
         composable("laporan") {
+//            LaporanScreen(
+//                onBack = { navController.popBackStack() },
+//                onOpenFilter = { navController.navigate("laporanFilter") }
+//            )
+            val parentEntry = remember(it) {
+                navController.getBackStackEntry("laporanFilter")
+            }
+            val laporanViewModel: LaporanViewModel = hiltViewModel(parentEntry)
             LaporanScreen(
                 onBack = { navController.popBackStack() },
-                onOpenFilter = { navController.navigate("laporanFilter") }
+                viewModel = laporanViewModel
             )
         }
 

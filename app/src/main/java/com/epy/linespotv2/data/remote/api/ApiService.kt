@@ -3,21 +3,23 @@ package com.epy.linespotv2.data.remote.api
 import com.epy.linespotv2.core.network.ApiEnvelope
 import com.epy.linespotv2.data.remote.dto.auth.ChangePasswordRequestDto
 import com.epy.linespotv2.data.remote.dto.auth.LoginRequestDto
-import com.epy.linespotv2.data.remote.dto.auth.LoginResponseDto
-import com.epy.linespotv2.data.remote.dto.payment.PostPaymentParkingResponseDto
-import com.epy.linespotv2.data.remote.dto.home.HomeResponseDto
-import com.epy.linespotv2.data.remote.dto.payment.PostParkingRequestDto
-import com.epy.linespotv2.data.remote.dto.laporan.LaporanResponseDto
-import com.epy.linespotv2.data.remote.dto.laporan.LaporanRequestDto
-import com.epy.linespotv2.data.remote.dto.helper.LokasiDto
-import com.epy.linespotv2.data.remote.dto.payment.PostParkingResponseDto
+import com.epy.linespotv2.data.remote.dto.auth.LoginRespDto
 import com.epy.linespotv2.data.remote.dto.auth.RefreshTokenRequestDto
 import com.epy.linespotv2.data.remote.dto.auth.RegisterRequestDto
 import com.epy.linespotv2.data.remote.dto.auth.TokenSetDto
-import com.epy.linespotv2.data.remote.dto.auth.UserDto
-import com.epy.linespotv2.data.remote.dto.riwayat.RiwayatResponseDto
-import com.epy.linespotv2.data.remote.dto.riwayat.RiwayatRequestDto
+import com.epy.linespotv2.data.remote.dto.helper.LokasiResponseDto
+import com.epy.linespotv2.data.remote.dto.home.CustomerHomeDto
+import com.epy.linespotv2.data.remote.dto.home.JukirHomeDto
+import com.epy.linespotv2.data.remote.dto.laporan.LaporanRequestDto
+import com.epy.linespotv2.data.remote.dto.laporan.LaporanResponseDto
+import com.epy.linespotv2.data.remote.dto.parking.PostParkingRequestDto
+import com.epy.linespotv2.data.remote.dto.parking.PostParkingResponseDto
 import com.epy.linespotv2.data.remote.dto.payment.PostPaymentParkingRequestDto
+import com.epy.linespotv2.data.remote.dto.payment.PostPaymentParkingResponseDto
+import com.epy.linespotv2.data.remote.dto.profile.CustomerDto
+import com.epy.linespotv2.data.remote.dto.profile.JukirDto
+import com.epy.linespotv2.data.remote.dto.riwayat.RiwayatRequestDto
+import com.epy.linespotv2.data.remote.dto.riwayat.RiwayatResponseDto
 import com.epy.linespotv2.data.remote.dto.subscription.SubscribeResponseDto
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -29,7 +31,7 @@ interface ApiService {
     @POST("api/v2/linespot/auth/login")
     suspend fun login(
         @Body request: LoginRequestDto
-    ): ApiEnvelope<LoginResponseDto>
+    ): ApiEnvelope<LoginRespDto>
     @POST("api/v2/linespot/auth/refreshToken")
     suspend fun refreshToken(
         @Body request: RefreshTokenRequestDto
@@ -44,8 +46,10 @@ interface ApiService {
     ): ApiEnvelope<String>
 
     //home
-    @GET ("api/v2/linespot/home")
-    suspend fun getHomePage() : ApiEnvelope<HomeResponseDto>
+    @GET ("api/v2/linespot/customer_home")
+    suspend fun getCustomerHomePage() : ApiEnvelope<CustomerHomeDto>
+    @GET ("api/v2/linespot/jukir_home")
+    suspend fun getJukirHomePage() : ApiEnvelope<JukirHomeDto>
 
     //laporan
     @POST("api/v2/linespot/laporan")
@@ -78,12 +82,14 @@ interface ApiService {
     ) : ApiEnvelope<PostPaymentParkingResponseDto>
 
     //settings
-    @GET("api/v2/linespot/users/me")
-    suspend fun getCurrentUser(): ApiEnvelope<UserDto>
+    @GET("api/v2/linespot/user/jukir/me")
+    suspend fun getJukirUser(): ApiEnvelope<JukirDto>
+    @GET("api/v2/linespot/users/customer/me")
+    suspend fun getCustomerUser(): ApiEnvelope<CustomerDto>
 
     //helper
     @GET("api/v2/linespot/get_lokasi")
-    suspend fun getLokasi() : ApiEnvelope<LokasiDto>
+    suspend fun getLokasi() : ApiEnvelope<LokasiResponseDto>
 
 
 

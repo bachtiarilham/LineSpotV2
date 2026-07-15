@@ -44,8 +44,8 @@ import com.epy.linespotv2.domain.model.subscription.StatusCard
 import com.epy.linespotv2.domain.model.subscription.SubscribeResponseModel
 
 private data class PromoOfferUi(
-    val code: String,
-    val description: String,
+    val code: String?,
+    val description: String?,
     val badge: String,
     val color: Color
 )
@@ -136,7 +136,9 @@ fun EnterPromoScreenPopUp(
                         promoList.forEach { promo ->
                             PromoRow(
                                 promo = promo.toUiOffer(),
-                                onClick = { onSelectPromo(promo.namaPromo) }
+//                                onClick = { onSelectPromo(promo.namaPromo) }
+                                        onClick = {  }
+
                             )
                         }
                     } else {
@@ -226,16 +228,20 @@ private fun PromoRow(
             }
             Spacer(modifier = Modifier.size(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = promo.code,
-                    color = DarkBlue,
-                    style = MaterialTheme.typography.titleSmall
-                )
-                Text(
-                    text = promo.description,
-                    color = GreyText,
-                    style = MaterialTheme.typography.bodySmall
-                )
+                promo.code?.let {
+                    Text(
+                        text = it,
+                        color = DarkBlue,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                }
+                promo.description?.let {
+                    Text(
+                        text = it,
+                        color = GreyText,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
             Surface(
                 color = promo.color.copy(alpha = 0.12f),
@@ -307,8 +313,8 @@ private fun InfoBox() {
 
 private fun PromoTerpilih.toUiOffer(): PromoOfferUi {
     val badgeColor = when {
-        jumlahDiskon >= 20 -> Tangerine
-        jumlahDiskon >= 15 -> SmartBlue
+//        jumlahDiskon >= 20 -> Tangerine
+//        jumlahDiskon >= 15 -> SmartBlue
         else -> Color(0xFF2FA84F)
     }
     return PromoOfferUi(

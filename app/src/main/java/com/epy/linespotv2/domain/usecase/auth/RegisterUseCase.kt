@@ -43,15 +43,12 @@ class RegisterUseCase @Inject constructor(
         if (reqModel.password.length < 8)
             return@withContext ApiCondition.AppFailure(Exception("Password minimal 8 karakter"))
 
-        if (reqModel.password != reqModel.confirmPassword)
-            return@withContext ApiCondition.AppFailure(Exception("Konfirmasi password tidak cocok"))
-
-        val hashedPassword = try {
+        try {
             PasswordHash.hashPassword(reqModel.password)
         } catch (exception: Exception) {
             return@withContext ApiCondition.AppFailure(exception)
         }
 
-        registerRepository.register(reqModel)
+        return@withContext registerRepository.register(reqModel)
     }
 }

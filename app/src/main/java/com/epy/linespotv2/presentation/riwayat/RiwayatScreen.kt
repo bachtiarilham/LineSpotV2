@@ -1,4 +1,4 @@
-﻿package com.epy.linespotv2.presentation.riwayat
+package com.epy.linespotv2.presentation.riwayat
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -46,10 +46,9 @@ import com.epy.linespotv2.core.ui.theme.GreyText
 import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
-import com.epy.linespotv2.core.utils.toRupiah
-import com.epy.linespotv2.domain.model.riwayat.RiwayatItem
-import com.epy.linespotv2.domain.model.riwayat.RiwayatResponseModel
-import com.epy.linespotv2.domain.model.riwayat.RiwayatSection
+import com.epy.linespotv2.presentation.riwayat.ui_model.RiwayatItemUiModel
+import com.epy.linespotv2.presentation.riwayat.ui_model.RiwayatScreenUiModel
+import com.epy.linespotv2.presentation.riwayat.ui_model.RiwayatSectionUiModel
 
 @Composable
 fun RiwayatScreen(
@@ -66,7 +65,7 @@ fun RiwayatScreen(
                 viewModel.consumeEffect()
             }
             RiwayatEffect.NavigateToFilter -> Unit
-            RiwayatEffect.NavigateToRiwayat -> Unit
+            RiwayatEffect.NavigateToRiwayat -> viewModel.consumeEffect()
             null -> Unit
         }
     }
@@ -74,19 +73,17 @@ fun RiwayatScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         when {
             state.isLoading -> FullScreenLoading()
-            state.riwayatResponseModel != null -> {
-                val riwayat = state.riwayatResponseModel!!
-                if (riwayat.sections.isEmpty()) {
+            state.screenUiModel != null -> {
+                if (state.screenUiModel!!.sections.isEmpty()) {
                     EmptyRiwayatScreen(onBack = onBack)
                 } else {
                     RiwayatScreenContent(
-                        riwayat = riwayat,
+                        uiModel = state.screenUiModel!!,
                         onItemClick = { viewModel.onIntent(RiwayatIntent.clickRiwayatDetail) },
                         onBack = onBack
                     )
                 }
             }
-
             else -> ErrorScreen(
                 message = state.error ?: "Terjadi kesalahan",
                 onRetry = { viewModel.onIntent(RiwayatIntent.loadPage) }
@@ -132,7 +129,7 @@ private fun EmptyRiwayatScreen(onBack: () -> Unit) {
 
 @Composable
 fun RiwayatScreenContent(
-    riwayat: RiwayatResponseModel,
+    uiModel: RiwayatScreenUiModel,
     onItemClick: () -> Unit = {},
     onBack: () -> Unit = {}
 ) {
@@ -147,7 +144,7 @@ fun RiwayatScreenContent(
     ) {
         HeaderBar(title = "Riwayat", onBack = onBack)
 
-        riwayat.sections.forEach { section ->
+        uiModel.sections.forEach { section ->
             DateSection(section.date)
             section.items.forEach { item ->
                 RiwayatHistoryCard(
@@ -161,12 +158,16 @@ fun RiwayatScreenContent(
 
 @Composable
 private fun DateSection(text: String) {
-    Text(text = text, color = DarkBlue, style = MaterialTheme.typography.titleMedium)
+    Text(
+        text = text,
+        color = DarkBlue,
+        style = MaterialTheme.typography.titleMedium
+    )
 }
 
 @Composable
 private fun RiwayatHistoryCard(
-    item: RiwayatItem,
+    item: RiwayatItemUiModel,
     onClick: () -> Unit
 ) {
     Card(
@@ -204,7 +205,7 @@ private fun RiwayatHistoryCard(
                     style = MaterialTheme.typography.bodySmall
                 )
                 Text(
-                    text = if (item.isEntry) "Masuk" else "Keluar",
+                    text = item.statusLabel,
                     color = if (item.isEntry) Color(0xFF2FA84F) else Color(0xFFE04F4F),
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -217,7 +218,7 @@ private fun RiwayatHistoryCard(
                 )
                 Spacer(modifier = Modifier.size(10.dp))
                 Text(
-                    text = item.amount.toRupiah(),
+                    text = item.amountLabel,
                     color = DarkBlue,
                     style = MaterialTheme.typography.titleSmall
                 )
@@ -228,7 +229,10 @@ private fun RiwayatHistoryCard(
 
 @Composable
 private fun HeaderBar(title: String, onBack: () -> Unit) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Icon(
             imageVector = Icons.Default.ChevronLeft,
             contentDescription = null,
@@ -236,7 +240,11 @@ private fun HeaderBar(title: String, onBack: () -> Unit) {
             modifier = Modifier.clickable { onBack() }
         )
         Spacer(modifier = Modifier.width(12.dp))
-        Text(text = title, color = DarkBlue, style = MaterialTheme.typography.titleLarge)
+        Text(
+            text = title,
+            color = DarkBlue,
+            style = MaterialTheme.typography.titleLarge
+        )
     }
 }
 
@@ -293,39 +301,42 @@ private fun ErrorScreen(
 private fun RiwayatScreenPreview() {
     MaterialTheme {
         RiwayatScreenContent(
-            riwayat = RiwayatResponseModel(
+            uiModel = RiwayatScreenUiModel(
                 sections = listOf(
-                    RiwayatSection(
+                    RiwayatSectionUiModel(
                         date = "30 Mei 2024",
                         items = listOf(
-                            RiwayatItem(
+                            RiwayatItemUiModel(
                                 code = "TRX-240530-00123",
                                 plateNumber = "B 1234 ABC",
                                 vehicleType = "Motor",
                                 time = "14:45",
-                                amount = 5000,
-                                isEntry = true
+                                amountLabel = "Rp 5.000",
+                                isEntry = true,
+                                statusLabel = "Masuk"
                             ),
-                            RiwayatItem(
+                            RiwayatItemUiModel(
                                 code = "TRX-240530-00122",
                                 plateNumber = "B 5678 DEF",
                                 vehicleType = "Mobil",
                                 time = "14:32",
-                                amount = 10000,
-                                isEntry = false
+                                amountLabel = "Rp 10.000",
+                                isEntry = false,
+                                statusLabel = "Keluar"
                             )
                         )
                     ),
-                    RiwayatSection(
+                    RiwayatSectionUiModel(
                         date = "29 Mei 2024",
                         items = listOf(
-                            RiwayatItem(
+                            RiwayatItemUiModel(
                                 code = "TRX-240529-00119",
                                 plateNumber = "B 3344 UVW",
                                 vehicleType = "Motor",
                                 time = "21:02",
-                                amount = 5000,
-                                isEntry = true
+                                amountLabel = "Rp 5.000",
+                                isEntry = true,
+                                statusLabel = "Masuk"
                             )
                         )
                     )

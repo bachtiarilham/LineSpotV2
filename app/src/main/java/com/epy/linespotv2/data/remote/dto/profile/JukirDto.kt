@@ -1,0 +1,40 @@
+package com.epy.linespotv2.data.remote.dto.profile
+import com.google.gson.annotations.SerializedName
+
+
+data class JukirDto(
+    @SerializedName("user_id") val userId: Long = 0L,
+    @SerializedName("nik") val nik: String = "",
+    @SerializedName("full_name") val fullName: String = "",
+    @SerializedName("username") val username: String = "",
+    @SerializedName("email") val email: String = "",
+    @SerializedName("phone") val phone: String = "",
+    @SerializedName("avatar_url") val photoUrl: String = "",
+    @SerializedName("is_verified") val isVerified: Boolean = false,
+    @SerializedName("role_id") val roleId: Long = 0L,
+    @SerializedName("role_code") val roleCode: String = "",
+    @SerializedName("role_name") val roleName: String = "",
+    @SerializedName("saldo")  val saldo : Long = 0L,
+    @SerializedName("location_id") val lokasiId: Long = 0L,
+    @SerializedName("location_code") val lokasiCode: String = "",
+    @SerializedName("location_name") val lokasiName: String = "",
+    @SerializedName("address") val address: String = "",
+    @SerializedName("minLatitude") val minLatitude: Double = 0.0,
+    @SerializedName("maxLatitude") val maxLatitude: Double = 0.0,
+    @SerializedName("minLongitude") val minLongitude: Double = 0.0,
+    @SerializedName("maxLongitude") val maxLongitude: Double = 0.0,
+    @SerializedName("centerLatitude") val centerLatitude: Double = 0.0,
+    @SerializedName("centerLongitude") val centerLongitude: Double = 0.0,
+    @SerializedName("radius_meter") val radiusMeter: Long = 0L,
+    @SerializedName("area_id") val areaId: Long = 0L,
+    @SerializedName("area_name") val areaName: String = "",
+    @SerializedName("zone_id") val zoneId: Long = 0L,
+    @SerializedName("zone_name") val zoneName: String = "",
+    @SerializedName("assignment_effective_from") val assignmentEffectiveFrom : String = "",
+    @SerializedName("assignment_effective_to") val assignmentEffectiveTo : String = "",
+    @SerializedName("today_income")  val todayIncome : Long = 0L,
+    @SerializedName("total_income")  val totalIncome : Long = 0L,
+    @SerializedName("today_transaction_count")  val todayTransactionCount : Long = 0L,
+    @SerializedName("unread_notification_count") val unreadNotificationCount: Long = 0L,
+)
+

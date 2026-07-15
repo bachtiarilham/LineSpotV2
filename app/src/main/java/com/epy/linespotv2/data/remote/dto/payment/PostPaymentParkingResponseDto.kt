@@ -3,21 +3,66 @@ package com.epy.linespotv2.data.remote.dto.payment
 import com.google.gson.annotations.SerializedName
 
 data class PostPaymentParkingResponseDto(
-    @SerializedName("title") val title: String? = null,
-    @SerializedName("success_title") val successTitle: String? = null,
-    @SerializedName("success_description") val successDescription: String? = null,
-    @SerializedName("total_amount") val totalAmount: String? = null,
-    @SerializedName("payment_status") val paymentStatus: String? = null,
-    @SerializedName("reference_number") val referenceNumber: String? = null,
-    @SerializedName("verification_message") val verificationMessage: String? = null,
-    @SerializedName("thank_you_title") val thankYouTitle: String? = null,
-    @SerializedName("thank_you_description") val thankYouDescription: String? = null,
-    @SerializedName("download_label") val downloadLabel: String? = null,
-    @SerializedName("back_to_home_label") val backToHomeLabel: String? = null,
-    @SerializedName("details") val details: List<PostPaymentParkingDetailItemDto>? = null
-)
+    @SerializedName("session_id")
+    val sessionId: Long?,
 
-data class PostPaymentParkingDetailItemDto(
-    @SerializedName("label") val label: String? = null,
-    @SerializedName("value") val value: String? = null
+    @SerializedName("session_code")
+    val sessionCode: String?,
+
+    @SerializedName("trx_code")
+    val transactionCode: String?,
+
+    @SerializedName("plate_number")
+    val plateNumber: String?,
+
+    @SerializedName("vhc_type_code")
+    val vehicleTypeCode: String?,
+
+    @SerializedName("vhc_type_name")
+    val vehicleTypeName: String?,
+
+    @SerializedName("loc_id")
+    val locationId: Long?,
+
+    @SerializedName("loc_name")
+    val locationName: String?,
+
+    @SerializedName("area_id")
+    val areaId: Long?,
+
+    @SerializedName("area_name")
+    val areaName: String?,
+
+    @SerializedName("amount")
+    val amount: Long?,
+
+    @SerializedName("parking_stat_code")
+    val parkingStatusCode: String?,
+
+    @SerializedName("parking_stat_name")
+    val parkingStatusName: String?,
+
+    @SerializedName("payment_stat_code")
+    val paymentStatusCode: String?,
+
+    @SerializedName("payment_stat_name")
+    val paymentStatusName: String?,
+
+    @SerializedName("payment_code")
+    val paymentCode: String?,
+
+    @SerializedName("failed_reason")
+    val failedReason: String?,
+
+    @SerializedName("receipt_number")
+    val receiptNumber: Long?,
+
+    @SerializedName("startedat")
+    val startedAt: String?,
+
+    @SerializedName("paidat")
+    val paidAt: String?,
+
+    @SerializedName("qr_expiredat")
+    val qrExpiredAt: String?
 )

@@ -1,5 +1,9 @@
-﻿package com.epy.linespotv2.presentation.home_jukir
+package com.epy.linespotv2.presentation.home_jukir
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,30 +32,31 @@ import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.QuestionMark
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.epy.linespotv2.core.ui.theme.Black
@@ -60,17 +65,18 @@ import com.epy.linespotv2.core.ui.theme.GreyText
 import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
+import com.epy.linespotv2.core.utils.inlocation.LocationBoundaryStatus
 import com.epy.linespotv2.core.utils.toIndonesiaDate
 import com.epy.linespotv2.core.utils.toRupiah
-import com.epy.linespotv2.domain.model.home.HomeResponseModel
-import com.epy.linespotv2.domain.model.home.HomeWarnings
-import com.epy.linespotv2.domain.model.home.Profile
+import com.epy.linespotv2.domain.model.home.JukirHomeModel
+import com.epy.linespotv2.domain.model.profile.JukirModel
+import com.epy.linespotv2.presentation.home_jukir.ui_model.HomeJukirUiModel
 import java.util.Date
 
 @Composable
 fun HomeJukirScreen(
     onNavigateToSettings: () -> Unit = {},
-    onNavigateToNotification : () -> Unit = {},
+    onNavigateToNotification: () -> Unit = {},
     onNavigateToRiwayat: () -> Unit = {},
     onNavigateToScanTicket: () -> Unit = {},
     onNavigateToInputManual: () -> Unit = {},
@@ -82,9 +88,40 @@ fun HomeJukirScreen(
     bottomBar: @Composable () -> Unit = {}
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    var hasLocationPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        hasLocationPermission = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (hasLocationPermission) {
+            viewModel.onIntent(HomeJukirIntent.loadHomeJukir)
+        }
+    }
 
-    LaunchedEffect(Unit) {
-        viewModel.onIntent(HomeJukirIntent.loadHomeJukir)
+    LaunchedEffect(hasLocationPermission) {
+        if (hasLocationPermission) {
+            viewModel.onIntent(HomeJukirIntent.loadHomeJukir)
+        } else {
+            permissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
     }
 
     Scaffold(
@@ -98,10 +135,21 @@ fun HomeJukirScreen(
                 .background(PageBg)
         ) {
             when {
-                state.isLoading && state.homeResponseModel == null -> FullScreenLoading()
-                state.homeResponseModel != null -> {
+                !hasLocationPermission -> PermissionRequiredScreen(
+                    onRetry = {
+                        permissionLauncher.launch(
+                            arrayOf(
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            )
+                        )
+                    }
+                )
+                state.isLoading && state.homeJukirModel == null -> FullScreenLoading()
+                state.homeJukirModel != null && state.uiModel != null -> {
                     HomeScreenContent(
                         state = state,
+                        uiModel = state.uiModel!!,
                         onIntent = viewModel::onIntent,
                         onNavigateToSettings = onNavigateToSettings,
                         onNavigateToNotification = onNavigateToNotification,
@@ -112,7 +160,7 @@ fun HomeJukirScreen(
                         onNavigateToBantuan = onNavigateToBantuan,
                         onNavigateToTopUp = onNavigateToTopUp,
                         onNavigateToLogin = onNavigateToLogin,
-                        consumeEffect = { viewModel.consumeEffect() },
+                        consumeEffect = { viewModel.consumeEffect() }
                     )
                 }
                 else -> ErrorScreen(
@@ -125,12 +173,43 @@ fun HomeJukirScreen(
 }
 
 @Composable
+private fun PermissionRequiredScreen(
+    onRetry: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Izin lokasi dibutuhkan",
+            color = DarkBlue,
+            style = MaterialTheme.typography.headlineMedium,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "Aktifkan izin lokasi agar status area tugas bisa diverifikasi.",
+            color = GreyText,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(20.dp))
+        TextButton(onClick = onRetry) {
+            Text("Aktifkan Izin", color = DarkBlue, style = MaterialTheme.typography.labelLarge)
+        }
+    }
+}
+
+@Composable
 fun HomeScreenContent(
     state: HomeJukirState,
+    uiModel: HomeJukirUiModel,
     onIntent: (HomeJukirIntent) -> Unit,
-
     onNavigateToSettings: () -> Unit,
-    onNavigateToNotification : () -> Unit,
+    onNavigateToNotification: () -> Unit,
     onNavigateToRiwayat: () -> Unit,
     onNavigateToScanTicket: () -> Unit,
     onNavigateToInputManual: () -> Unit,
@@ -138,23 +217,20 @@ fun HomeScreenContent(
     onNavigateToBantuan: () -> Unit,
     onNavigateToTopUp: () -> Unit,
     onNavigateToLogin: () -> Unit,
-
     consumeEffect: () -> Unit
 ) {
-    val home = state.homeResponseModel ?: return
-
     LaunchedEffect(state.homeJukirEffect) {
         when (state.homeJukirEffect) {
-            is HomeJukirEffect.NavigateToTopUp -> { onNavigateToTopUp (); consumeEffect()}
-            is HomeJukirEffect.NavigateToSettings -> { onNavigateToSettings(); consumeEffect()}
-            is HomeJukirEffect.ShowToast -> {consumeEffect()}
-            is HomeJukirEffect.SessionExpired -> {onNavigateToLogin(); consumeEffect()}
-            is HomeJukirEffect.NavigateToRiwayat -> {onNavigateToRiwayat(); consumeEffect()}
-            is HomeJukirEffect.NavigateToBantuan -> {onNavigateToBantuan(); consumeEffect()}
-            is HomeJukirEffect.NavigateToInputManual -> {onNavigateToInputManual(); consumeEffect()}
-            is HomeJukirEffect.NavigateToLaporan -> {onNavigateToLaporan(); consumeEffect()}
-            is HomeJukirEffect.NavigateToScanTicket -> {onNavigateToScanTicket(); consumeEffect()}
-            is HomeJukirEffect.NavigateToNotification -> {onNavigateToNotification(); consumeEffect()}
+            is HomeJukirEffect.NavigateToTopUp -> { onNavigateToTopUp(); consumeEffect() }
+            is HomeJukirEffect.NavigateToSettings -> { onNavigateToSettings(); consumeEffect() }
+            is HomeJukirEffect.ShowToast -> { consumeEffect() }
+            is HomeJukirEffect.SessionExpired -> { onNavigateToLogin(); consumeEffect() }
+            is HomeJukirEffect.NavigateToRiwayat -> { onNavigateToRiwayat(); consumeEffect() }
+            is HomeJukirEffect.NavigateToBantuan -> { onNavigateToBantuan(); consumeEffect() }
+            is HomeJukirEffect.NavigateToInputManual -> { onNavigateToInputManual(); consumeEffect() }
+            is HomeJukirEffect.NavigateToLaporan -> { onNavigateToLaporan(); consumeEffect() }
+            is HomeJukirEffect.NavigateToScanTicket -> { onNavigateToScanTicket(); consumeEffect() }
+            is HomeJukirEffect.NavigateToNotification -> { onNavigateToNotification(); consumeEffect() }
             null -> Unit
         }
     }
@@ -170,13 +246,14 @@ fun HomeScreenContent(
         JukirTopBar(
             onNotificationClick = { onIntent(HomeJukirIntent.clickNotification(0)) },
             onProfileClick = { onIntent(HomeJukirIntent.clickProfile) },
-            title = home.profile.name.ifBlank { "Petugas Dishub" },
+            title = uiModel.title
         )
 
         AreaTaskCard(
-            zonaValue = home.profile.zona.ifBlank { "-" },
-            lokasiValue = home.profile.lokasi.ifBlank { "-" },
-            areaValue = home.profile.area.ifBlank { "-" },
+            areaLabel = uiModel.areaLabel,
+            zonaValue = uiModel.zonaValue,
+            lokasiValue = uiModel.lokasiValue,
+            areaValue = uiModel.areaValue
         )
 
         Text(
@@ -185,15 +262,22 @@ fun HomeScreenContent(
             style = MaterialTheme.typography.titleSmall
         )
 
-        home.warnings.finance
+        state.locationBoundaryStatus?.let { status ->
+            LocationStatusCard(
+                status = status,
+                message = state.locationStatusMessage.orEmpty()
+            )
+        }
+
+        uiModel.financeWarning
             ?.takeIf { it.isNotBlank() }
             ?.let { financeWarning ->
                 WarningCard(message = financeWarning)
             }
 
         IncomeBalanceCard(
-            pendapatan = home.profile.pendapatan,
-            saldo = home.profile.saldo,
+            pendapatan = uiModel.pendapatan,
+            saldo = uiModel.saldo,
             onRiwayatClick = { onIntent(HomeJukirIntent.clickRiwayat) },
             onTopUpClick = { onIntent(HomeJukirIntent.clickTopUp) }
         )
@@ -203,7 +287,7 @@ fun HomeScreenContent(
             onLaporanClick = { onIntent(HomeJukirIntent.clickLaporan) },
             onBantuanClick = { onIntent(HomeJukirIntent.clickBantuan) }
         )
-        SupervisorCard()
+        SupervisorCard(supervisorName = uiModel.supervisorName)
 
         Spacer(modifier = Modifier.height(12.dp))
     }
@@ -213,7 +297,7 @@ fun HomeScreenContent(
 private fun JukirTopBar(
     onNotificationClick: () -> Unit,
     onProfileClick: () -> Unit,
-    title: String,
+    title: String
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -251,9 +335,10 @@ private fun JukirTopBar(
 
 @Composable
 private fun AreaTaskCard(
+    areaLabel: String,
     zonaValue: String,
     lokasiValue: String,
-    areaValue: String,
+    areaValue: String
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -261,14 +346,14 @@ private fun AreaTaskCard(
         colors = CardDefaults.cardColors(containerColor = White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Row (
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            Text(text = "Area Tugas", color = SmartBlue, style = MaterialTheme.typography.titleMedium)
+            Text(text = areaLabel, color = SmartBlue, style = MaterialTheme.typography.titleMedium)
         }
         Column(
             modifier = Modifier
@@ -333,11 +418,51 @@ private fun WarningCard(message: String) {
 }
 
 @Composable
+private fun LocationStatusCard(
+    status: LocationBoundaryStatus,
+    message: String
+) {
+    val accentColor = when (status) {
+        LocationBoundaryStatus.Inside -> Color(0xFF2FA84F)
+        LocationBoundaryStatus.Outside -> Color(0xFFE04F4F)
+        LocationBoundaryStatus.NeedPreciseRecheck -> Color(0xFFF5A623)
+        LocationBoundaryStatus.LocationDisabled -> Color(0xFFF5A623)
+        LocationBoundaryStatus.InvalidCurrentLocation -> GreyText
+        LocationBoundaryStatus.InvalidBoundary -> GreyText
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = "Status Lokasi",
+                color = accentColor,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                text = message,
+                color = GreyText,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+}
+
+@Composable
 private fun IncomeBalanceCard(
     pendapatan: Long,
     saldo: Long,
     onRiwayatClick: () -> Unit,
-    onTopUpClick: () -> Unit,
+    onTopUpClick: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -362,11 +487,6 @@ private fun IncomeBalanceCard(
                     color = DarkBlue,
                     style = MaterialTheme.typography.headlineSmall
                 )
-//                Text(
-//                    text = "↑ 12% dari kemarin",
-//                    color = Color(0xFF2FA84F),
-//                    style = MaterialTheme.typography.bodyMedium
-//                )
             }
 
             Column(modifier = Modifier.weight(1f)) {
@@ -380,11 +500,6 @@ private fun IncomeBalanceCard(
                     color = DarkBlue,
                     style = MaterialTheme.typography.headlineSmall
                 )
-//                Text(
-//                    text = "Saldo siap dicairkan",
-//                    color = GreyText,
-//                    style = MaterialTheme.typography.bodyMedium
-//                )
             }
         }
         HorizontalDivider(
@@ -397,18 +512,18 @@ private fun IncomeBalanceCard(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceAround
         ) {
-            QuickActionItem(icon = Icons.Default.History,label = "Riwayat",onRiwayatClick)
-            QuickActionItem(icon = Icons.Default.AccountBalanceWallet, label = "Top Up", onTopUpClick)
+            QuickActionItem(icon = Icons.Default.History, label = "Riwayat", onClick = onRiwayatClick)
+            QuickActionItem(icon = Icons.Default.AccountBalanceWallet, label = "Top Up", onClick = onTopUpClick)
         }
     }
 }
 
 @Composable
 private fun QuickActionsCard(
-    onScanTicketClick : () -> Unit ,
-    onInputManualClick : () -> Unit,
-    onLaporanClick : () -> Unit,
-    onBantuanClick : () -> Unit
+    onScanTicketClick: () -> Unit,
+    onInputManualClick: () -> Unit,
+    onLaporanClick: () -> Unit,
+    onBantuanClick: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -443,7 +558,7 @@ private fun QuickActionsCard(
 private fun QuickActionItem(
     icon: ImageVector,
     label: String,
-    onClick: () -> Unit,
+    onClick: () -> Unit
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -469,7 +584,7 @@ private fun QuickActionItem(
 }
 
 @Composable
-private fun SupervisorCard() {
+private fun SupervisorCard(supervisorName: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -497,7 +612,7 @@ private fun SupervisorCard() {
                     style = MaterialTheme.typography.bodySmall
                 )
                 Text(
-                    text = "Budi Santoso",
+                    text = supervisorName,
                     color = DarkBlue,
                     style = MaterialTheme.typography.titleMedium
                 )
@@ -547,40 +662,47 @@ private fun ErrorScreen(message: String, onRetry: () -> Unit) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun HomeScreenPreview() {
-    val mockHome = HomeResponseModel(
-        profile = Profile(
-            id = 1, name = "Petugas Dishub", photoUrl = null,
+    val mockModel = JukirHomeModel(
+        jukirModel = JukirModel(
+            userId = 1L,
+            fullName = "Petugas Dishub",
             saldo = 2_750_000L,
-            expiredDate = "30 Mei 2024",
-            pendapatan = 1_250_000L,
-            lokasi = "Jl. Sudirman",
-            area = "Zona Biru",
-            zona = "Area Tugas"
-        ),
-        events = emptyList(),
-        news = emptyList(),
-        warnings = HomeWarnings(profile = null, parking = null, finance = null)
+            todayIncome = 1_250_000L,
+            lokasiName = "Jl. Sudirman",
+            zoneName = "Zona Biru",
+            areaName = "Area Tugas"
+        )
+    )
+    val mockUiModel = HomeJukirUiModel(
+        title = "Petugas Dishub",
+        areaLabel = "Area Tugas",
+        zonaValue = "Zona Biru",
+        lokasiValue = "Jl. Sudirman",
+        areaValue = "Area Tugas",
+        pendapatan = 1_250_000L,
+        saldo = 2_750_000L,
+        supervisorName = "Budi Santoso"
     )
 
     MaterialTheme {
         HomeScreenContent(
             state = HomeJukirState(
                 isLoading = false,
-                homeResponseModel = mockHome
+                homeJukirModel = mockModel,
+                uiModel = mockUiModel
             ),
+            uiModel = mockUiModel,
             onIntent = {},
-
             onNavigateToSettings = {},
             onNavigateToNotification = {},
             onNavigateToRiwayat = {},
-            onNavigateToScanTicket= {},
-            onNavigateToInputManual= {},
-            onNavigateToLaporan= {},
-            onNavigateToBantuan= {},
-            onNavigateToTopUp= {},
-            onNavigateToLogin= {},
-
-            consumeEffect = {},
+            onNavigateToScanTicket = {},
+            onNavigateToInputManual = {},
+            onNavigateToLaporan = {},
+            onNavigateToBantuan = {},
+            onNavigateToTopUp = {},
+            onNavigateToLogin = {},
+            consumeEffect = {}
         )
     }
 }

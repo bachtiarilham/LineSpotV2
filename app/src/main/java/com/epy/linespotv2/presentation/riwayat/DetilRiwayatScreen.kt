@@ -2,10 +2,11 @@ package com.epy.linespotv2.presentation.riwayat
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,13 +14,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.NorthEast
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Share
@@ -43,12 +45,15 @@ import com.epy.linespotv2.core.ui.theme.GreyText
 import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
+import com.epy.linespotv2.presentation.riwayat.ui_model.DetilRiwayatInfoItemUiModel
+import com.epy.linespotv2.presentation.riwayat.ui_model.DetilRiwayatUiModel
 
 @Composable
 fun DetilRiwayatScreen(
     onBack: () -> Unit = {},
     onPrint: () -> Unit = {},
-    onShare: () -> Unit = {}
+    onShare: () -> Unit = {},
+    uiModel: DetilRiwayatUiModel = detilRiwayatPreviewModel()
 ) {
     Column(
         modifier = Modifier
@@ -60,11 +65,22 @@ fun DetilRiwayatScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         DetailHeader(onBack = onBack)
-        StatusCard()
-        TicketInfoCard()
-        PaymentMethodCard()
-        PetugasInfoCard()
-        NotesCard()
+        StatusCard(uiModel = uiModel)
+        TicketInfoCard(items = uiModel.ticketInfoItems)
+        PaymentMethodCard(
+            methodLabel = uiModel.paymentMethodLabel,
+            amountLabel = uiModel.paymentAmountLabel
+        )
+        PetugasInfoCard(
+            officerName = uiModel.officerName,
+            officerRole = uiModel.officerRole,
+            officerIdLabel = uiModel.officerIdLabel,
+            officerIdValue = uiModel.officerIdValue
+        )
+        NotesCard(
+            noteLabel = uiModel.noteLabel,
+            noteValue = uiModel.noteValue
+        )
         ActionButtons(
             onPrint = onPrint,
             onShare = onShare
@@ -81,7 +97,8 @@ private fun DetailHeader(onBack: () -> Unit) {
         Icon(
             imageVector = Icons.Default.ChevronLeft,
             contentDescription = null,
-            tint = DarkBlue
+            tint = DarkBlue,
+            modifier = Modifier.clickable { onBack() }
         )
         Spacer(modifier = Modifier.size(12.dp))
         Text(
@@ -93,7 +110,7 @@ private fun DetailHeader(onBack: () -> Unit) {
 }
 
 @Composable
-private fun StatusCard() {
+private fun StatusCard(uiModel: DetilRiwayatUiModel) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -104,7 +121,7 @@ private fun StatusCard() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                color = Color(0xFFEAF8EF),
+                color = if (uiModel.isEntry) Color(0xFFEAF8EF) else Color(0xFFFFEFEE),
                 shape = RoundedCornerShape(14.dp)
             ) {
                 Column(
@@ -112,13 +129,13 @@ private fun StatusCard() {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Icon(
-                        imageVector = Icons.Default.SouthWest,
+                        imageVector = if (uiModel.isEntry) Icons.Default.SouthWest else Icons.Default.NorthEast,
                         contentDescription = null,
-                        tint = Color(0xFF2FA84F)
+                        tint = if (uiModel.isEntry) Color(0xFF2FA84F) else Color(0xFFE04F4F)
                     )
                     Text(
-                        text = "Masuk",
-                        color = Color(0xFF2FA84F),
+                        text = uiModel.statusLabel,
+                        color = if (uiModel.isEntry) Color(0xFF2FA84F) else Color(0xFFE04F4F),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -129,7 +146,7 @@ private fun StatusCard() {
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "TRX-240530-00123",
+                        text = uiModel.ticketCode,
                         color = DarkBlue,
                         style = MaterialTheme.typography.titleMedium
                     )
@@ -139,7 +156,7 @@ private fun StatusCard() {
                         shape = RoundedCornerShape(999.dp)
                     ) {
                         Text(
-                            text = "Selesai",
+                            text = uiModel.statusChipLabel,
                             color = Color(0xFF2FA84F),
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                             style = MaterialTheme.typography.labelSmall
@@ -150,7 +167,7 @@ private fun StatusCard() {
                 Spacer(modifier = Modifier.size(6.dp))
 
                 Text(
-                    text = "30 Mei 2024, 14:45:32",
+                    text = uiModel.statusDateTime,
                     color = GreyText,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -163,7 +180,7 @@ private fun StatusCard() {
                         shape = RoundedCornerShape(999.dp)
                     ) {
                         Text(
-                            text = "P",
+                            text = uiModel.vehicleInitial,
                             color = SmartBlue,
                             modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
                             style = MaterialTheme.typography.labelSmall
@@ -171,13 +188,13 @@ private fun StatusCard() {
                     }
                     Spacer(modifier = Modifier.size(6.dp))
                     Text(
-                        text = "Motor",
+                        text = uiModel.vehicleType,
                         color = SmartBlue,
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
-                        text = "Rp 5.000",
+                        text = uiModel.totalAmountLabel,
                         color = DarkBlue,
                         style = MaterialTheme.typography.headlineSmall
                     )
@@ -188,24 +205,29 @@ private fun StatusCard() {
 }
 
 @Composable
-private fun TicketInfoCard() {
+private fun TicketInfoCard(items: List<DetilRiwayatInfoItemUiModel>) {
     DetailCard(title = "Informasi Tiket") {
-        InfoRow("Nomor Tiket", "TRX-240530-00123")
-        InfoRow("Waktu Masuk", "30 Mei 2024, 08:15")
-        InfoRow("Area Parkir", "Jl. Sudirman - Zona Biru")
-        InfoRow("Jenis Kendaraan", "Motor")
-        InfoRow("Durasi Parkir", "6 jam 30 menit")
-        InfoRow("Tarif", "Rp 2.000 / jam")
-        HorizontalDivider(
-            color = Color(0xFFE7EBF2),
-            modifier = Modifier.padding(vertical = 10.dp)
-        )
-        InfoRow("Total Tarif", "Rp 5.000", emphasized = true)
+        items.forEachIndexed { index, item ->
+            if (index > 0 && item.emphasized) {
+                HorizontalDivider(
+                    color = Color(0xFFE7EBF2),
+                    modifier = Modifier.padding(vertical = 10.dp)
+                )
+            }
+            InfoRow(
+                label = item.label,
+                value = item.value,
+                emphasized = item.emphasized
+            )
+        }
     }
 }
 
 @Composable
-private fun PaymentMethodCard() {
+private fun PaymentMethodCard(
+    methodLabel: String,
+    amountLabel: String
+) {
     DetailCard(title = "Metode Pembayaran") {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -217,7 +239,7 @@ private fun PaymentMethodCard() {
                     shape = RoundedCornerShape(10.dp)
                 ) {
                     Text(
-                        text = "T",
+                        text = methodLabel.take(1).ifBlank { "-" },
                         color = Color(0xFF2FA84F),
                         modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp),
                         style = MaterialTheme.typography.labelMedium
@@ -225,14 +247,14 @@ private fun PaymentMethodCard() {
                 }
                 Spacer(modifier = Modifier.size(10.dp))
                 Text(
-                    text = "Tunai",
+                    text = methodLabel,
                     color = DarkBlue,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                text = "Rp 5.000",
+                text = amountLabel,
                 color = DarkBlue,
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -241,7 +263,12 @@ private fun PaymentMethodCard() {
 }
 
 @Composable
-private fun PetugasInfoCard() {
+private fun PetugasInfoCard(
+    officerName: String,
+    officerRole: String,
+    officerIdLabel: String,
+    officerIdValue: String
+) {
     DetailCard(title = "Informasi Petugas") {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -261,24 +288,24 @@ private fun PetugasInfoCard() {
             Spacer(modifier = Modifier.size(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Budi Santoso",
+                    text = officerName,
                     color = DarkBlue,
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = "Juru Parkir",
+                    text = officerRole,
                     color = GreyText,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "ID Petugas",
+                    text = officerIdLabel,
                     color = GreyText,
                     style = MaterialTheme.typography.bodySmall
                 )
                 Text(
-                    text = "JP-000123",
+                    text = officerIdValue,
                     color = DarkBlue,
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -288,7 +315,10 @@ private fun PetugasInfoCard() {
 }
 
 @Composable
-private fun NotesCard() {
+private fun NotesCard(
+    noteLabel: String,
+    noteValue: String
+) {
     DetailCard(title = "Catatan") {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -307,13 +337,13 @@ private fun NotesCard() {
             }
             Spacer(modifier = Modifier.size(12.dp))
             Text(
-                text = "Tidak ada catatan",
+                text = noteLabel,
                 color = GreyText,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.weight(1f)
             )
             Text(
-                text = "-",
+                text = noteValue,
                 color = GreyText,
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -333,9 +363,15 @@ private fun DetailCard(
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            content = content
-        )
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = title,
+                color = DarkBlue,
+                style = MaterialTheme.typography.titleSmall
+            )
+            content()
+        }
     }
 }
 
@@ -358,11 +394,7 @@ private fun InfoRow(
         Text(
             text = value,
             color = DarkBlue,
-            style = if (emphasized) {
-                MaterialTheme.typography.titleMedium
-            } else {
-                MaterialTheme.typography.bodyMedium
-            },
+            style = if (emphasized) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.End,
             modifier = Modifier.weight(1f)
         )
@@ -384,6 +416,7 @@ private fun ActionButtons(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .clickable { onPrint() }
                     .padding(vertical = 14.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
@@ -411,6 +444,7 @@ private fun ActionButtons(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .clickable { onShare() }
                     .padding(vertical = 14.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
@@ -430,6 +464,36 @@ private fun ActionButtons(
             }
         }
     }
+}
+
+private fun detilRiwayatPreviewModel(): DetilRiwayatUiModel {
+    return DetilRiwayatUiModel(
+        ticketCode = "TRX-240530-00123",
+        statusChipLabel = "Selesai",
+        statusLabel = "Masuk",
+        statusDateTime = "30 Mei 2024, 14:45:32",
+        vehicleInitial = "P",
+        vehicleType = "Motor",
+        totalAmountLabel = "Rp 5.000",
+        isEntry = true,
+        ticketInfoItems = listOf(
+            DetilRiwayatInfoItemUiModel("Nomor Tiket", "TRX-240530-00123"),
+            DetilRiwayatInfoItemUiModel("Waktu Masuk", "30 Mei 2024, 08:15"),
+            DetilRiwayatInfoItemUiModel("Area Parkir", "Jl. Sudirman - Zona Biru"),
+            DetilRiwayatInfoItemUiModel("Jenis Kendaraan", "Motor"),
+            DetilRiwayatInfoItemUiModel("Durasi Parkir", "6 jam 30 menit"),
+            DetilRiwayatInfoItemUiModel("Tarif", "Rp 2.000 / jam"),
+            DetilRiwayatInfoItemUiModel("Total Tarif", "Rp 5.000", emphasized = true)
+        ),
+        paymentMethodLabel = "Tunai",
+        paymentAmountLabel = "Rp 5.000",
+        officerName = "Budi Santoso",
+        officerRole = "Juru Parkir",
+        officerIdLabel = "ID Petugas",
+        officerIdValue = "JP-000123",
+        noteLabel = "Tidak ada catatan",
+        noteValue = "-"
+    )
 }
 
 @Preview(showBackground = true, showSystemUi = true)

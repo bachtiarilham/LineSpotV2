@@ -66,8 +66,8 @@ import com.epy.linespotv2.core.ui.theme.GreyText
 import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
-import com.epy.linespotv2.domain.model.auth.UserModel
 import com.epy.linespotv2.domain.model.helper.TarifModel
+import com.epy.linespotv2.domain.model.profile.CustomerModel
 import com.epy.linespotv2.presentation.settings.SettingsEffect
 import com.epy.linespotv2.presentation.settings.SettingsIntent
 import com.epy.linespotv2.presentation.settings.SettingsState
@@ -161,7 +161,9 @@ fun SettingsScreenContent(
                     CircularProgressIndicator(color = DarkBlue)
                 }
             } else {
-                state.userModel?.let { SettingsProfileCard(it) }
+                state.userModel?.let { SettingsProfileCard(it)
+                    { onIntent(SettingsIntent.NavigateToProfil) }
+                }
             }
 
             if (!state.error.isNullOrBlank()) {
@@ -181,7 +183,12 @@ fun SettingsScreenContent(
                     SettingsItemModel(Icons.Default.PrivacyTip, "Privasi")
                 ),
                 onItemClick = { item ->
-                    if (item.hasSwitch) notifEnabled = !notifEnabled
+                    when (item.title) {
+                        "Keamanan" -> onIntent(SettingsIntent.NavigateToKeamanan)
+                        "Metode Pembayaran" -> onIntent(SettingsIntent.NavigateToMetodePembayaran)
+                        "Notifikasi" -> notifEnabled = !notifEnabled
+                        "Privasi" -> onIntent(SettingsIntent.NavigateToPrivasi)
+                    }
                 },
                 trailingContent = { item ->
                     if (item.hasSwitch) {
@@ -233,7 +240,12 @@ fun SettingsScreenContent(
                     )
                 ),
                 onItemClick = { item ->
-                    if (item.title == "Keluar") onIntent(SettingsIntent.OnLogoutClicked)
+                    when (item.title) {
+                        "Bantuan & FAQ" -> onIntent(SettingsIntent.NavigateToBantuanFaq)
+                        "Syarat & Ketentuan" -> onIntent(SettingsIntent.NavigateToSyaratKetentuan)
+                        "Tentang Aplikasi" -> onIntent(SettingsIntent.NavigateToTentangAplikasi)
+                        "Keluar" -> onIntent(SettingsIntent.OnLogoutClicked)
+                    }
                 }
             )
 
@@ -276,17 +288,20 @@ private fun SettingsTopBar(onBack: () -> Unit) {
 }
 
 @Composable
-private fun SettingsProfileCard(profile: UserModel) {
+private fun SettingsProfileCard(
+    profile: CustomerModel ,
+    onClick: () -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { }
+                .clickable {onClick()}
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -445,25 +460,13 @@ fun SettingsScreenPreview() {
     MaterialTheme {
         SettingsScreenContent(
             state = SettingsState(
-                userModel = UserModel(
+                userModel = CustomerModel(
                     userId = 1L,
                     nik = "3201234567890001",
                     fullName = "John Doe",
                     phone = "08123456789",
                     email = "john.doe@email.com",
                     username = "johndoe",
-                    role = 1,
-                    isVerified = true,
-                    avatar_url = "",
-                    lokasi = "",
-                    zona = "",
-                    tarif = listOf(
-                        TarifModel(kendaraan = "Motor", nominal = 2_000L),
-                        TarifModel(kendaraan = "Mobil", nominal = 5_000L)
-                    ),
-                    registeredAt = "",
-                    createdAt = "",
-                    updatedAt = ""
                 )
             ),
             onIntent = {}

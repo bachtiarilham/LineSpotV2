@@ -14,25 +14,28 @@ class RiwayatUseCase @Inject constructor(
     private val repository : RiwayatRepository,
     private val dispatcher : Dispatcher
 ){
-    suspend operator fun invoke( reqModel : RiwayatRequestModel): ApiCondition<RiwayatResponseModel> = withContext(dispatcher.io) {
-        if (reqModel.startDate.isBlank() || reqModel.endDate.isBlank()) {
+    suspend operator fun invoke(reqModel : RiwayatRequestModel): ApiCondition<RiwayatResponseModel> = withContext(dispatcher.io) {
+        val startDate = reqModel.startDate
+        val endDate = reqModel.endDate
+
+        if (startDate.isNullOrBlank() || endDate.isNullOrBlank()) {
             return@withContext ApiCondition.AppFailure(
-                Exception("Tanggal awal dan tanggal akhir tidak boleh kosong")
+                IllegalArgumentException("Tanggal awal dan tanggal akhir tidak boleh kosong")
             )
         }
 
-        val parsedStartDate = reqModel.startDate.parseIndonesiaDateOrNull()
-        val parsedEndDate = reqModel.endDate.parseIndonesiaDateOrNull()
+        val parsedStartDate = startDate.parseIndonesiaDateOrNull()
+        val parsedEndDate = endDate.parseIndonesiaDateOrNull()
 
         if (parsedStartDate == null || parsedEndDate == null) {
             return@withContext ApiCondition.AppFailure(
-                Exception("Format tanggal tidak valid")
+                IllegalArgumentException("Format tanggal tidak valid")
             )
         }
 
         if (parsedEndDate.before(parsedStartDate)) {
             return@withContext ApiCondition.AppFailure(
-                Exception("Tanggal akhir tidak boleh lebih kecil dari tanggal awal")
+                IllegalArgumentException("Tanggal akhir tidak boleh lebih kecil dari tanggal awal")
             )
         }
 
@@ -41,7 +44,7 @@ class RiwayatUseCase @Inject constructor(
 
         if (diffInDaysInclusive > 7) {
             return@withContext ApiCondition.AppFailure(
-                Exception("Rentang tanggal maksimal 7 hari")
+                IllegalArgumentException("Rentang tanggal maksimal 7 hari")
             )
         }
 

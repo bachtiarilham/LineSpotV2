@@ -2,7 +2,6 @@ package com.epy.linespotv2.domain.usecase.auth
 
 import com.epy.linespotv2.core.network.ApiCondition
 import com.epy.linespotv2.core.utils.Dispatcher
-import com.epy.linespotv2.core.utils.isValidEmail
 import com.epy.linespotv2.core.utils.PasswordHash
 import com.epy.linespotv2.domain.model.auth.LoginReqModel
 import com.epy.linespotv2.domain.model.auth.LoginRespModel
@@ -21,20 +20,16 @@ class LoginUseCase @Inject constructor(
             return@withContext ApiCondition.AppFailure(errorEmailKosong)
         }
 
-//        if (!reqModel.identity.isValidEmail())
-//            return@withContext ApiCondition.AppFailure(Exception("Format email tidak valid"))
-
         if (reqModel.password.isBlank()){
             val errorPasswordKosong = Exception("Password tidak boleh kosong")
             return@withContext ApiCondition.AppFailure(errorPasswordKosong)
         }
 
-        val hashedPassword = try {
+        var hashedPassword = try {
             PasswordHash.hashPassword(reqModel.password)
         } catch (exception: Exception) {
             return@withContext ApiCondition.AppFailure(exception)
         }
-
         return@withContext loginRepository.login(reqModel)
     }
 }

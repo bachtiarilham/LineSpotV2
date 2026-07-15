@@ -1,7 +1,5 @@
 package com.epy.linespotv2.presentation.input_manual
 
-import com.epy.linespotv2.domain.model.payment.PembayaranOptionType
-
 sealed class InputManualIntent {
     object LoadPage : InputManualIntent()
     object ClickBack : InputManualIntent()
@@ -9,7 +7,6 @@ sealed class InputManualIntent {
 
     data class ChangeNomorPolisi(val nomorPolisi: String) : InputManualIntent()
     data class SelectJenisKendaraan(val jenisKendaraan: String) : InputManualIntent()
-    data class ChangeWaktuMasuk(val waktuMasuk: String) : InputManualIntent()
 
     object SubmitInputManual : InputManualIntent()
 
@@ -18,6 +15,6 @@ sealed class InputManualIntent {
     object RefreshStatus : InputManualIntent()
 
     object ClickPaymentDetail : InputManualIntent()
-    data class SelectPaymentOption(val optionType: PembayaranOptionType) : InputManualIntent()
+    data class SelectPaymentOption(val optionType: String) : InputManualIntent()
     object ClickPrintReceipt : InputManualIntent()
 }

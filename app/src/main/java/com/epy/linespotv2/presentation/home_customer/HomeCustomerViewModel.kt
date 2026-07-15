@@ -1,21 +1,22 @@
-﻿package com.epy.linespotv2.presentation.home_customer
+package com.epy.linespotv2.presentation.home_customer
 
 import androidx.lifecycle.viewModelScope
 import com.epy.linespotv2.core.base.BaseViewModel
 import com.epy.linespotv2.core.network.ApiCondition
-import com.epy.linespotv2.domain.usecase.home.HomeUseCase
+import com.epy.linespotv2.domain.usecase.home.CustomerHomeUseCase
+import com.epy.linespotv2.presentation.home_customer.ui_model.toUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeCustomerViewModel @Inject constructor(
-    private val doHomeUseCase: HomeUseCase
+    private val doHomeUseCase: CustomerHomeUseCase
 ) : BaseViewModel<HomeCustomerIntent, HomeCustomerState>(HomeCustomerState()) {
 
     override fun onIntent(intent: HomeCustomerIntent) {
         when (intent) {
-            is HomeCustomerIntent.LoadHomeCustomer -> loadHome(isRefresh = false)
+            is HomeCustomerIntent.LoadHomeCustomer -> loadHome()
             is HomeCustomerIntent.clickProfile -> sendEffect(HomeCustomerEffect.NavigateToSettings)
             is HomeCustomerIntent.clickSubscribe -> sendEffect(HomeCustomerEffect.NavigateToSubscription)
             is HomeCustomerIntent.clickTopUp -> sendEffect(HomeCustomerEffect.NavigateToTopUp)
@@ -23,23 +24,23 @@ class HomeCustomerViewModel @Inject constructor(
             is HomeCustomerIntent.clickBooking -> sendEffect(HomeCustomerEffect.NavigateToBooking)
             is HomeCustomerIntent.clickPromo -> sendEffect(HomeCustomerEffect.NavigateToPromo)
             is HomeCustomerIntent.clickLayananLain -> sendEffect(HomeCustomerEffect.NavigateToLayananLain)
-            is HomeCustomerIntent.clickNotification -> sendEffect(
-                HomeCustomerEffect.ShowToast(message = "Notifikasi diklik")
-            )
+            is HomeCustomerIntent.clickNotification -> {
+                sendEffect(HomeCustomerEffect.ShowToast(message = "Notifikasi diklik"))
+            }
             is HomeCustomerIntent.dismissError -> updateState { it.copy(error = null) }
         }
     }
 
     fun consumeEffect() {
-        updateState { it.copy(homeCustomerEffect = null) }
+        updateState { it.copy(customerHomeEffect = null) }
     }
 
-    private fun loadHome(isRefresh: Boolean = false) {
+    private fun loadHome() {
         viewModelScope.launch {
             updateState {
                 it.copy(
-                    isLoading = !isRefresh,
-                    isRefresh = isRefresh,
+                    isLoading = true,
+                    isRefresh = false,
                     error = null
                 )
             }
@@ -49,8 +50,8 @@ class HomeCustomerViewModel @Inject constructor(
                     is ApiCondition.AppLoading -> {
                         updateState {
                             it.copy(
-                                isLoading = !isRefresh,
-                                isRefresh = isRefresh,
+                                isLoading = true,
+                                isRefresh = false,
                                 error = null
                             )
                         }
@@ -61,7 +62,8 @@ class HomeCustomerViewModel @Inject constructor(
                             it.copy(
                                 isLoading = false,
                                 isRefresh = false,
-                                homeResponseModel = result.data,
+                                customerHomeModel = result.data,
+                                uiModel = result.data.toUiModel(),
                                 error = null
                             )
                         }
@@ -88,7 +90,7 @@ class HomeCustomerViewModel @Inject constructor(
     }
 
     private fun sendEffect(effect: HomeCustomerEffect) {
-        updateState { it.copy(homeCustomerEffect = effect) }
+        updateState { it.copy(customerHomeEffect = effect) }
     }
 
     private fun String.isSessionExpiredMessage(): Boolean {

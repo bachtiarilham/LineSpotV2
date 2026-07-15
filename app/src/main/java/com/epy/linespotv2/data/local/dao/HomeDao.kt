@@ -4,36 +4,27 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.epy.linespotv2.data.local.entity.HomeEntity
+import com.epy.linespotv2.data.local.entity.CustomerEntity
+import com.epy.linespotv2.data.local.entity.JukirEntity
+
 
 @Dao
 interface HomeDao {
-    @Query(
-        """
-        SELECT
-            profileId,
-            profileName,
-            photoUrl,
-            0 AS saldo,
-            expiredDate,
-            0 AS pendapatan,
-            lokasi,
-            area,
-            zona,
-            events,
-            news,
-            warningProfile,
-            warningParking,
-            warningFinance,
-            cachedAt
-        FROM home_cache
-        """
-    )
-    suspend fun getHomeCache(): HomeEntity?
+    @Query("SELECT * FROM customer_cache LIMIT 1")
+    suspend fun getCustomerCache(): CustomerEntity?
+
+    @Query("SELECT * FROM jukir_cache LIMIT 1")
+    suspend fun getJukirCache(): JukirEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertHomeCache(cache: HomeEntity)
+    suspend fun insertCustomerCache(cache: CustomerEntity)
 
-    @Query("DELETE FROM home_cache")
-    suspend fun clearCache()
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertJukirCache(cache: JukirEntity)
+
+    @Query("DELETE FROM customer_cache")
+    suspend fun clearCustomerCache()
+
+    @Query("DELETE FROM jukir_cache")
+    suspend fun clearJukirCache()
 }

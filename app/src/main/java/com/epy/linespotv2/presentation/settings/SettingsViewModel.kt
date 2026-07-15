@@ -3,10 +3,10 @@ package com.epy.linespotv2.presentation.settings
 
 import androidx.lifecycle.viewModelScope
 import com.epy.linespotv2.core.base.BaseViewModel
-import com.epy.linespotv2.core.network.ApiCondition
 import com.epy.linespotv2.core.preferences.AppPreferences
-import com.epy.linespotv2.domain.model.auth.UserModel
-import com.epy.linespotv2.domain.usecase.user.GetProfileUseCase
+import com.epy.linespotv2.domain.model.helper.TarifModel
+import com.epy.linespotv2.domain.model.profile.CustomerModel
+import com.epy.linespotv2.domain.usecase.settings.GetJukirProfileUseCase
 import com.epy.linespotv2.domain.usecase.user.LogoutUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -14,28 +14,19 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val getProfileUseCase: GetProfileUseCase,
+    private val getJukirProfileUseCase: GetJukirProfileUseCase,
     private val logoutUseCase: LogoutUseCase,
     private val prefs: AppPreferences
 ) : BaseViewModel<SettingsIntent, SettingsState>(
     // Tampil data lokal dari prefs dulu sebelum API selesai
     initialState = SettingsState(
-        userModel = UserModel(
+        userModel = CustomerModel(
             userId = prefs.userId,
             nik = prefs.nik,
             fullName = prefs.fullName,
             phone = prefs.phone,
-            avatar_url = prefs.avatarUrl,
             email = prefs.email,
             username = prefs.username,
-            role = prefs.roleId,
-            isVerified = false,
-            lokasi = prefs.lokasi,
-            zona = prefs.zona,
-            tarif = TODO(),
-            registeredAt = TODO(),
-            createdAt = TODO(),
-            updatedAt = TODO()
         )
     )
 ) {
@@ -55,7 +46,7 @@ class SettingsViewModel @Inject constructor(
             is SettingsIntent.NavigateToPrivasi -> sendEffect(SettingsEffect.NavigateToPrivasi)
             is SettingsIntent.NavigateToMetodePembayaran -> sendEffect(SettingsEffect.NavigateToMetodePembayaran)
             is SettingsIntent.NavigateToSyaratKetentuan -> sendEffect(SettingsEffect.NavigateToSyaratKetentuan)
-            is SettingsIntent.NavigateToTentangAplikasi -> sendEffect(SettingsEffect.NavigateToSyaratKetentuan)
+            is SettingsIntent.NavigateToTentangAplikasi -> sendEffect(SettingsEffect.NavigateToTentangAplikasi)
             is SettingsIntent.NavigateToKeamanan -> sendEffect(SettingsEffect.NavigateToKeamanan)
         }
     }

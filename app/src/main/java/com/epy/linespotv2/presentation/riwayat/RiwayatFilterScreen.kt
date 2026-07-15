@@ -51,8 +51,9 @@ import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
 import com.epy.linespotv2.core.utils.parseIndonesiaDateOrNull
 import com.epy.linespotv2.core.utils.toIndonesiaDate
-import com.epy.linespotv2.domain.model.riwayat.RiwayatPaymentFilter
-import com.epy.linespotv2.domain.model.riwayat.RiwayatVehicleFilter
+import com.epy.linespotv2.presentation.riwayat.ui_model.RiwayatFilterUiModel
+import com.epy.linespotv2.presentation.riwayat.ui_model.RiwayatPaymentFilter
+import com.epy.linespotv2.presentation.riwayat.ui_model.RiwayatVehicleFilter
 import java.util.Date
 
 private enum class RiwayatDateField {
@@ -69,8 +70,6 @@ fun RiwayatFilterScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     var startDate by rememberSaveable { mutableStateOf(Date().toIndonesiaDate()) }
     var endDate by rememberSaveable { mutableStateOf(Date().toIndonesiaDate()) }
-    var selectedPayment by rememberSaveable { mutableStateOf(RiwayatPaymentFilter.ALL) }
-    var selectedVehicle by rememberSaveable { mutableStateOf(RiwayatVehicleFilter.ALL) }
 
     LaunchedEffect(Unit) {
         viewModel.onIntent(RiwayatIntent.loadFilterPage)
@@ -92,29 +91,29 @@ fun RiwayatFilterScreen(
         state = state,
         startDate = startDate,
         endDate = endDate,
-        selectedPayment = selectedPayment,
-        selectedVehicle = selectedVehicle,
+        selectedPayment = state.filterUiModel.selectedPayment,
+        selectedVehicle = state.filterUiModel.selectedVehicle,
         onReset = {
             startDate = Date().toIndonesiaDate()
             endDate = Date().toIndonesiaDate()
-            selectedPayment = RiwayatPaymentFilter.ALL
-            selectedVehicle = RiwayatVehicleFilter.ALL
             viewModel.onIntent(RiwayatIntent.selectLokasi("Semua Area"))
+            viewModel.onIntent(RiwayatIntent.selectPayment(RiwayatPaymentFilter.ALL.name))
+            viewModel.onIntent(RiwayatIntent.selectVehicle(RiwayatVehicleFilter.ALL.name))
         },
         onCancel = onCancel,
         onStartDateClick = { startDate = it },
         onEndDateClick = { endDate = it },
         onSelectLokasi = { viewModel.onIntent(RiwayatIntent.selectLokasi(it)) },
-        onSelectPayment = { selectedPayment = it },
-        onSelectVehicle = { selectedVehicle = it },
+        onSelectPayment = { viewModel.onIntent(RiwayatIntent.selectPayment(it.name)) },
+        onSelectVehicle = { viewModel.onIntent(RiwayatIntent.selectVehicle(it.name)) },
         onApply = {
             viewModel.onIntent(
                 RiwayatIntent.submitFilter(
                     startDate = startDate,
                     endDate = endDate,
-                    payment = selectedPayment,
-                    vehicle = selectedVehicle,
-                    lokasi = state.selectedLokasi
+                    payment = state.filterUiModel.selectedPayment.name,
+                    vehicle = state.filterUiModel.selectedVehicle.name,
+                    lokasi = state.filterUiModel.selectedLokasi
                 )
             )
         }
@@ -205,8 +204,8 @@ fun RiwayatFilterContent(
                     FilterChip("Semua", null, selectedPayment == RiwayatPaymentFilter.ALL, Modifier.weight(1f)) {
                         onSelectPayment(RiwayatPaymentFilter.ALL)
                     }
-                    FilterChip("Tunai", Icons.Default.MonetizationOn, selectedPayment == RiwayatPaymentFilter.QRIS, Modifier.weight(1f)) {
-                        onSelectPayment(RiwayatPaymentFilter.QRIS)
+                    FilterChip("Tunai", Icons.Default.MonetizationOn, selectedPayment == RiwayatPaymentFilter.TUNAI, Modifier.weight(1f)) {
+                        onSelectPayment(RiwayatPaymentFilter.TUNAI)
                     }
                     FilterChip("Non Tunai", Icons.Default.CalendarMonth, selectedPayment == RiwayatPaymentFilter.NON_TUNAI, Modifier.weight(1f)) {
                         onSelectPayment(RiwayatPaymentFilter.NON_TUNAI)
@@ -230,8 +229,8 @@ fun RiwayatFilterContent(
 
             FilterSection("Area Parkir") {
                 DropdownField(
-                    text = state.selectedLokasi,
-                    locations = state.lokasiList,
+                    text = state.filterUiModel.selectedLokasi,
+                    locations = state.filterUiModel.lokasiOptions,
                     isLoading = state.isLoadingLokasi,
                     error = state.errorLokasi,
                     onSelect = onSelectLokasi
@@ -617,7 +616,13 @@ private fun RiwayatFilterScreenPreview() {
             RiwayatFilterContent(
                 state = RiwayatState(
                     lokasiList = listOf("Semua Area", "Zona Biru", "Zona Merah"),
-                    selectedLokasi = "Zona Biru"
+                    selectedLokasi = "Zona Biru",
+                    filterUiModel = RiwayatFilterUiModel(
+                        lokasiOptions = listOf("Semua Area", "Zona Biru", "Zona Merah"),
+                        selectedLokasi = "Zona Biru",
+                        selectedVehicle = RiwayatVehicleFilter.ALL,
+                        selectedPayment = RiwayatPaymentFilter.ALL
+                    )
                 ),
                 startDate = Date().toIndonesiaDate(),
                 endDate = Date().toIndonesiaDate(),

@@ -3,8 +3,7 @@ package com.epy.linespotv2.data.repository_impl.payment
 import com.epy.linespotv2.core.network.ApiCondition
 import com.epy.linespotv2.core.utils.Dispatcher
 import com.epy.linespotv2.data.remote.api.ApiService
-import com.epy.linespotv2.data.remote.mapper.auth.toDomain
-import com.epy.linespotv2.domain.model.payment.PostParkingRespModel
+import com.epy.linespotv2.domain.model.parking.PostParkingRespModel
 import com.epy.linespotv2.domain.repository.payment.GetPembayaranStatusRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

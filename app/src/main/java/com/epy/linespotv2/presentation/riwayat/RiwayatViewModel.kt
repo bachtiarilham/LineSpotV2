@@ -3,13 +3,14 @@
 import androidx.lifecycle.viewModelScope
 import com.epy.linespotv2.core.base.BaseViewModel
 import com.epy.linespotv2.core.network.ApiCondition
-import com.epy.linespotv2.core.preferences.AppPreferences
 import com.epy.linespotv2.domain.model.helper.LokasiModel
-import com.epy.linespotv2.domain.model.riwayat.RiwayatPaymentFilter
 import com.epy.linespotv2.domain.model.riwayat.RiwayatRequestModel
-import com.epy.linespotv2.domain.model.riwayat.RiwayatVehicleFilter
 import com.epy.linespotv2.domain.usecase.helper.GetLokasiUseCase
 import com.epy.linespotv2.domain.usecase.riwayat.RiwayatUseCase
+import com.epy.linespotv2.presentation.riwayat.ui_model.RiwayatPaymentFilter
+import com.epy.linespotv2.presentation.riwayat.ui_model.RiwayatVehicleFilter
+import com.epy.linespotv2.presentation.riwayat.ui_model.toRiwayatFilterUiModel
+import com.epy.linespotv2.presentation.riwayat.ui_model.toUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -18,8 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class RiwayatViewModel @Inject constructor(
     private val doRiwayatUseCase: RiwayatUseCase,
-    private val doGetLokasiUseCase: GetLokasiUseCase,
-    private val prefs: AppPreferences
+    private val doGetLokasiUseCase: GetLokasiUseCase
 ) : BaseViewModel<RiwayatIntent, RiwayatState>(RiwayatState()) {
 
     override fun onIntent(intent: RiwayatIntent) {
@@ -27,14 +27,14 @@ class RiwayatViewModel @Inject constructor(
             RiwayatIntent.loadPage -> loadRiwayatPage()
             RiwayatIntent.loadFilterPage -> loadFilterPage()
             RiwayatIntent.clickRiwayatDetail -> sendEffect(RiwayatEffect.NavigateToDetail)
-            is RiwayatIntent.selectVehicle -> updateState { it.copy(selectedVehicle = intent.vehicle, error = null) }
-            is RiwayatIntent.selectPayment -> updateState { it.copy(selectedPayment = intent.payment, error = null) }
-            is RiwayatIntent.selectLokasi -> updateState { it.copy(selectedLokasi = intent.lokasi, error = null) }
+            is RiwayatIntent.selectVehicle -> updateSelectedVehicle(intent.vehicle)
+            is RiwayatIntent.selectPayment -> updateSelectedPayment(intent.payment)
+            is RiwayatIntent.selectLokasi -> updateSelectedLokasi(intent.lokasi)
             is RiwayatIntent.submitFilter -> submitFilter(
                 startDate = intent.startDate,
                 endDate = intent.endDate,
-                payment = intent.payment,
-                vehicle = intent.vehicle,
+                payment = intent.payment.toRiwayatPaymentFilter(),
+                vehicle = intent.vehicle.toRiwayatVehicleFilter(),
                 lokasi = intent.lokasi
             )
         }
@@ -42,6 +42,50 @@ class RiwayatViewModel @Inject constructor(
 
     fun consumeEffect() {
         updateState { it.copy(riwayatEffect = null) }
+    }
+
+    private fun updateSelectedVehicle(vehicle: String) {
+        val selectedVehicle = vehicle.toRiwayatVehicleFilter()
+        updateState { currentState ->
+            currentState.copy(
+                selectedVehicle = selectedVehicle,
+                error = null,
+                filterUiModel = currentState.lokasiList.toRiwayatFilterUiModel(
+                    selectedLokasi = currentState.selectedLokasi,
+                    selectedVehicle = selectedVehicle,
+                    selectedPayment = currentState.selectedPayment
+                )
+            )
+        }
+    }
+
+    private fun updateSelectedPayment(payment: String) {
+        val selectedPayment = payment.toRiwayatPaymentFilter()
+        updateState { currentState ->
+            currentState.copy(
+                selectedPayment = selectedPayment,
+                error = null,
+                filterUiModel = currentState.lokasiList.toRiwayatFilterUiModel(
+                    selectedLokasi = currentState.selectedLokasi,
+                    selectedVehicle = currentState.selectedVehicle,
+                    selectedPayment = selectedPayment
+                )
+            )
+        }
+    }
+
+    private fun updateSelectedLokasi(lokasi: String) {
+        updateState { currentState ->
+            currentState.copy(
+                selectedLokasi = lokasi,
+                error = null,
+                filterUiModel = currentState.lokasiList.toRiwayatFilterUiModel(
+                    selectedLokasi = lokasi,
+                    selectedVehicle = currentState.selectedVehicle,
+                    selectedPayment = currentState.selectedPayment
+                )
+            )
+        }
     }
 
     private fun loadRiwayatPage() {
@@ -69,15 +113,13 @@ class RiwayatViewModel @Inject constructor(
                     }
 
                     is ApiCondition.AppSuccess -> {
-                        val lokasiList = result.data.withDefaultOption()
+                        val currentState = state.value
+
                         updateState {
                             it.copy(
                                 isLoadingLokasi = false,
-                                lokasiList = lokasiList,
-                                selectedLokasi = it.selectedLokasi
-                                    .takeIf { selected -> lokasiList.contains(selected) }
-                                    ?: lokasiList.firstOrNull()
-                                    ?: "Semua Area",
+                                selectedVehicle = currentState.selectedVehicle,
+                                selectedPayment = currentState.selectedPayment,
                                 errorLokasi = null
                             )
                         }
@@ -113,22 +155,19 @@ class RiwayatViewModel @Inject constructor(
                     isLoading = true,
                     error = null,
                     selectedLokasi = lokasi,
-                    selectedPayment = payment.name,
-                    selectedVehicle = vehicle.name
+                    selectedPayment = payment,
+                    selectedVehicle = vehicle
                 )
             }
 
             when (
                 val result = doRiwayatUseCase(
                     reqModel = RiwayatRequestModel(
-                    userId = prefs.userId,
-                    username = prefs.username,
-                    roleId = prefs.roleId,
-                    startDate = startDate,
-                    endDate = endDate,
-                    payment = payment,
-                    vehicle = vehicle,
-                    lokasi = lokasi
+                        startDate = startDate,
+                        endDate = endDate,
+                        paymentCode = payment.code.takeUnless { it == RiwayatPaymentFilter.ALL.code },
+                        vehicleCode = vehicle.code.takeUnless { it == RiwayatVehicleFilter.ALL.code },
+                        lokasiCode = lokasi.takeUnless { it == "Semua Area" }
                     ),
                 )
             ) {
@@ -138,10 +177,16 @@ class RiwayatViewModel @Inject constructor(
                             isLoading = false,
                             isRefresh = false,
                             riwayatResponseModel = result.data,
+                            screenUiModel = result.data.toUiModel(),
                             error = null,
                             selectedLokasi = lokasi,
-                            selectedPayment = payment.name,
-                            selectedVehicle = vehicle.name
+                            selectedPayment = payment,
+                            selectedVehicle = vehicle,
+                            filterUiModel = it.lokasiList.toRiwayatFilterUiModel(
+                                selectedLokasi = lokasi,
+                                selectedVehicle = vehicle,
+                                selectedPayment = payment
+                            )
                         )
                     }
                     sendEffect(RiwayatEffect.NavigateToRiwayat)
@@ -169,12 +214,13 @@ class RiwayatViewModel @Inject constructor(
         }
     }
 
-    private fun LokasiModel.withDefaultOption(): List<String> {
-        val source = nama_lokasi.filter { it.isNotBlank() }
-        return if (source.any { it == "Semua Area" }) {
-            source
-        } else {
-            listOf("Semua Area") + source
-        }
+    private fun String.toRiwayatPaymentFilter(): RiwayatPaymentFilter {
+        return RiwayatPaymentFilter.entries.firstOrNull { it.name == this || it.code == this }
+            ?: RiwayatPaymentFilter.ALL
+    }
+
+    private fun String.toRiwayatVehicleFilter(): RiwayatVehicleFilter {
+        return RiwayatVehicleFilter.entries.firstOrNull { it.name == this || it.code == this }
+            ?: RiwayatVehicleFilter.ALL
     }
 }

@@ -7,6 +7,5 @@ sealed class LaporanIntent {
     data class submitFilter(
         val startDate: String,
         val endDate: String,
-        val lokasi: String
     ) : LaporanIntent()
 }

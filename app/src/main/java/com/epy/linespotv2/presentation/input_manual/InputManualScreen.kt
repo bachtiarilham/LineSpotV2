@@ -1,5 +1,6 @@
 package com.epy.linespotv2.presentation.input_manual
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,8 +29,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,11 +45,8 @@ import com.epy.linespotv2.core.ui.theme.GreyText
 import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
-import com.epy.linespotv2.core.utils.toRupiah
-import com.epy.linespotv2.domain.model.payment.InputManualModel
-import com.epy.linespotv2.domain.model.payment.InputManualTarifSummary
-import com.epy.linespotv2.domain.model.payment.InputManualVehicleOption
-import com.epy.linespotv2.domain.model.payment.InputManualVehicleType
+import com.epy.linespotv2.presentation.input_manual.ui_model.InputManualUiModel
+import com.epy.linespotv2.presentation.input_manual.ui_model.InputManualVehicleUiFilter
 
 @Composable
 fun InputManualScreen(
@@ -76,13 +74,14 @@ fun InputManualScreen(
             is InputManualEffect.NavigateToPaymentMethod,
             InputManualEffect.PrintReceipt,
             is InputManualEffect.ShowToast,
+            InputManualEffect.ShowPaymentSuccess,
+            InputManualEffect.ShowPaymentFailed,
             null -> Unit
-
-            else -> {}
         }
     }
 
     InputManualContent(
+        uiModel = state.inputManualUiModel,
         state = state,
         onIntent = viewModel::onIntent
     )
@@ -90,11 +89,10 @@ fun InputManualScreen(
 
 @Composable
 private fun InputManualContent(
+    uiModel: InputManualUiModel,
     state: InputManualState,
     onIntent: (InputManualIntent) -> Unit
 ) {
-    val model = state.inputManualModel
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -105,27 +103,27 @@ private fun InputManualContent(
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         SimpleTopBar(
-            title = "Input Manual",
+            title = uiModel.title,
             onBack = { onIntent(InputManualIntent.ClickBack) }
         )
-        InfoCard(INPUT_MANUAL_INFO_MESSAGE)
+        InfoCard(uiModel.infoMessage)
         SectionLabel("Data Kendaraan")
         NomorPolisiField(
-            value = model.nomorPolisi,
-            placeholder = INPUT_MANUAL_PLATE_PLACEHOLDER,
+            value = uiModel.nomorPolisi,
+            placeholder = uiModel.nomorPolisiPlaceholder,
             onValueChange = { onIntent(InputManualIntent.ChangeNomorPolisi(it)) }
         )
         SectionLabel("Jenis Kendaraan")
         VehicleSelector(
-            vehicleOptions = INPUT_MANUAL_VEHICLE_OPTIONS,
-            selectedVehicle = model.selectedVehicle,
+            vehicleOptions = uiModel.vehicleOptions,
+            selectedVehicle = uiModel.selectedVehicle,
             onVehicleSelected = {
-                onIntent(InputManualIntent.SelectJenisKendaraan(it.label))
+                onIntent(InputManualIntent.SelectJenisKendaraan(it.code))
             }
         )
-        ReadOnlyField("Waktu Masuk", model.waktuMasuk, Icons.Default.CalendarMonth)
-        ReadOnlyField("Area Parkir", model.areaParkir, Icons.Default.ArrowDownward)
-        TariffCard(tarifSummary = model.tarifSummary)
+        ReadOnlyField("Waktu Masuk", uiModel.waktuMasuk, Icons.Default.CalendarMonth)
+        ReadOnlyField("Area Parkir", uiModel.areaParkir, Icons.Default.ArrowDownward)
+        TariffCard(totalTarifLabel = uiModel.totalTarifLabel)
 
         state.error?.takeIf { it.isNotBlank() }?.let { message ->
             Text(
@@ -138,12 +136,14 @@ private fun InputManualContent(
         Surface(
             color = if (state.isLoading) SmartBlue.copy(alpha = 0.7f) else SmartBlue,
             shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.clickable(enabled = !state.isLoading) {
-                onIntent(InputManualIntent.SubmitInputManual)
-            }
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(enabled = !state.isLoading) {
+                    onIntent(InputManualIntent.SubmitInputManual)
+                }
         ) {
             Text(
-                text = if (state.isLoading) "Memproses..." else "Simpan & Proses Pembayaran",
+                text = if (state.isLoading) "Memproses..." else uiModel.submitLabel,
                 color = White,
                 style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center,
@@ -154,7 +154,7 @@ private fun InputManualContent(
         }
 
         Text(
-            text = "Batal",
+            text = uiModel.cancelLabel,
             color = SmartBlue,
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier
@@ -166,15 +166,15 @@ private fun InputManualContent(
 
 @Composable
 private fun VehicleSelector(
-    vehicleOptions: List<InputManualVehicleOption>,
-    selectedVehicle: InputManualVehicleType,
-    onVehicleSelected: (InputManualVehicleOption) -> Unit
+    vehicleOptions: List<InputManualVehicleUiFilter>,
+    selectedVehicle: InputManualVehicleUiFilter,
+    onVehicleSelected: (InputManualVehicleUiFilter) -> Unit
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         vehicleOptions.forEach { option ->
             VehicleChip(
                 text = option.label,
-                selected = option.type == selectedVehicle,
+                selected = option == selectedVehicle,
                 modifier = Modifier.weight(1f),
                 onClick = { onVehicleSelected(option) }
             )
@@ -192,10 +192,7 @@ private fun VehicleChip(
     Surface(
         color = if (selected) Color(0xFFEFF5FF) else White,
         shape = RoundedCornerShape(12.dp),
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            if (selected) SmartBlue else Color(0xFFE3E8F0)
-        ),
+        border = BorderStroke(1.dp, if (selected) SmartBlue else Color(0xFFE3E8F0)),
         modifier = modifier.clickable { onClick() }
     ) {
         Row(
@@ -220,9 +217,7 @@ private fun VehicleChip(
 }
 
 @Composable
-private fun TariffCard(
-    tarifSummary: InputManualTarifSummary
-) {
+private fun TariffCard(totalTarifLabel: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -233,21 +228,16 @@ private fun TariffCard(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             SectionLabel("Tarif")
-            SummaryRow("Durasi Parkir", tarifSummary.durasiParkir)
-            SummaryRow("Total Tarif", tarifSummary.totalTarif.toRupiah(), highlight = true)
+            SummaryRow("Total Tarif", totalTarifLabel)
         }
     }
 }
 
 @Composable
-private fun SummaryRow(label: String, value: String, highlight: Boolean = false) {
+private fun SummaryRow(label: String, value: String) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(text = label, color = GreyText, style = MaterialTheme.typography.bodySmall)
-        Text(
-            text = value,
-            color = if (highlight) DarkBlue else DarkBlue,
-            style = MaterialTheme.typography.bodyMedium
-        )
+        Text(text = value, color = DarkBlue, style = MaterialTheme.typography.bodyMedium)
     }
 }
 
@@ -263,11 +253,7 @@ private fun NomorPolisiField(
             value = value,
             onValueChange = onValueChange,
             placeholder = {
-                Text(
-                    text = placeholder,
-                    color = GreyText,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Text(text = placeholder, color = GreyText, style = MaterialTheme.typography.bodyMedium)
             },
             singleLine = true,
             textStyle = MaterialTheme.typography.bodyMedium.copy(color = DarkBlue),
@@ -288,7 +274,7 @@ private fun ReadOnlyField(
         Surface(
             color = White,
             shape = RoundedCornerShape(12.dp),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE4EAF3))
+            border = BorderStroke(1.dp, Color(0xFFE4EAF3))
         ) {
             Row(
                 modifier = Modifier
@@ -346,26 +332,15 @@ private fun SimpleTopBar(title: String, onBack: () -> Unit) {
 private fun InputManualScreenPreview() {
     MaterialTheme {
         InputManualContent(
-            state = InputManualState(
-                inputManualModel = InputManualModel(
-                    nomorPolisi = "B 1234 ABC",
-                    selectedVehicle = InputManualVehicleType.MOTOR,
-                    waktuMasuk = "30 Mei 2024, 08:15:00",
-                    areaParkir = "Jl. Sudirman - Zona Biru",
-                    tarifSummary = InputManualTarifSummary(
-                        durasiParkir = "0 jam 00 menit",
-                        totalTarif = 2_000
-                    )
-                )
+            uiModel = InputManualUiModel(
+                nomorPolisi = "B 1234 ABC",
+                selectedVehicle = InputManualVehicleUiFilter.MOTOR,
+                waktuMasuk = "30 Mei 2024, 08:15:00",
+                areaParkir = "Jl. Sudirman - Zona Biru",
+                totalTarifLabel = "Rp 2.000"
             ),
+            state = InputManualState(),
             onIntent = {}
         )
     }
-}
-
-private const val INPUT_MANUAL_INFO_MESSAGE =
-    "Masukkan data kendaraan secara manual jika tiket tidak tersedia atau rusak."
-private const val INPUT_MANUAL_PLATE_PLACEHOLDER = "Contoh: B 1234 ABC"
-private val INPUT_MANUAL_VEHICLE_OPTIONS = InputManualVehicleType.entries.map { type ->
-    InputManualVehicleOption(type = type)
 }

@@ -90,7 +90,6 @@ fun LaporanFilterScreen(
         state = state,
         onBack = onBack,
         onIntent = viewModel::onIntent,
-        onSelectLokasi = viewModel::updateSelectedLokasi
     )
 }
 
@@ -99,7 +98,6 @@ private fun LaporanFilterContent(
     state: LaporanState,
     onBack: () -> Unit,
     onIntent: (LaporanIntent) -> Unit,
-    onSelectLokasi: (String) -> Unit
 ) {
     var startDate by rememberSaveable { mutableStateOf(Date().toIndonesiaDate()) }
     var endDate by rememberSaveable { mutableStateOf(Date().toIndonesiaDate()) }
@@ -122,22 +120,11 @@ private fun LaporanFilterContent(
             ErrorBanner(message = message)
         }
 
-        state.errorLokasi?.takeIf { it.isNotBlank() }?.let { message ->
-            ErrorBanner(message = message)
-        }
-
         PeriodSection(
             startDate = startDate,
             endDate = endDate,
             onStartDateClick = { showStartDatePicker = true },
             onEndDateClick = { showEndDatePicker = true }
-        )
-
-        AreaSection(
-            lokasiList = state.lokasiList,
-            selectedLokasi = state.selectedLokasi,
-            isLoading = state.isLoadingLokasi,
-            onSelectLokasi = onSelectLokasi
         )
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -149,7 +136,6 @@ private fun LaporanFilterContent(
                     LaporanIntent.submitFilter(
                         startDate = startDate,
                         endDate = endDate,
-                        lokasi = state.selectedLokasi
                     )
                 )
             }
@@ -269,37 +255,6 @@ private fun PeriodSection(
                 endDate = endDate,
                 onStartDateClick = onStartDateClick,
                 onEndDateClick = onEndDateClick
-            )
-        }
-    }
-}
-
-@Composable
-private fun AreaSection(
-    lokasiList: List<String>,
-    selectedLokasi: String,
-    isLoading: Boolean,
-    onSelectLokasi: (String) -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = White)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = "Area Parkir",
-                color = DarkBlue,
-                style = MaterialTheme.typography.titleMedium
-            )
-            LokasiDropdown(
-                lokasiList = lokasiList,
-                selectedLokasi = selectedLokasi,
-                isLoading = isLoading,
-                onSelectLokasi = onSelectLokasi
             )
         }
     }
@@ -506,13 +461,9 @@ private fun SubmitButton(
 private fun LaporanFilterScreenPreview() {
     MaterialTheme {
         LaporanFilterContent(
-            state = LaporanState(
-                lokasiList = listOf("Semua Area", "Jl. Sudirman - Zona Biru", "Jl. Asia Afrika"),
-                selectedLokasi = "Semua Area"
-            ),
+            state = LaporanState(),
             onBack = {},
             onIntent = {},
-            onSelectLokasi = {}
         )
     }
 }

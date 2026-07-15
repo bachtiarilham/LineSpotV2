@@ -1,7 +1,7 @@
 package com.epy.linespotv2.presentation.laporan
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,10 +22,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.FileCopy
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MonetizationOn
-import androidx.compose.material.icons.filled.North
+import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -46,24 +45,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.epy.linespotv2.core.ui.theme.Success
 import com.epy.linespotv2.core.ui.theme.DarkBlue
 import com.epy.linespotv2.core.ui.theme.GreyText
 import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
-import com.epy.linespotv2.core.utils.toRupiah
-import com.epy.linespotv2.domain.model.laporan.LaporanChartBar
-import com.epy.linespotv2.domain.model.laporan.LaporanDateRange
-import com.epy.linespotv2.domain.model.laporan.LaporanResponseModel
-import com.epy.linespotv2.domain.model.laporan.LaporanPaymentSummary
-import com.epy.linespotv2.domain.model.laporan.LaporanRecentTransaction
-import com.epy.linespotv2.domain.model.laporan.LaporanSummary
+import com.epy.linespotv2.presentation.laporan.ui_model.LaporanChartItemUiModel
+import com.epy.linespotv2.presentation.laporan.ui_model.LaporanScreenUiModel
+import com.epy.linespotv2.presentation.laporan.ui_model.LaporanSummaryItemUiModel
 
 @Composable
 fun LaporanScreen(
     onBack: () -> Unit = {},
-    onOpenFilter: () -> Unit = {},
     viewModel: LaporanViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -74,18 +67,13 @@ fun LaporanScreen(
 
     LaunchedEffect(state.laporanEffect) {
         when (state.laporanEffect) {
-            LaporanEffect.NavigateToFilter -> {
-                onOpenFilter()
-                viewModel.consumeEffect()
-            }
+            LaporanEffect.NavigateToFilter -> viewModel.consumeEffect()
             LaporanEffect.NavigateToLaporan -> viewModel.consumeEffect()
             null -> Unit
         }
     }
 
-    Scaffold(
-        containerColor = PageBg
-    ) { paddingValues ->
+    Scaffold(containerColor = PageBg) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -94,17 +82,18 @@ fun LaporanScreen(
         ) {
             when {
                 state.isLoading -> FullScreenLoading()
-                state.laporanResponseModel != null -> {
+                state.screenUiModel != null -> {
                     LaporanScreenContent(
-                        laporan = state.laporanResponseModel!!,
-                        onBack = onBack,
-                        onOpenFilter = onOpenFilter
+                        uiModel = state.screenUiModel!!,
+                        onBack = onBack
                     )
                 }
-                else -> ErrorScreen(
-                    message = state.error ?: "Terjadi kesalahan",
-                    onRetry = { viewModel.onIntent(LaporanIntent.loadPage) }
-                )
+                else -> {
+                    ErrorScreen(
+                        message = state.error ?: "Belum ada data laporan",
+                        onRetry = { viewModel.onIntent(LaporanIntent.loadPage) }
+                    )
+                }
             }
         }
     }
@@ -112,9 +101,8 @@ fun LaporanScreen(
 
 @Composable
 private fun LaporanScreenContent(
-    laporan: LaporanResponseModel,
-    onBack: () -> Unit,
-    onOpenFilter: () -> Unit
+    uiModel: LaporanScreenUiModel,
+    onBack: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -127,72 +115,75 @@ private fun LaporanScreenContent(
     ) {
         SimpleHeader(
             title = "Laporan",
-            onBack = onBack,
-            actionText = "Filter",
-            onActionClick = onOpenFilter
+            onBack = onBack
         )
-        TanggalTerpilih(
-            periode = laporan.periode,
-            fallbackText = laporan.tanggalTerpilih
+        TanggalTerpilih(periodeText = uiModel.selectedDateLabel)
+        SummaryGrid(
+            totalTransaksi = uiModel.totalTransaksiLabel,
+            totalPendapatan = uiModel.totalPendapatanLabel,
+            rataRataTransaksi = uiModel.rataRataTransaksiLabel
         )
-        SummaryGrid(summary = laporan.summary)
         ChartCard(
-            totalPendapatan = laporan.summary.totalPendapatan,
-            chartBars = laporan.chartBars
+            totalPendapatan = uiModel.totalPendapatanLabel,
+            chartItems = uiModel.chartItems
         )
         SectionHeader("Ringkasan")
-        SummaryCard(paymentSummaries = laporan.paymentSummaries)
+        SummaryCard(summaryItems = uiModel.summaryItems)
         DownloadButton()
     }
 }
 
 @Composable
-private fun TanggalTerpilih(
-    periode: LaporanDateRange,
-    fallbackText: String,
-) {
-    val periodeText = when {
-        periode.label.isNotBlank() -> periode.label
-        periode.startDate.isNotBlank() && periode.endDate.isNotBlank() -> "${periode.startDate} - ${periode.endDate}"
-        fallbackText.isNotBlank() -> fallbackText
-        else -> "-"
-    }
-
+private fun TanggalTerpilih(periodeText: String) {
     Surface(
         color = White,
         shape = RoundedCornerShape(14.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = "Tanggal Terpilih",
-                    color = GreyText,
-                    style = MaterialTheme.typography.labelMedium
-                )
-                Text(
-                    text = periodeText,
-                    color = DarkBlue,
-                    style = MaterialTheme.typography.titleSmall
-                )
-            }
+            Text(
+                text = "Tanggal Terpilih",
+                color = GreyText,
+                style = MaterialTheme.typography.labelMedium
+            )
+            Text(
+                text = periodeText,
+                color = DarkBlue,
+                style = MaterialTheme.typography.titleSmall
+            )
         }
     }
 }
 
 @Composable
-private fun SummaryGrid(summary: LaporanSummary) {
+private fun SummaryGrid(
+    totalTransaksi: String,
+    totalPendapatan: String,
+    rataRataTransaksi: String
+) {
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        SummaryMetric("Total Transaksi", summary.totalTransaksi.toString(), Icons.Default.FileCopy, modifier = Modifier.weight(1f))
-        SummaryMetric("Total Pendapatan", summary.totalPendapatan.toRupiah(), Icons.Default.Description, modifier = Modifier.weight(1f))
-        SummaryMetric("Rata-rata Transaksi", summary.rataRataTransaksi.toRupiah(), Icons.Default.MonetizationOn, modifier = Modifier.weight(1f))
+        SummaryMetric(
+            title = "Total Transaksi",
+            value = totalTransaksi,
+            icon = Icons.Default.ReceiptLong,
+            modifier = Modifier.weight(1f)
+        )
+        SummaryMetric(
+            title = "Total Pendapatan",
+            value = totalPendapatan,
+            icon = Icons.Default.Description,
+            modifier = Modifier.weight(1f)
+        )
+        SummaryMetric(
+            title = "Rata-rata",
+            value = rataRataTransaksi,
+            icon = Icons.Default.MonetizationOn,
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 
@@ -212,17 +203,30 @@ private fun SummaryMetric(
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Icon(icon, null, tint = SmartBlue, modifier = Modifier.size(18.dp))
-            Text(text = title, color = GreyText, style = MaterialTheme.typography.labelSmall)
-            Text(text = value, color = DarkBlue, style = MaterialTheme.typography.titleSmall)
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = SmartBlue,
+                modifier = Modifier.size(18.dp)
+            )
+            Text(
+                text = title,
+                color = GreyText,
+                style = MaterialTheme.typography.labelSmall
+            )
+            Text(
+                text = value,
+                color = DarkBlue,
+                style = MaterialTheme.typography.titleSmall
+            )
         }
     }
 }
 
 @Composable
 private fun ChartCard(
-    totalPendapatan: Long,
-    chartBars: List<LaporanChartBar>
+    totalPendapatan: String,
+    chartItems: List<LaporanChartItemUiModel>
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -250,56 +254,27 @@ private fun ChartCard(
                 )
             }
 
-            Row(
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-//                        text = "Total Pendapatan",
-                        text = "Total Pendapatan",
-                        color = GreyText,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Text(
-                        text = totalPendapatan.toRupiah(),
-                        color = DarkBlue,
-                        style = MaterialTheme.typography.headlineMedium
-                    )
-                }
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.North,
-                            contentDescription = null,
-                            tint = Success,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = "12%",
-                            color = Success,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                    Text(
-                        text = "vs bulan lalu",
-                        color = GreyText,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = "Total Pendapatan",
+                    color = GreyText,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = totalPendapatan,
+                    color = DarkBlue,
+                    style = MaterialTheme.typography.headlineMedium
+                )
             }
 
-            LaporanBarChart(chartBars = chartBars)
+            LaporanBarChart(chartItems = chartItems)
         }
     }
 }
 
 @Composable
-private fun LaporanBarChart(chartBars: List<LaporanChartBar>) {
-    if (chartBars.isEmpty()) {
+private fun LaporanBarChart(chartItems: List<LaporanChartItemUiModel>) {
+    if (chartItems.isEmpty()) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -315,35 +290,23 @@ private fun LaporanBarChart(chartBars: List<LaporanChartBar>) {
         return
     }
 
-    val maxAmount = chartBars.maxOf { it.amount }.coerceAtLeast(1L)
+    val maxAmount = chartItems.maxOf { it.amount }.coerceAtLeast(1L)
 
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(260.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalAlignment = Alignment.Bottom
-        ) {
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxSize()
-                    .border(width = 1.dp, color = Color(0xFFE7EDF6), shape = RoundedCornerShape(18.dp))
-                    .padding(horizontal = 12.dp, vertical = 14.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
-            ) {
-                chartBars.forEach { bar ->
-                    VerticalBarItem(
-                        label = bar.periodLabel.ifBlank { bar.tanggal },
-                        valueLabel = bar.amount.toChartAmountLabel(),
-                        ratio = (bar.amount.toFloat() / maxAmount.toFloat()).coerceIn(0f, 1f),
-                        isHighlighted = bar.amount == maxAmount,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(260.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.Bottom
+    ) {
+        chartItems.forEach { item ->
+            VerticalBarItem(
+                label = item.label,
+                valueLabel = item.valueLabel,
+                ratio = (item.amount.toFloat() / maxAmount.toFloat()).coerceIn(0f, 1f),
+                isHighlighted = item.isHighlighted,
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }
@@ -369,8 +332,8 @@ private fun VerticalBarItem(
         Spacer(modifier = Modifier.height(8.dp))
         Box(
             modifier = Modifier
-                .height(160.dp)
-                .width(22.dp),
+                .width(24.dp)
+                .height(160.dp),
             contentAlignment = Alignment.BottomCenter
         ) {
             Box(
@@ -393,77 +356,53 @@ private fun VerticalBarItem(
 }
 
 @Composable
-private fun SummaryCard(paymentSummaries: List<LaporanPaymentSummary>) {
+private fun SummaryCard(summaryItems: List<LaporanSummaryItemUiModel>) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = White)
     ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            paymentSummaries.forEach { summary ->
-                SummaryLine(
-                    label = summary.label,
-                    value = summary.amount.toRupiah(),
-                    percent = "${summary.percentage}%"
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SummaryLine(label: String, value: String, percent: String) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(text = label, color = DarkBlue, style = MaterialTheme.typography.bodyMedium)
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(text = value, color = DarkBlue, style = MaterialTheme.typography.bodyMedium)
-            Text(text = percent, color = GreyText, style = MaterialTheme.typography.bodySmall)
-        }
-    }
-}
-
-private fun Int.toCountdownText(): String {
-    val minutes = this / 60
-    val seconds = this % 60
-    return String.format("%02d:%02d", minutes, seconds)
-}
-
-@Composable
-private fun RecentTransactions(
-    transactions: List<LaporanRecentTransaction>
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        transactions.forEach { transaction ->
-            TransactionRow(
-                code = transaction.code,
-                time = transaction.time,
-                total = transaction.total.toRupiah(),
-                tag = transaction.paymentTag
-            )
-        }
-    }
-}
-
-@Composable
-private fun TransactionRow(code: String, time: String, total: String, tag: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = White)
-    ) {
-        Row(
-            modifier = Modifier.padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = code, color = DarkBlue, style = MaterialTheme.typography.bodyMedium)
-                Text(text = time, color = GreyText, style = MaterialTheme.typography.bodySmall)
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                Text(text = total, color = DarkBlue, style = MaterialTheme.typography.bodyMedium)
-                Text(text = tag, color = SmartBlue, style = MaterialTheme.typography.bodySmall)
+            if (summaryItems.isEmpty()) {
+                Text(
+                    text = "Belum ada ringkasan transaksi",
+                    color = GreyText,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            } else {
+                summaryItems.forEach { summary ->
+                    SummaryLine(
+                        label = summary.label,
+                        value = summary.value
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun SummaryLine(
+    label: String,
+    value: String
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            color = DarkBlue,
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+            text = value,
+            color = DarkBlue,
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 }
 
@@ -472,7 +411,7 @@ private fun DownloadButton() {
     Surface(
         color = White,
         shape = RoundedCornerShape(12.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFD4E2FF))
+        border = BorderStroke(1.dp, Color(0xFFD4E2FF))
     ) {
         Row(
             modifier = Modifier
@@ -481,40 +420,47 @@ private fun DownloadButton() {
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Default.Download, null, tint = SmartBlue, modifier = Modifier.size(18.dp))
+            Icon(
+                imageVector = Icons.Default.Download,
+                contentDescription = null,
+                tint = SmartBlue,
+                modifier = Modifier.size(18.dp)
+            )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = "Unduh Laporan", color = SmartBlue, style = MaterialTheme.typography.titleSmall)
+            Text(
+                text = "Unduh Laporan",
+                color = SmartBlue,
+                style = MaterialTheme.typography.titleSmall
+            )
         }
     }
 }
 
 @Composable
 private fun SectionHeader(text: String) {
-    Text(text = text, color = DarkBlue, style = MaterialTheme.typography.titleMedium)
-}
-
-@Composable
-private fun SectionTitleLine(title: String, action: String) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(text = title, color = DarkBlue, style = MaterialTheme.typography.titleMedium)
-        Spacer(modifier = Modifier.weight(1f))
-        Text(text = action, color = SmartBlue, style = MaterialTheme.typography.bodySmall)
-    }
+    Text(
+        text = text,
+        color = DarkBlue,
+        style = MaterialTheme.typography.titleMedium
+    )
 }
 
 @Composable
 private fun SimpleHeader(
     title: String,
-    onBack: () -> Unit,
-    actionText: String? = null,
-    onActionClick: (() -> Unit)? = null
+    onBack: () -> Unit
 ) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Icon(
             imageVector = Icons.Default.ChevronLeft,
             contentDescription = null,
             tint = DarkBlue,
-            modifier = Modifier.clickable { onBack() }
+            modifier = Modifier
+                .size(24.dp)
+                .clickable { onBack() }
         )
         Spacer(modifier = Modifier.width(12.dp))
         Text(
@@ -523,15 +469,7 @@ private fun SimpleHeader(
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.weight(1f)
         )
-        if (actionText != null && onActionClick != null) {
-            TextButton(onClick = onActionClick) {
-                Text(
-                    text = actionText,
-                    color = SmartBlue,
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
-        }
+        Spacer(modifier = Modifier.width(8.dp))
     }
 }
 
@@ -579,53 +517,33 @@ private fun ErrorScreen(
     }
 }
 
-private fun Long.toChartAmountLabel(): String {
-    if (this <= 0L) return "0"
-    return when {
-        this >= 1_000_000L -> "${this / 1_000_000} jt"
-        this >= 1_000L -> "${this / 1_000} rb"
-        else -> this.toString()
-    }
-}
-
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun LaporanScreenPreview() {
     MaterialTheme {
         LaporanScreenContent(
-            laporan = LaporanResponseModel(
-                tanggalTerpilih = "30 Mei 2024",
-                periode = LaporanDateRange(
-                    startDate = "01 Mei 2024",
-                    endDate = "07 Mei 2024",
-                    label = "01 Mei 2024 - 07 Mei 2024"
+            uiModel = LaporanScreenUiModel(
+                selectedDateLabel = "01 Mei 2024 - 07 Mei 2024",
+                totalTransaksiLabel = "243",
+                totalPendapatanLabel = "Rp 1.250.000",
+                rataRataTransaksiLabel = "Rp 5.144",
+                summaryItems = listOf(
+                    LaporanSummaryItemUiModel("Tunai", "150"),
+                    LaporanSummaryItemUiModel("QRIS", "93"),
+                    LaporanSummaryItemUiModel("Motor", "180"),
+                    LaporanSummaryItemUiModel("Mobil", "63")
                 ),
-                summary = LaporanSummary(
-                    totalTransaksi = 243,
-                    totalPendapatan = 1_250_000,
-                    rataRataTransaksi = 5_150
-                ),
-                chartBars = listOf(
-                    LaporanChartBar(tanggal = "01", amount = 350_000, periodLabel = "01"),
-                    LaporanChartBar(tanggal = "02", amount = 480_000, periodLabel = "02"),
-                    LaporanChartBar(tanggal = "03", amount = 760_000, periodLabel = "03"),
-                    LaporanChartBar(tanggal = "04", amount = 620_000, periodLabel = "04"),
-                    LaporanChartBar(tanggal = "05", amount = 980_000, periodLabel = "05"),
-                    LaporanChartBar(tanggal = "06", amount = 680_000, periodLabel = "06"),
-                    LaporanChartBar(tanggal = "07", amount = 440_000, periodLabel = "07"),
-                ),
-                paymentSummaries = listOf(
-                    LaporanPaymentSummary(label = "Tunai", amount = 850_000, percentage = 68),
-                    LaporanPaymentSummary(label = "QRIS / E-Wallet", amount = 350_000, percentage = 28),
-                    LaporanPaymentSummary(label = "Lainnya", amount = 50_000, percentage = 4)
-                ),
-                recentTransactions = listOf(
-                    LaporanRecentTransaction(code = "TRX-240530-00123", time = "14:45", total = 5_000, paymentTag = "Tunai"),
-                    LaporanRecentTransaction(code = "TRX-240530-00122", time = "14:32", total = 3_000, paymentTag = "QRIS")
+                chartItems = listOf(
+                    LaporanChartItemUiModel("01", "350 rb", 350_000),
+                    LaporanChartItemUiModel("02", "480 rb", 480_000),
+                    LaporanChartItemUiModel("03", "760 rb", 760_000),
+                    LaporanChartItemUiModel("04", "620 rb", 620_000),
+                    LaporanChartItemUiModel("05", "980 rb", 980_000, true),
+                    LaporanChartItemUiModel("06", "680 rb", 680_000),
+                    LaporanChartItemUiModel("07", "440 rb", 440_000)
                 )
             ),
-            onBack = {},
-            onOpenFilter = {}
+            onBack = {}
         )
     }
 }

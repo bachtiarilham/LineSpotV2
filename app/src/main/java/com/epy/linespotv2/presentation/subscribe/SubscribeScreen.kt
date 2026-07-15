@@ -106,12 +106,13 @@ fun SubscribeScreenContent(
     onTabSelected: (Int) -> Unit = {},
     onRetry: () -> Unit = {},
 ) {
+    val activeModel = model ?: state.subscribeResponseModel
     val tabs = listOf("Bulanan", "6 Bulan", "Tahunan")
     val selectedTab = state.selectedTabIndex.coerceIn(0, tabs.lastIndex)
-    val packages = model?.packageCard
+    val packages = activeModel?.packageCard
         ?.filter { it.matchesTab(selectedTab) }
         ?.map { it.toUiOption() }
-        ?: listOf(PackageOption("Error", 0, "Error", "Error"))
+        .orEmpty()
     val namaPackage = packages.firstOrNull()?.name.orEmpty()
 
     LaunchedEffect(state.subscribeEffect) {
@@ -182,9 +183,9 @@ fun SubscribeScreenContent(
                 .padding(horizontal = 18.dp, vertical = 14.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (model?.statusCard != null) {
+            if (activeModel?.statusCard != null) {
                 StatusCard(
-                    statusCard = model.statusCard,
+                    statusCard = activeModel.statusCard,
                     onOpenBenefit = onOpenBenefit
                 )
             } else {
@@ -260,11 +261,13 @@ private fun StatusCard(
                     )
                 }
 
-                Text(
-                    text = statusCard.paketAktif,
-                    color = White,
-                    style = MaterialTheme.typography.headlineSmall
-                )
+                statusCard.paketAktif?.let {
+                    Text(
+                        text = it,
+                        color = White,
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                }
                 Text(
                     text = "Aktif hingga ${statusCard.kadaluarsa}",
                     color = White.copy(alpha = 0.92f),
@@ -286,10 +289,10 @@ private fun StatusCard(
 //                }
 
                 Text(
-                    text = statusCard.benefit,
-                    color = White.copy(alpha = 0.88f),
-                    style = MaterialTheme.typography.bodySmall
-                )
+        text = statusCard.benefit.orEmpty(),
+        color = White.copy(alpha = 0.88f),
+        style = MaterialTheme.typography.bodySmall
+    )
             }
         }
     }
@@ -431,10 +434,10 @@ private fun BenefitMiniItem(
             modifier = Modifier.size(16.dp)
         )
         Text(
-            text = text,
-            color = DarkBlue,
-            style = MaterialTheme.typography.labelSmall,
-            textAlign = TextAlign.Center,
+        text = text,
+        color = DarkBlue,
+        style = MaterialTheme.typography.labelSmall,
+        textAlign = TextAlign.Center,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
@@ -636,17 +639,17 @@ private fun PackageCard.toUiOption(): PackageOption {
     val highlighted = namaPaket.equals("Premium", ignoreCase = true)
     val badge = if (highlighted) "Populer" else null
     return PackageOption(
-        name = namaPaket,
-        price = harga,
-        period = "/${masaBerlaku.trimStart('/')}",
-        discountInfo = "${jumlahDiskon}% • $deskripsi",
+        name = namaPaket.orEmpty().ifBlank { "Paket" },
+        price = harga ?: 0L,
+        period = "/${masaBerlaku.orEmpty().trimStart('/')}",
+        discountInfo = "${jumlahDiskon ?: 0L}% • ${deskripsi.orEmpty()}",
         badge = badge,
         highlighted = highlighted
     )
 }
 
 private fun PackageCard.matchesTab(tabIndex: Int): Boolean {
-    val period = masaBerlaku.lowercase()
+    val period = masaBerlaku.orEmpty().lowercase()
     return when (tabIndex) {
         0 -> period.contains("bulan") && !period.contains("6")
         1 -> period.contains("6") || period.contains("enam")

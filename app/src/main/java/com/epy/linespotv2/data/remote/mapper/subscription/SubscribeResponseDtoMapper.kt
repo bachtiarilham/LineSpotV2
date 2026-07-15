@@ -11,34 +11,34 @@ import com.epy.linespotv2.domain.model.subscription.PromoTerpilih
 import com.epy.linespotv2.domain.model.subscription.StatusCard
 import com.epy.linespotv2.domain.model.subscription.SubscribeResponseModel
 
-fun SubscribeResponseDto.toDomain() : SubscribeResponseModel = SubscribeResponseModel (
+fun SubscribeResponseDto.toDomain(): SubscribeResponseModel = SubscribeResponseModel(
     statusCard = statusCard.toDomain(),
-    packageCard = this.packageCard?.map { it.toDomain() }.orEmpty(),
-    promo = this.promo?.map { it.toDomain() }.orEmpty(),
+    packageCard = packageCard?.map { it.toDomain() },
+    promo = promo?.map { it.toDomain() }
 )
 
 private fun StatusCardDto?.toDomain(): StatusCard = StatusCard(
-    paketAktif = this?.paketAktif.orEmpty(),
-    kadaluarsa = this?.kadaluarsa.orEmpty(),
-    benefit = this?.benefit.orEmpty(),
+    paketAktif = this?.paketAktif,
+    kadaluarsa = this?.kadaluarsa,
+    benefit = this?.benefit
 )
 
-private fun PackageCardDto?.toDomain() : PackageCard = PackageCard(
-    namaPaket = this?.namaPaket.orEmpty(),
-    harga = this?.harga ?: 0L,
-    masaBerlaku = this?.masaBerlaku.orEmpty(),
-    jumlahDiskon = this?.jumlahDiskon ?: 0L,
-    deskripsi = this?.deskripsi.orEmpty(),
-    benefit = this?.benefit.orEmpty(),
+private fun PackageCardDto?.toDomain(): PackageCard = PackageCard(
+    namaPaket = this?.namaPaket,
+    harga = this?.harga,
+    masaBerlaku = this?.masaBerlaku,
+    jumlahDiskon = this?.jumlahDiskon,
+    deskripsi = this?.deskripsi,
+    benefit = this?.benefit
 )
 
-private fun PromoDto?.toDomain() : Promo = Promo (
-    sNk = this?.sNk.orEmpty(),
-    promo = this?.promo?.map { it.toDomain() }.orEmpty(),
+private fun PromoDto?.toDomain(): Promo = Promo(
+    sNk = this?.sNk,
+    promo = this?.promo?.map { it.toDomain() }
 )
 
-private fun PromoTerpilihDto?.toDomain() : PromoTerpilih = PromoTerpilih (
-    namaPromo = this?.namaPromo.orEmpty(),
-    deskripsi = this?.deskripsi.orEmpty(),
-    jumlahDiskon = this?.jumlahDiskon ?: 0L,
+private fun PromoTerpilihDto?.toDomain(): PromoTerpilih = PromoTerpilih(
+    namaPromo = this?.namaPromo,
+    deskripsi = this?.deskripsi,
+    jumlahDiskon = this?.jumlahDiskon
 )

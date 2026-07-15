@@ -8,8 +8,8 @@ sealed class RegisterIntent {
     data class OnUsernameChanged(val username: String)             : RegisterIntent()
     data class OnPasswordChanged(val password: String)             : RegisterIntent()
     data class OnConfirmPasswordChanged(val confirmPassword: String) : RegisterIntent()
-    object OnRegisterClicked                                       : RegisterIntent()
-    object OnLoginClicked                                          : RegisterIntent()
-    object OnTogglePasswordVisibility                              : RegisterIntent()
-    object OnToggleConfirmPasswordVisibility                       : RegisterIntent()
+    data object OnRegisterClicked                                       : RegisterIntent()
+    data object OnLoginClicked                                          : RegisterIntent()
+    data object OnTogglePasswordVisibility                              : RegisterIntent()
+    data object OnToggleConfirmPasswordVisibility                       : RegisterIntent()
 }

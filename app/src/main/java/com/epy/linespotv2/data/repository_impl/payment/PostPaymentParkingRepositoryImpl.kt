@@ -2,8 +2,9 @@ package com.epy.linespotv2.data.repository_impl.payment
 
 import com.epy.linespotv2.core.network.ApiCondition
 import com.epy.linespotv2.data.remote.api.ApiService
-import com.epy.linespotv2.data.remote.dto.payment.PostPaymentParkingRequestDto
 import com.epy.linespotv2.data.remote.mapper.auth.toDomain
+import com.epy.linespotv2.data.remote.mapper.parking.toDomain
+import com.epy.linespotv2.data.remote.mapper.parking.toDto
 import com.epy.linespotv2.data.remote.mapper.payment.toDomain
 import com.epy.linespotv2.data.remote.mapper.payment.toDto
 import com.epy.linespotv2.domain.model.payment.PostPaymentParkingReqModel

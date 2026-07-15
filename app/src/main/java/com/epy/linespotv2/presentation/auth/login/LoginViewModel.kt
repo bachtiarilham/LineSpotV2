@@ -45,7 +45,7 @@ class LoginViewModel @Inject constructor(
                 is ApiCondition.AppSuccess ->{
                     val loginData = result.data
 
-                    val navigationEffect = when (loginData.userModel.role) {
+                    val navigationEffect = when (loginData.roleId) {
                         1L -> LoginEffect.NavigateToCustomerHome
                         2L -> LoginEffect.NavigateToJukirHome
                         else -> {

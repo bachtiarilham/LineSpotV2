@@ -1,4 +1,3 @@
-// presentation/auth/register/RegisterViewModel.kt
 package com.epy.linespotv2.presentation.auth.register
 
 import androidx.lifecycle.viewModelScope
@@ -53,38 +52,74 @@ class RegisterViewModel @Inject constructor(
 
     private fun performRegister() {
         viewModelScope.launch {
+            val currentState = state.value
+
+            if (currentState.password != currentState.confirmPassword) {
+                updateState {
+                    it.copy(
+                        error = "Konfirmasi password tidak cocok",
+                        registerEffect = RegisterEffect.ShowMessage("Konfirmasi password tidak cocok")
+                    )
+                }
+                return@launch
+            }
+
             updateState { it.copy(isLoading = true, error = null) }
-            val s = state.value
-            when (val result = doRegisterUseCase(
+
+            when (
+                val result = doRegisterUseCase(
                     reqModel = RegisterReqModel(
-                        fullName        = s.fullName,
-                        nik             = s.nik,
-                        email           = s.email,
-                        phone           = s.phone,
-                        username        = s.username,
-                        password        = s.password,
-                        confirmPassword = s.confirmPassword
+                        fullName = currentState.fullName,
+                        nik = currentState.nik,
+                        email = currentState.email,
+                        phone = currentState.phone,
+                        username = currentState.username,
+                        password = currentState.password,
+                        confirmPassword = currentState.password
                     )
                 )
             ) {
-                is ApiCondition.AppSuccess ->
-                    updateState {
-                        it.copy(
-                            isLoading      = false,
-                            registerEffect = RegisterEffect.NavigateToLogin
-                        )
-                    }
-                is ApiCondition.AppFailure ->
+                is ApiCondition.AppSuccess -> {
                     updateState {
                         it.copy(
                             isLoading = false,
-                            error     = result.exception.message
+                            error = null,
+                            registerEffect = RegisterEffect.ShowMessage(
+                                result.data.ifBlank { "Registrasi berhasil" }
+                            )
                         )
                     }
-                is ApiCondition.AppLoading -> {}
+                }
+
+                is ApiCondition.AppFailure -> {
+                    val message = result.exception.message?.ifBlank { null } ?: "Registrasi gagal"
+                    updateState {
+                        it.copy(
+                            isLoading = false,
+                            error = message,
+                            registerEffect = RegisterEffect.ShowMessage(message)
+                        )
+                    }
+                }
+
+                is ApiCondition.AppLoading -> Unit
             }
         }
     }
 
-    fun consumeEffect() = updateState { it.copy(registerEffect = null) }
+    fun consumeEffect() {
+        val currentEffect = state.value.registerEffect
+        val shouldNavigateToLogin =
+            currentEffect is RegisterEffect.ShowMessage && state.value.error.isNullOrBlank()
+
+        updateState {
+            it.copy(
+                registerEffect = if (shouldNavigateToLogin) {
+                    RegisterEffect.NavigateToLogin
+                } else {
+                    null
+                }
+            )
+        }
+    }
 }

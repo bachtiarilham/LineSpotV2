@@ -120,7 +120,7 @@ fun BenefitScreenPopUp(
                 )
 
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    selectedPackage.benefit.forEach { item -> BenefitListRow(text = item) }
+                    selectedPackage.benefit?.forEach { item -> BenefitListRow(text = item) }
                 }
 
                 Surface(
@@ -193,16 +193,20 @@ private fun StatusMiniCard(
 //                        )
 //                    }
                     model?.statusCard?.let{
-                        Text(
-                            text = it.paketAktif,
-                            color = White,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = it.kadaluarsa,
-                            color = White.copy(alpha = 0.9f),
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                        it.paketAktif?.let { text ->
+                            Text(
+                                text = text,
+                                color = White,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+                        it.kadaluarsa?.let { text ->
+                            Text(
+                                text = text,
+                                color = White.copy(alpha = 0.9f),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
                     }
 
                 }
