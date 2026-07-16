@@ -59,8 +59,8 @@ import com.epy.linespotv2.core.ui.theme.GreyText
 import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
-import com.epy.linespotv2.core.utils.parseIndonesiaDateOrNull
-import com.epy.linespotv2.core.utils.toIndonesiaDate
+import com.epy.linespotv2.core.utils.parseApiDateOrNull
+import com.epy.linespotv2.core.utils.toApiDate
 import java.util.Date
 
 @Composable
@@ -99,8 +99,8 @@ private fun LaporanFilterContent(
     onBack: () -> Unit,
     onIntent: (LaporanIntent) -> Unit,
 ) {
-    var startDate by rememberSaveable { mutableStateOf(Date().toIndonesiaDate()) }
-    var endDate by rememberSaveable { mutableStateOf(Date().toIndonesiaDate()) }
+    var startDate by rememberSaveable { mutableStateOf(Date().toApiDate()) }
+    var endDate by rememberSaveable { mutableStateOf(Date().toApiDate()) }
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
 
@@ -206,7 +206,7 @@ private fun InfoBanner() {
                 tint = SmartBlue,
             )
             Text(
-                text = "Maksimal rentang periode adalah 1 minggu.",
+                text = "Format tanggal menggunakan yyyy-MM-dd.",
                 color = GreyText,
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -403,7 +403,7 @@ private fun LaporanDatePickerDialog(
                 onClick = {
                     val selectedDate = datePickerState.selectedDateMillis
                     if (selectedDate != null) {
-                        onConfirm(Date(selectedDate).toIndonesiaDate())
+                        onConfirm(Date(selectedDate).toApiDate())
                     } else {
                         onDismiss()
                     }
@@ -423,7 +423,7 @@ private fun LaporanDatePickerDialog(
 }
 
 private fun String.toMillis(): Long? {
-    return parseIndonesiaDateOrNull()?.time
+    return parseApiDateOrNull()?.time
 }
 
 @Composable

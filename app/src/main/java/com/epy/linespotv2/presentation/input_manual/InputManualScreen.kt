@@ -24,6 +24,10 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.SyncAlt
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -32,6 +36,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -122,7 +129,12 @@ private fun InputManualContent(
             }
         )
         ReadOnlyField("Waktu Masuk", uiModel.waktuMasuk, Icons.Default.CalendarMonth)
-        ReadOnlyField("Area Parkir", uiModel.areaParkir, Icons.Default.ArrowDownward)
+        AreaDropdownField(
+            label = "Area Parkir",
+            value = uiModel.areaParkir,
+            options = uiModel.areaOptions,
+            onSelect = { onIntent(InputManualIntent.SelectArea(it)) }
+        )
         TariffCard(totalTarifLabel = uiModel.totalTarifLabel)
 
         state.error?.takeIf { it.isNotBlank() }?.let { message ->
@@ -161,6 +173,70 @@ private fun InputManualContent(
                 .align(Alignment.CenterHorizontally)
                 .clickable { onIntent(InputManualIntent.ClickCancel) }
         )
+    }
+}
+
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun AreaDropdownField(
+    label: String,
+    value: String,
+    options: List<String>,
+    onSelect: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val hasOptions = options.isNotEmpty()
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(text = label, color = DarkBlue, style = MaterialTheme.typography.titleSmall)
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { if (hasOptions) expanded = !expanded }
+        ) {
+            OutlinedTextField(
+                value = value,
+                onValueChange = {},
+                readOnly = true,
+                enabled = hasOptions,
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodyMedium.copy(color = DarkBlue),
+                shape = RoundedCornerShape(12.dp),
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.ArrowDownward,
+                        contentDescription = null,
+                        tint = if (hasOptions) SmartBlue else GreyText
+                    )
+                },
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth()
+                    .clickable(enabled = hasOptions) { expanded = true },
+                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+            )
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option) },
+                        onClick = {
+                            onSelect(option)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+        if (!hasOptions) {
+            Text(
+                text = "Area parkir belum tersedia",
+                color = GreyText,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
     }
 }
 

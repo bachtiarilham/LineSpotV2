@@ -8,5 +8,5 @@ data class PostParkingRequestDto(
     @SerializedName("jenis_kendaraan")
     val vehicleTypeCode: String?,
     @SerializedName("area_parkir")
-    val selectedAreaId: Long?
+    val selectedAreaId: Long?,
 )

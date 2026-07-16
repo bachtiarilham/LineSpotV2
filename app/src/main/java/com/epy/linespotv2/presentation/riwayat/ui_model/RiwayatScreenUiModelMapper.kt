@@ -22,14 +22,12 @@ private fun RiwayatSection.toUiModelOrNull(): RiwayatSectionUiModel? {
 }
 
 private fun RiwayatItem.toUiModel(): RiwayatItemUiModel {
-    val isEntryValue = isEntry == true
     return RiwayatItemUiModel(
         code = code.orEmpty().ifBlank { "-" },
         plateNumber = plateNumber.orEmpty().ifBlank { "-" },
         vehicleType = vehicleType.orEmpty().ifBlank { "-" },
         time = time.orEmpty().ifBlank { "-" },
         amountLabel = (amount ?: 0L).toRupiah(),
-        isEntry = isEntryValue,
-        statusLabel = if (isEntryValue) "Masuk" else "Keluar"
+        statusLabel = "Masuk"
     )
 }

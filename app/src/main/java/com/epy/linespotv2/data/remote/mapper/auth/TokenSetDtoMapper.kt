@@ -6,6 +6,6 @@ import com.epy.linespotv2.domain.model.auth.TokenSetModel
 fun TokenSetDto.toDomain(): TokenSetModel = TokenSetModel(
     accessToken = accessToken,
     refreshToken = refreshToken,
-    expiresAt = expiresAt
+    expiresAt = expiresIn
 )
 

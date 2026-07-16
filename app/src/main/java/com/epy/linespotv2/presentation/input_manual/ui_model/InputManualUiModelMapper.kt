@@ -11,6 +11,7 @@ fun InputManualModel.toUiModel(): InputManualUiModel {
         selectedVehicle = selected,
         waktuMasuk = waktuMasuk.orEmpty().ifBlank { "-" },
         areaParkir = areaParkir.orEmpty().ifBlank { "-" },
+        areaOptions = areaOptions.orEmpty(),
         totalTarifLabel = (tarifSummary?.totalTarif ?: 0L).toRupiah()
     )
 }

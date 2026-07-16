@@ -43,11 +43,11 @@ object NetworkModule {
                 .header("Accept","application/json")
 
             if (
-                prefs.token.isNotBlank() &&
+                prefs.accessToken.isNotBlank() &&
                 !chain.request().url.encodedPath.contains("/api/v2/linespot/auth/login") &&
                 !chain.request().url.encodedPath.contains("/api/v2/linespot/auth/refresh")
             ) {
-                requestBuilder.header("Authorization", "Bearer ${prefs.token}")
+                requestBuilder.header("Authorization", "Bearer ${prefs.accessToken}")
             }
             chain.proceed(requestBuilder.build())
         }

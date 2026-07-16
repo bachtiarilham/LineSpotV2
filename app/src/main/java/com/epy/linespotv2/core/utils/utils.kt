@@ -5,8 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private const val INDONESIA_DATE_PATTERN = "dd MMMM yyyy"
-private const val INDONESIA_DATE_TIME_PATTERN = "dd MMMM yyyy, HH:mm:ss"
+private const val API_DATE_PATTERN = "yyyy-MM-dd"
 private val INDONESIA_LOCALE: Locale = Locale.forLanguageTag("id-ID")
 
 fun Long.toRupiah(): String {
@@ -20,30 +19,27 @@ fun Long.toCountdownText(): String {
     return String.format(INDONESIA_LOCALE,"%02d:%02d", minutes, seconds)
 }
 
-//date
-fun Date.toIndonesiaDate(): String {
-    val formatter = SimpleDateFormat(INDONESIA_DATE_PATTERN, INDONESIA_LOCALE)
-
+fun Date.toApiDate(): String {
+    val formatter = SimpleDateFormat(API_DATE_PATTERN, Locale.US)
     return formatter.format(this)
 }
 
-fun Date.toIndonesiaDateTime(): String {
-    val formatter = SimpleDateFormat(INDONESIA_DATE_TIME_PATTERN, INDONESIA_LOCALE)
-    return formatter.format(this)
-}
-
-fun String.parseIndonesiaDateOrNull(): Date? {
+fun String.parseApiDateOrNull(): Date? {
     return runCatching {
-        SimpleDateFormat(INDONESIA_DATE_PATTERN, INDONESIA_LOCALE).apply {
+        SimpleDateFormat(API_DATE_PATTERN, Locale.US).apply {
             isLenient = false
         }.parse(this)
     }.getOrNull()
 }
 
-fun String.parseIndonesiaDateTimeOrNull(): Date? {
-    return runCatching {
-        SimpleDateFormat(INDONESIA_DATE_TIME_PATTERN, INDONESIA_LOCALE).apply {
-            isLenient = false
-        }.parse(this)
-    }.getOrNull()
+fun String.toApiDateOrSelf(): String {
+    return parseApiDateOrNull()?.toApiDate() ?: this
+}
+
+fun String?.normalizeBackendDateToApiDate(): String {
+    val value = this.orEmpty().trim()
+    if (value.isBlank()) return ""
+
+    val candidate = value.substringBefore("T").trim()
+    return candidate.takeIf { it.parseApiDateOrNull() != null } ?: value.take(10)
 }

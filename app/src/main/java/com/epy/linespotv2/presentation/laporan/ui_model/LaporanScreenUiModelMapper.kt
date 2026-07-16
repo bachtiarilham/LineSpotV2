@@ -62,7 +62,7 @@ private fun List<LaporanItemModel>.toChartItems(): List<LaporanChartItemUiModel>
     return map { item ->
         val amount = item.totalPendapatanJukir ?: 0L
         LaporanChartItemUiModel(
-            label = item.tanggal.toChartLabel(),
+            tanggal = item.tanggal.toChartLabel(),
             valueLabel = amount.toChartAmountLabel(),
             amount = amount,
             isHighlighted = amount == maxAmount && maxAmount > 0L
@@ -75,9 +75,9 @@ private fun String?.toChartLabel(): String {
     if (value.isBlank()) return "-"
 
     return value
-        .split(" ", "-", "/")
-        .filter { it.isNotBlank() }
-        .firstOrNull()
+        .split("-")
+        .getOrNull(2)
+        ?.take(2)
         ?: value
 }
 

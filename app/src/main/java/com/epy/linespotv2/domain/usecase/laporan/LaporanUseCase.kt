@@ -2,7 +2,7 @@ package com.epy.linespotv2.domain.usecase.laporan
 
 import com.epy.linespotv2.core.network.ApiCondition
 import com.epy.linespotv2.core.utils.Dispatcher
-import com.epy.linespotv2.core.utils.parseIndonesiaDateOrNull
+import com.epy.linespotv2.core.utils.parseApiDateOrNull
 import com.epy.linespotv2.domain.model.laporan.LaporanRequestModel
 import com.epy.linespotv2.domain.model.laporan.LaporanResponseModel
 import com.epy.linespotv2.domain.repository.laporan.LaporanRepository
@@ -22,8 +22,8 @@ class LaporanUseCase @Inject constructor(
             )
         }
 
-        val parsedStartDate = reqModel.startDate.parseIndonesiaDateOrNull()
-        val parsedEndDate = reqModel.endDate.parseIndonesiaDateOrNull()
+        val parsedStartDate = reqModel.startDate.parseApiDateOrNull()
+        val parsedEndDate = reqModel.endDate.parseApiDateOrNull()
 
         if (parsedStartDate == null || parsedEndDate == null) {
             return@withContext ApiCondition.AppFailure(

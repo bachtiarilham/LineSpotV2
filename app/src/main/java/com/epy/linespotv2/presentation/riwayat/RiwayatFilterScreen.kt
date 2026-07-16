@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.DirectionsCar
@@ -49,11 +51,9 @@ import com.epy.linespotv2.core.ui.theme.GreyText
 import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
-import com.epy.linespotv2.core.utils.parseIndonesiaDateOrNull
-import com.epy.linespotv2.core.utils.toIndonesiaDate
-import com.epy.linespotv2.presentation.riwayat.ui_model.RiwayatFilterUiModel
-import com.epy.linespotv2.presentation.riwayat.ui_model.RiwayatPaymentFilter
-import com.epy.linespotv2.presentation.riwayat.ui_model.RiwayatVehicleFilter
+import com.epy.linespotv2.core.utils.parseApiDateOrNull
+import com.epy.linespotv2.core.utils.toApiDate
+import com.epy.linespotv2.domain.model.helper.LokasiItemModel
 import java.util.Date
 
 private enum class RiwayatDateField {
@@ -68,8 +68,8 @@ fun RiwayatFilterScreen(
     viewModel: RiwayatViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    var startDate by rememberSaveable { mutableStateOf(Date().toIndonesiaDate()) }
-    var endDate by rememberSaveable { mutableStateOf(Date().toIndonesiaDate()) }
+    var startDate by rememberSaveable { mutableStateOf(Date().toApiDate()) }
+    var endDate by rememberSaveable { mutableStateOf(Date().toApiDate()) }
 
     LaunchedEffect(Unit) {
         viewModel.onIntent(RiwayatIntent.loadFilterPage)
@@ -91,29 +91,27 @@ fun RiwayatFilterScreen(
         state = state,
         startDate = startDate,
         endDate = endDate,
-        selectedPayment = state.filterUiModel.selectedPayment,
-        selectedVehicle = state.filterUiModel.selectedVehicle,
         onReset = {
-            startDate = Date().toIndonesiaDate()
-            endDate = Date().toIndonesiaDate()
-            viewModel.onIntent(RiwayatIntent.selectLokasi("Semua Area"))
-            viewModel.onIntent(RiwayatIntent.selectPayment(RiwayatPaymentFilter.ALL.name))
-            viewModel.onIntent(RiwayatIntent.selectVehicle(RiwayatVehicleFilter.ALL.name))
+            startDate = Date().toApiDate()
+            endDate = Date().toApiDate()
+            viewModel.onIntent(RiwayatIntent.updateLokasi("SEMUA"))
+            viewModel.onIntent(RiwayatIntent.updatePaymentCode("SEMUA"))
+            viewModel.onIntent(RiwayatIntent.updateVehicleCode("SEMUA"))
         },
         onCancel = onCancel,
         onStartDateClick = { startDate = it },
         onEndDateClick = { endDate = it },
-        onSelectLokasi = { viewModel.onIntent(RiwayatIntent.selectLokasi(it)) },
-        onSelectPayment = { viewModel.onIntent(RiwayatIntent.selectPayment(it.name)) },
-        onSelectVehicle = { viewModel.onIntent(RiwayatIntent.selectVehicle(it.name)) },
+        onSelectLokasi = { viewModel.onIntent(RiwayatIntent.updateLokasi(it)) },
+        onSelectPayment = { viewModel.onIntent(RiwayatIntent.updatePaymentCode(it)) },
+        onSelectVehicle = { viewModel.onIntent(RiwayatIntent.updateVehicleCode(it)) },
         onApply = {
             viewModel.onIntent(
                 RiwayatIntent.submitFilter(
                     startDate = startDate,
                     endDate = endDate,
-                    payment = state.filterUiModel.selectedPayment.name,
-                    vehicle = state.filterUiModel.selectedVehicle.name,
-                    lokasi = state.filterUiModel.selectedLokasi
+                    paymentCode = state.selectedPaymentCode,
+                    vehicleCode = state.selectedVehicleCode,
+                    lokasiCode = state.selectedLokasiCode ?: "SEMUA"
                 )
             )
         }
@@ -125,18 +123,26 @@ fun RiwayatFilterContent(
     state: RiwayatState,
     startDate: String,
     endDate: String,
-    selectedPayment: RiwayatPaymentFilter,
-    selectedVehicle: RiwayatVehicleFilter,
     onReset: () -> Unit,
     onCancel: () -> Unit,
     onStartDateClick: (String) -> Unit,
     onEndDateClick: (String) -> Unit,
     onSelectLokasi: (String) -> Unit,
-    onSelectPayment: (RiwayatPaymentFilter) -> Unit,
-    onSelectVehicle: (RiwayatVehicleFilter) -> Unit,
+    onSelectPayment: (String) -> Unit,
+    onSelectVehicle: (String) -> Unit,
     onApply: () -> Unit
 ) {
     var activeDateField by remember { mutableStateOf<RiwayatDateField?>(null) }
+    val lokasiOptions = remember(state.lokasiList) {
+        buildList {
+            add("SEMUA")
+            addAll(
+                state.lokasiList.mapNotNull { lokasi ->
+                    lokasi.namaLokasi.orEmpty().trim().takeIf { it.isNotBlank() }
+                }.distinct()
+            )
+        }
+    }
 
     Surface(
         color = White,
@@ -162,6 +168,15 @@ fun RiwayatFilterContent(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Icon(
+                    imageVector = Icons.Default.ChevronLeft,
+                    contentDescription = "Kembali",
+                    tint = DarkBlue,
+                    modifier = Modifier
+                        .size(22.dp)
+                        .clickable { onCancel() }
+                )
+                Spacer(modifier = Modifier.size(12.dp))
                 Text(
                     text = "Filter Riwayat",
                     color = DarkBlue,
@@ -185,52 +200,38 @@ fun RiwayatFilterContent(
                 )
             }
 
-//            FilterSection("Jenis Transaksi") {
-//                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-//                    FilterChip("Semua", null, selectedTransaction == RiwayatTransactionFilter.ALL, Modifier.weight(1f)) {
-//                        onSelectTransaction(RiwayatTransactionFilter.ALL)
-//                    }
-//                    FilterChip("Masuk", Icons.Default.SouthWest, selectedTransaction == RiwayatTransactionFilter.MASUK, Modifier.weight(1f)) {
-//                        onSelectTransaction(RiwayatTransactionFilter.MASUK)
-//                    }
-//                    FilterChip("Keluar", Icons.Default.NorthEast, selectedTransaction == RiwayatTransactionFilter.KELUAR, Modifier.weight(1f)) {
-//                        onSelectTransaction(RiwayatTransactionFilter.KELUAR)
-//                    }
-//                }
-//            }
-
             FilterSection("Metode Pembayaran") {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    FilterChip("Semua", null, selectedPayment == RiwayatPaymentFilter.ALL, Modifier.weight(1f)) {
-                        onSelectPayment(RiwayatPaymentFilter.ALL)
+                    FilterChip("Semua", null, state.selectedPaymentCode == "SEMUA", Modifier.weight(1f)) {
+                        onSelectPayment("SEMUA")
                     }
-                    FilterChip("Tunai", Icons.Default.MonetizationOn, selectedPayment == RiwayatPaymentFilter.TUNAI, Modifier.weight(1f)) {
-                        onSelectPayment(RiwayatPaymentFilter.TUNAI)
+                    FilterChip("QRIS", Icons.Default.AccountBalanceWallet, state.selectedPaymentCode == "QRIS", Modifier.weight(1f)) {
+                        onSelectPayment("QRIS")
                     }
-                    FilterChip("Non Tunai", Icons.Default.CalendarMonth, selectedPayment == RiwayatPaymentFilter.NON_TUNAI, Modifier.weight(1f)) {
-                        onSelectPayment(RiwayatPaymentFilter.NON_TUNAI)
+                    FilterChip("CASH", Icons.Default.MonetizationOn, state.selectedPaymentCode == "CASH", Modifier.weight(1f)) {
+                        onSelectPayment("CASH")
                     }
                 }
             }
 
             FilterSection("Jenis Kendaraan") {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    FilterChip("Semua", null, selectedVehicle == RiwayatVehicleFilter.ALL, Modifier.weight(1f)) {
-                        onSelectVehicle(RiwayatVehicleFilter.ALL)
+                    FilterChip("Semua", null, state.selectedVehicleCode == "SEMUA", Modifier.weight(1f)) {
+                        onSelectVehicle("SEMUA")
                     }
-                    FilterChip("Motor", Icons.Default.TwoWheeler, selectedVehicle == RiwayatVehicleFilter.MOTOR, Modifier.weight(1f)) {
-                        onSelectVehicle(RiwayatVehicleFilter.MOTOR)
+                    FilterChip("Motor", Icons.Default.TwoWheeler, state.selectedVehicleCode == "MOTOR", Modifier.weight(1f)) {
+                        onSelectVehicle("MOTOR")
                     }
-                    FilterChip("Mobil", Icons.Default.DirectionsCar, selectedVehicle == RiwayatVehicleFilter.MOBIL, Modifier.weight(1f)) {
-                        onSelectVehicle(RiwayatVehicleFilter.MOBIL)
+                    FilterChip("Mobil", Icons.Default.DirectionsCar, state.selectedVehicleCode == "MOBIL", Modifier.weight(1f)) {
+                        onSelectVehicle("MOBIL")
                     }
                 }
             }
 
-            FilterSection("Area Parkir") {
+            FilterSection("Lokasi Parkir") {
                 DropdownField(
-                    text = state.filterUiModel.selectedLokasi,
-                    locations = state.filterUiModel.lokasiOptions,
+                    text = state.selectedLokasi,
+                    locations = lokasiOptions,
                     isLoading = state.isLoadingLokasi,
                     error = state.errorLokasi,
                     onSelect = onSelectLokasi
@@ -262,7 +263,7 @@ fun RiwayatFilterContent(
             onConfirm = {
                 if (activeDateField == RiwayatDateField.START) {
                     onStartDateClick(it)
-                    activeDateField = RiwayatDateField.END
+                    activeDateField = null
                 } else {
                     onEndDateClick(it)
                     activeDateField = null
@@ -339,7 +340,7 @@ private fun DateRangeField(
             }
 
             Text(
-                text = "Tip: pilih tanggal mulai dulu, lalu tanggal akhir akan terbuka otomatis.",
+                text = "Format tanggal menggunakan yyyy-MM-dd.",
                 color = GreyText,
                 style = MaterialTheme.typography.bodySmall
             )
@@ -364,7 +365,7 @@ private fun RiwayatDatePickerDialog(
                 onClick = {
                     val selected = datePickerState.selectedDateMillis
                     if (selected != null) {
-                        onConfirm(selected.toIndonesiaDateString())
+                        onConfirm(selected.toApiDateString())
                     } else {
                         onDismiss()
                     }
@@ -437,11 +438,11 @@ private fun DateSelectionChip(
 }
 
 private fun String.toMillis(): Long? {
-    return parseIndonesiaDateOrNull()?.time
+    return parseApiDateOrNull()?.time
 }
 
-private fun Long.toIndonesiaDateString(): String {
-    return Date(this).toIndonesiaDate()
+private fun Long.toApiDateString(): String {
+    return Date(this).toApiDate()
 }
 
 @Composable
@@ -615,19 +616,15 @@ private fun RiwayatFilterScreenPreview() {
         ) {
             RiwayatFilterContent(
                 state = RiwayatState(
-                    lokasiList = listOf("Semua Area", "Zona Biru", "Zona Merah"),
-                    selectedLokasi = "Zona Biru",
-                    filterUiModel = RiwayatFilterUiModel(
-                        lokasiOptions = listOf("Semua Area", "Zona Biru", "Zona Merah"),
-                        selectedLokasi = "Zona Biru",
-                        selectedVehicle = RiwayatVehicleFilter.ALL,
-                        selectedPayment = RiwayatPaymentFilter.ALL
-                    )
+                    lokasiList = listOf(
+                        LokasiItemModel(lokasiId = 1L, namaLokasi = "Zona Biru"),
+                        LokasiItemModel(lokasiId = 2L, namaLokasi = "Zona Merah")
+                    ),
+                    selectedLokasi = "SEMUA",
+                    selectedLokasiCode = "SEMUA"
                 ),
-                startDate = Date().toIndonesiaDate(),
-                endDate = Date().toIndonesiaDate(),
-                selectedPayment = RiwayatPaymentFilter.ALL,
-                selectedVehicle = RiwayatVehicleFilter.ALL,
+                startDate = Date().toApiDate(),
+                endDate = Date().toApiDate(),
                 onReset = {},
                 onCancel = {},
                 onStartDateClick = {},

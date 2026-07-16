@@ -3,7 +3,7 @@ package com.epy.linespotv2.data.remote.dto.helper
 import com.google.gson.annotations.SerializedName
 
 data class LokasiResponseDto(
-    @SerializedName("lokasi")    val lokasi: List<LokasiItemResponseDto>? = null
+    @SerializedName("lokasi_item") val lokasi: List<LokasiItemResponseDto>? = null
 )
 
 data class LokasiItemResponseDto(

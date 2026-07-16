@@ -13,6 +13,7 @@ import com.epy.linespotv2.presentation.auth.register.RegisterScreen
 import com.epy.linespotv2.presentation.home_customer.HomeCustomerScreen
 import com.epy.linespotv2.presentation.home_jukir.HomeJukirScreen
 import com.epy.linespotv2.presentation.input_manual.InputManualScreen
+import com.epy.linespotv2.presentation.input_manual.InputManualViewModel
 import com.epy.linespotv2.presentation.input_manual.PembayaranScreen
 import com.epy.linespotv2.presentation.laporan.LaporanFilterScreen
 import com.epy.linespotv2.presentation.laporan.LaporanScreen
@@ -277,15 +278,22 @@ fun AppNavHost() {
         }
 
         composable("inputmanual") {
+            val inputManualViewModel: InputManualViewModel = hiltViewModel(it)
             InputManualScreen(
                 onBack = { navController.popBackStack() },
-                onNavigateToPembayaran = { navController.navigate("pembayaran") }
+                onNavigateToPembayaran = { navController.navigate("pembayaran") },
+                viewModel = inputManualViewModel
             )
         }
 
         composable("pembayaran") {
+            val parentEntry = remember(it) {
+                navController.getBackStackEntry("inputmanual")
+            }
+            val inputManualViewModel: InputManualViewModel = hiltViewModel(parentEntry)
             PembayaranScreen(
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                viewModel = inputManualViewModel
             )
         }
     }

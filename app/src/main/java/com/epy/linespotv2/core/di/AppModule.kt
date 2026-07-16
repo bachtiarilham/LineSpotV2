@@ -3,6 +3,7 @@ package com.epy.linespotv2.core.di
 import com.epy.linespotv2.core.utils.Dispatcher
 import com.epy.linespotv2.data.repository_impl.auth.AuthRepositoryImpl
 import com.epy.linespotv2.data.repository_impl.helper.GetLokasiRepositoryImpl
+import com.epy.linespotv2.data.repository_impl.helper.GetTarifRepositoryImpl
 import com.epy.linespotv2.data.repository_impl.home.CustomerHomeRepositoryImpl
 import com.epy.linespotv2.data.repository_impl.home.JukirHomeRepositoryImpl
 import com.epy.linespotv2.data.repository_impl.laporan.LaporanRepositoryImpl
@@ -14,6 +15,7 @@ import com.epy.linespotv2.data.repository_impl.settings.SettingsRepositoryImpl
 import com.epy.linespotv2.data.repository_impl.subscription.SubscribeRepositoryImpl
 import com.epy.linespotv2.domain.repository.auth.AuthRepository
 import com.epy.linespotv2.domain.repository.helper.GetLokasiRepository
+import com.epy.linespotv2.domain.repository.helper.GetTarifRepository
 import com.epy.linespotv2.domain.repository.home.CustomerHomeRepository
 import com.epy.linespotv2.domain.repository.home.JukirHomeRepository
 import com.epy.linespotv2.domain.repository.laporan.LaporanRepository
@@ -52,6 +54,8 @@ abstract class AppModule {
     abstract fun bindRiwayatRepository(impl: RiwayatRepositoryImpl): RiwayatRepository
     @Binds @Singleton
     abstract fun bindGetLokasiRepository(impl: GetLokasiRepositoryImpl): GetLokasiRepository
+    @Binds @Singleton
+    abstract fun bindGetTarifRepository(impl: GetTarifRepositoryImpl): GetTarifRepository
     @Binds @Singleton
     abstract fun bindLaporanRepository(impl: LaporanRepositoryImpl): LaporanRepository
     @Binds @Singleton

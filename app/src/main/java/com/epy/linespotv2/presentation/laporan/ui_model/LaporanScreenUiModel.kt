@@ -15,7 +15,7 @@ data class LaporanSummaryItemUiModel(
 )
 
 data class LaporanChartItemUiModel(
-    val label: String,
+    val tanggal: String,
     val valueLabel: String,
     val amount: Long,
     val isHighlighted: Boolean = false

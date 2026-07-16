@@ -182,13 +182,13 @@ private fun RiwayatHistoryCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                color = if (item.isEntry) Color(0xFFEAF8EF) else Color(0xFFFFEFEE),
+                color = Color(0xFFEAF8EF),
                 shape = CircleShape
             ) {
                 Icon(
-                    imageVector = if (item.isEntry) Icons.Default.SouthWest else Icons.Default.NorthEast,
+                    imageVector = Icons.Default.SouthWest,
                     contentDescription = null,
-                    tint = if (item.isEntry) Color(0xFF2FA84F) else Color(0xFFE04F4F),
+                    tint = Color(0xFF2FA84F),
                     modifier = Modifier.padding(9.dp)
                 )
             }
@@ -206,7 +206,7 @@ private fun RiwayatHistoryCard(
                 )
                 Text(
                     text = item.statusLabel,
-                    color = if (item.isEntry) Color(0xFF2FA84F) else Color(0xFFE04F4F),
+                    color =Color(0xFF2FA84F),
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -312,7 +312,6 @@ private fun RiwayatScreenPreview() {
                                 vehicleType = "Motor",
                                 time = "14:45",
                                 amountLabel = "Rp 5.000",
-                                isEntry = true,
                                 statusLabel = "Masuk"
                             ),
                             RiwayatItemUiModel(
@@ -321,7 +320,6 @@ private fun RiwayatScreenPreview() {
                                 vehicleType = "Mobil",
                                 time = "14:32",
                                 amountLabel = "Rp 10.000",
-                                isEntry = false,
                                 statusLabel = "Keluar"
                             )
                         )
@@ -335,7 +333,6 @@ private fun RiwayatScreenPreview() {
                                 vehicleType = "Motor",
                                 time = "21:02",
                                 amountLabel = "Rp 5.000",
-                                isEntry = true,
                                 statusLabel = "Masuk"
                             )
                         )

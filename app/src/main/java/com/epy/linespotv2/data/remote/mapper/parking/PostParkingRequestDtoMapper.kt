@@ -6,5 +6,5 @@ import com.epy.linespotv2.domain.model.parking.PostParkingReqModel
 fun PostParkingReqModel.toDto(): PostParkingRequestDto = PostParkingRequestDto(
     plateNumber = plateNumber,
     vehicleTypeCode = vehicleTypeCode,
-    selectedAreaId = selectedAreaId
+    selectedAreaId = selectedAreaId,
 )

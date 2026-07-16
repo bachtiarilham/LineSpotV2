@@ -4,20 +4,20 @@ sealed class RiwayatIntent {
     object loadPage : RiwayatIntent()
     object clickRiwayatDetail : RiwayatIntent()
     object loadFilterPage : RiwayatIntent()
-    data class selectVehicle(
-        val vehicle : String
+    data class updateVehicleCode(
+        val vehicleCode : String
     ) : RiwayatIntent()
-    data class selectPayment(
-        val payment : String
+    data class updatePaymentCode(
+        val paymentCode : String
     ) : RiwayatIntent()
-    data class selectLokasi(
+    data class updateLokasi(
         val lokasi: String
     ) : RiwayatIntent()
     data class submitFilter(
         val startDate: String,
         val endDate: String,
-        val payment: String,
-        val vehicle: String,
-        val lokasi: String
+        val paymentCode: String?,
+        val vehicleCode: String?,
+        val lokasiCode: String?
     ) : RiwayatIntent()
 }

@@ -7,6 +7,7 @@ data class InputManualModel(
     val selectedVehicle: String? = null,
     val vehicleOptions: List<InputManualVehicleOption>? = null,
     val waktuMasuk: String? = null,
+    val selectedAreaId: Long? = null,
     val areaParkir: String? = null,
     val areaOptions: List<String>? = null,
     val tarifSummary: InputManualTarifSummary? = null

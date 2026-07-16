@@ -15,5 +15,4 @@ data class RiwayatItem(
     val vehicleType: String? = null,
     val time: String? = null,
     val amount: Long? = null,
-    val isEntry: Boolean? = null
 )

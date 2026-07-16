@@ -4,6 +4,7 @@ package com.epy.linespotv2.presentation.settings
 import androidx.lifecycle.viewModelScope
 import com.epy.linespotv2.core.base.BaseViewModel
 import com.epy.linespotv2.core.preferences.AppPreferences
+import com.epy.linespotv2.data.local.dao.HomeDao
 import com.epy.linespotv2.domain.model.helper.TarifModel
 import com.epy.linespotv2.domain.model.profile.CustomerModel
 import com.epy.linespotv2.domain.usecase.settings.GetJukirProfileUseCase
@@ -16,17 +17,12 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val getJukirProfileUseCase: GetJukirProfileUseCase,
     private val logoutUseCase: LogoutUseCase,
-    private val prefs: AppPreferences
+    private val homeDao: HomeDao
 ) : BaseViewModel<SettingsIntent, SettingsState>(
     // Tampil data lokal dari prefs dulu sebelum API selesai
     initialState = SettingsState(
         userModel = CustomerModel(
-            userId = prefs.userId,
-            nik = prefs.nik,
-            fullName = prefs.fullName,
-            phone = prefs.phone,
-            email = prefs.email,
-            username = prefs.username,
+
         )
     )
 ) {

@@ -12,12 +12,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
@@ -26,6 +29,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -34,6 +38,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -112,8 +117,10 @@ private fun ScanScreenContent(
             .fillMaxSize()
             .background(PageBg)
             .systemBarsPadding()
+            .navigationBarsPadding()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         ScanTopBar(
             title = "Scan QRIS",
@@ -133,14 +140,17 @@ private fun ScanScreenContent(
         ScanDetectedHint(
             text = when {
                 state.isLoading -> "Memproses QRIS..."
-                state.error != null -> state.error ?: "Terjadi kesalahan"
+                state.error != null -> state.error
                 else -> "QRIS akan otomatis terdeteksi"
             }
         )
 
         GalleryPickerCard(onClick = onPickFromGallery)
 
+
         SecurityCard()
+
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }
 
@@ -174,39 +184,48 @@ private fun ScanTopBar(
 
 @Composable
 private fun ScanInfoCard() {
-    Row(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = White),
+        border = BorderStroke(1.dp, ScanCardBorder)
     ) {
-        Box(
+        Row(
             modifier = Modifier
-                .size(40.dp)
-                .background(ScanIconBg, CircleShape),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 14.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Default.Collections,
-                contentDescription = null,
-                tint = SmartBlue,
-                modifier = Modifier.size(18.dp)
-            )
-        }
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(ScanIconBg, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Collections,
+                    contentDescription = null,
+                    tint = SmartBlue,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
 
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Text(
-                text = "Arahkan kamera ke QRIS",
-                color = DarkBlue,
-                style = MaterialTheme.typography.labelLarge
-            )
-            Text(
-                text = "Pastikan QR code berada dalam area kotak dan terlihat jelas.",
-                color = GreyText,
-                style = MaterialTheme.typography.bodySmall
-            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = "Arahkan kamera ke QRIS",
+                    color = DarkBlue,
+                    style = MaterialTheme.typography.labelLarge
+                )
+                Text(
+                    text = "Pastikan QR code berada dalam area kotak dan terlihat jelas.",
+                    color = GreyText,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
         }
     }
 }
@@ -224,7 +243,8 @@ private fun ScanCameraSection(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(348.dp)
+            .height(380.dp)
+            .clip(RoundedCornerShape(24.dp))
             .background(ScanSurface, RoundedCornerShape(24.dp))
             .border(1.dp, ScanCardBorder, RoundedCornerShape(24.dp))
     ) {
@@ -249,7 +269,9 @@ private fun ScanCameraSection(
         }
 
         ScanFrame(
-            modifier = Modifier.matchParentSize()
+            modifier = Modifier
+                .matchParentSize()
+                .padding(14.dp)
         )
 
         Box(
@@ -268,16 +290,10 @@ private fun ScanFrame(
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .padding(horizontal = 2.dp, vertical = 2.dp)
-        ) {
-            ScanCorner(modifier = Modifier.align(Alignment.TopStart), top = true, start = true)
-            ScanCorner(modifier = Modifier.align(Alignment.TopEnd), top = true, start = false)
-            ScanCorner(modifier = Modifier.align(Alignment.BottomStart), top = false, start = true)
-            ScanCorner(modifier = Modifier.align(Alignment.BottomEnd), top = false, start = false)
-        }
+        ScanCorner(modifier = Modifier.align(Alignment.TopStart), top = true, start = true)
+        ScanCorner(modifier = Modifier.align(Alignment.TopEnd), top = true, start = false)
+        ScanCorner(modifier = Modifier.align(Alignment.BottomStart), top = false, start = true)
+        ScanCorner(modifier = Modifier.align(Alignment.BottomEnd), top = false, start = false)
 
         Box(
             modifier = Modifier
@@ -464,6 +480,7 @@ private fun GalleryPickerCard(onClick: () -> Unit) {
 
 @Composable
 private fun SecurityCard() {
+
     Row(
         modifier = Modifier
             .fillMaxWidth()

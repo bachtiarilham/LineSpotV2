@@ -2,7 +2,7 @@ package com.epy.linespotv2.domain.usecase.riwayat
 
 import com.epy.linespotv2.core.network.ApiCondition
 import com.epy.linespotv2.core.utils.Dispatcher
-import com.epy.linespotv2.core.utils.parseIndonesiaDateOrNull
+import com.epy.linespotv2.core.utils.parseApiDateOrNull
 import com.epy.linespotv2.domain.model.riwayat.RiwayatRequestModel
 import com.epy.linespotv2.domain.model.riwayat.RiwayatResponseModel
 import com.epy.linespotv2.domain.repository.riwayat.RiwayatRepository
@@ -24,8 +24,8 @@ class RiwayatUseCase @Inject constructor(
             )
         }
 
-        val parsedStartDate = startDate.parseIndonesiaDateOrNull()
-        val parsedEndDate = endDate.parseIndonesiaDateOrNull()
+        val parsedStartDate = startDate.parseApiDateOrNull()
+        val parsedEndDate = endDate.parseApiDateOrNull()
 
         if (parsedStartDate == null || parsedEndDate == null) {
             return@withContext ApiCondition.AppFailure(

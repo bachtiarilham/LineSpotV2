@@ -66,7 +66,7 @@ import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
 import com.epy.linespotv2.core.utils.inlocation.LocationBoundaryStatus
-import com.epy.linespotv2.core.utils.toIndonesiaDate
+import com.epy.linespotv2.core.utils.toApiDate
 import com.epy.linespotv2.core.utils.toRupiah
 import com.epy.linespotv2.domain.model.home.JukirHomeModel
 import com.epy.linespotv2.domain.model.profile.JukirModel
@@ -257,7 +257,7 @@ fun HomeScreenContent(
         )
 
         Text(
-            text = Date().toIndonesiaDate(),
+            text = Date().toApiDate(),
             color = DarkBlue,
             style = MaterialTheme.typography.titleSmall
         )
@@ -478,7 +478,7 @@ private fun IncomeBalanceCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Pendapatan (Hari Ini)",
+                    text = "Pendapatan Total",
                     color = GreyText,
                     style = MaterialTheme.typography.titleSmall
                 )

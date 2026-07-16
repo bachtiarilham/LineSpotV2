@@ -26,20 +26,20 @@ class TokenRefreshAuthenticator @Inject constructor(
             ?.removePrefix("Bearer ")
             ?.trim()
             .orEmpty()
-        val currentToken = prefs.token
-        val currentRefreshToken = prefs.refreshtoken
+        val currentToken = prefs.accessToken
+        val currentRefreshToken = prefs.refreshToken
 
         if (currentRefreshToken.isBlank()) return null
 
         synchronized(this) {
-            val latestToken = prefs.token
+            val latestToken = prefs.accessToken
             if (currentToken.isNotBlank() && latestToken.isNotBlank() && latestToken != requestToken) {
                 return response.request.newBuilder()
                     .header("Authorization", "Bearer $latestToken")
                     .build()
             }
 
-            val refreshTokenToUse = prefs.refreshtoken.ifBlank { currentRefreshToken }
+            val refreshTokenToUse = prefs.refreshToken.ifBlank { currentRefreshToken }
             if (refreshTokenToUse.isBlank()) return null
 
             val refreshed = runBlocking {
@@ -52,14 +52,14 @@ class TokenRefreshAuthenticator @Inject constructor(
 
             val tokenSet = refreshed.data
             if (!refreshed.success || tokenSet == null || tokenSet.accessToken.isBlank()) {
-                prefs.token = ""
-                prefs.refreshtoken = ""
+                prefs.accessToken = ""
+                prefs.refreshToken = ""
                 return null
             }
 
-            prefs.token = tokenSet.accessToken
+            prefs.accessToken = tokenSet.accessToken
             if (tokenSet.refreshToken.isNotBlank()) {
-                prefs.refreshtoken = tokenSet.refreshToken
+                prefs.refreshToken = tokenSet.refreshToken
             }
 
             return response.request.newBuilder()

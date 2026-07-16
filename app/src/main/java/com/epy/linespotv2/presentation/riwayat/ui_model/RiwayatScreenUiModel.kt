@@ -15,6 +15,5 @@ data class RiwayatItemUiModel(
     val vehicleType: String,
     val time: String,
     val amountLabel: String,
-    val isEntry: Boolean,
     val statusLabel: String
 )

@@ -22,5 +22,4 @@ private fun RiwayatItemDto?.toDomain(): RiwayatItem = RiwayatItem(
     vehicleType = this?.vehicleType,
     time = this?.time,
     amount = this?.amount,
-    isEntry = this?.isEntry
 )

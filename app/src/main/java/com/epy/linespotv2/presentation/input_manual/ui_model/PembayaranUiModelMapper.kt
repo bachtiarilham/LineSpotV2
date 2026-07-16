@@ -36,10 +36,6 @@ private fun PostParkingRespModel.buildPaymentOptions(
             subtitle = "Terima pembayaran secara tunai"
         ),
         PembayaranOptionUiModel(
-            title = "Non Tunai",
-            subtitle = paymentName.ifBlank { "Pembayaran dengan QRIS atau kanal digital" }
-        ),
-        PembayaranOptionUiModel(
             title = "Transfer Bank",
             subtitle = "Gunakan transfer bank bila tersedia"
         )

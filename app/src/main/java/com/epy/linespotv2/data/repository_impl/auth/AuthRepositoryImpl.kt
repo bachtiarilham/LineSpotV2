@@ -2,7 +2,6 @@ package com.epy.linespotv2.data.repository_impl.auth
 
 import com.epy.linespotv2.core.network.ApiCondition
 import com.epy.linespotv2.core.preferences.AppPreferences
-import com.epy.linespotv2.core.preferences.TarifItem
 import com.epy.linespotv2.data.remote.api.ApiService
 import com.epy.linespotv2.data.remote.mapper.auth.toDomain
 import com.epy.linespotv2.data.remote.mapper.auth.toDto
@@ -23,6 +22,10 @@ class AuthRepositoryImpl @Inject constructor(
             val response = api.login(reqModel.toDto())
 
             if (response.success && response.data!= null){
+                prefs.refreshToken = response.data.tokenSetDto.refreshToken
+                prefs.accessToken = response.data.tokenSetDto.accessToken
+                prefs.expiresIn = response.data.tokenSetDto.expiresIn
+                prefs.roleId = response.data.roleId
                 ApiCondition.AppSuccess(response.data.toDomain())
             } else {
                 ApiCondition.AppFailure(Exception(response.message ?: "login gagal"))

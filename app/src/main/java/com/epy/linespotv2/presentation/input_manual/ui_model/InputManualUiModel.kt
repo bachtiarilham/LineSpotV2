@@ -8,6 +8,7 @@ data class InputManualUiModel(
     val selectedVehicle: InputManualVehicleUiFilter = InputManualVehicleUiFilter.MOTOR,
     val vehicleOptions: List<InputManualVehicleUiFilter> = InputManualVehicleUiFilter.entries,
     val waktuMasuk: String = "-",
+    val areaOptions: List<String> = emptyList(),
     val areaParkir: String = "-",
     val totalTarifLabel: String = "Rp 0",
     val submitLabel: String = "Simpan & Proses Pembayaran",

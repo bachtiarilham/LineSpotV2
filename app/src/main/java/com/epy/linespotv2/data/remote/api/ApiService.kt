@@ -8,6 +8,7 @@ import com.epy.linespotv2.data.remote.dto.auth.RefreshTokenRequestDto
 import com.epy.linespotv2.data.remote.dto.auth.RegisterRequestDto
 import com.epy.linespotv2.data.remote.dto.auth.TokenSetDto
 import com.epy.linespotv2.data.remote.dto.helper.LokasiResponseDto
+import com.epy.linespotv2.data.remote.dto.helper.TarifResponseDto
 import com.epy.linespotv2.data.remote.dto.home.CustomerHomeDto
 import com.epy.linespotv2.data.remote.dto.home.JukirHomeDto
 import com.epy.linespotv2.data.remote.dto.laporan.LaporanRequestDto
@@ -90,6 +91,8 @@ interface ApiService {
     //helper
     @GET("api/v2/linespot/get_lokasi")
     suspend fun getLokasi() : ApiEnvelope<LokasiResponseDto>
+    @GET("api/v2/linespot/get_tarif")
+    suspend fun getTarif() : ApiEnvelope<TarifResponseDto>
 
 
 

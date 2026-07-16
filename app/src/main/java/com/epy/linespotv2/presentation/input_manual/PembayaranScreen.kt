@@ -244,24 +244,46 @@ private fun QrisPaymentCard(
         colors = CardDefaults.cardColors(containerColor = White)
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 18.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Text(uiModel.qrTitle, color = DarkBlue, style = MaterialTheme.typography.titleMedium)
-            Image(
-                bitmap = QrCodeMaker.createBitmap(pembayaran).asImageBitmap(),
-                contentDescription = "QRIS Pembayaran",
-                modifier = Modifier
-                    .size(180.dp)
-                    .background(White)
+            Text(
+                text = uiModel.qrTitle,
+                color = DarkBlue,
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
             )
+
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    bitmap = QrCodeMaker.createBitmap(pembayaran).asImageBitmap(),
+                    contentDescription = "QRIS Pembayaran",
+                    modifier = Modifier
+                        .size(180.dp)
+                        .background(White)
+                )
+            }
+
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.Center
             ) {
                 Icon(Icons.Default.Info, null, tint = GreyText, modifier = Modifier.size(14.dp))
-                Text(uiModel.qrExpiredLabel, color = GreyText, style = MaterialTheme.typography.bodySmall)
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = uiModel.qrExpiredLabel,
+                    color = GreyText,
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
@@ -347,7 +369,6 @@ private fun PembayaranScreenPreview() {
                 qrExpiredLabel = "2024-05-30 14:45:00",
                 paymentOptions = listOf(
                     PembayaranOptionUiModel("Tunai", "Terima pembayaran secara tunai"),
-                    PembayaranOptionUiModel("Non Tunai", "Pembayaran dengan QRIS atau kanal digital"),
                     PembayaranOptionUiModel("Transfer Bank", "Gunakan transfer bank bila tersedia")
                 )
             ),

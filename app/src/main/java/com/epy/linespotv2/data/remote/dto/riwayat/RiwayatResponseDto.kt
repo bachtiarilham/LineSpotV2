@@ -17,5 +17,4 @@ data class RiwayatItemDto(
     @SerializedName("vehicle_type") val vehicleType: String? = null,
     @SerializedName("time") val time: String? = null,
     @SerializedName("amount")   val amount: Long? = null,
-    @SerializedName("is_entry") val isEntry: Boolean? = null
 )

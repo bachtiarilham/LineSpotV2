@@ -301,7 +301,7 @@ private fun LaporanBarChart(chartItems: List<LaporanChartItemUiModel>) {
     ) {
         chartItems.forEach { item ->
             VerticalBarItem(
-                label = item.label,
+                label = item.tanggal,
                 valueLabel = item.valueLabel,
                 ratio = (item.amount.toFloat() / maxAmount.toFloat()).coerceIn(0f, 1f),
                 isHighlighted = item.isHighlighted,
