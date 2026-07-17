@@ -1,8 +1,11 @@
 package com.epy.linespotv2.presentation.navigation
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -186,14 +189,25 @@ fun AppNavHost() {
         composable("subscribe") {
             SubscribeScreen(
                 onBack = { navController.popBackStack() },
-                onChoosePackage = { navController.navigate("subscribepopup") },
+                onChoosePackage = { packageName ->
+                    navController.navigate("subscribepopup/${Uri.encode(packageName)}")
+                },
                 onOpenBenefit = { navController.navigate("benefitpaket") },
                 onOpenPromoCode = { navController.navigate("promoberlangganan") }
             )
         }
 
-        composable("subscribepopup") {
+        composable(
+            route = "subscribepopup/{packageName}",
+            arguments = listOf(
+                navArgument("packageName") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
             SubscribeScreenPopUpScreen(
+                packageName = backStackEntry.arguments?.getString("packageName").orEmpty(),
                 onClose = { navController.popBackStack() },
                 onSubscribeNow = {}
             )

@@ -1,4 +1,4 @@
-﻿package com.epy.linespotv2.presentation.subscribe
+package com.epy.linespotv2.presentation.subscribe
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,34 +33,38 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.epy.linespotv2.core.ui.theme.DarkBlue
 import com.epy.linespotv2.core.ui.theme.GreyText
 import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.Tangerine
 import com.epy.linespotv2.core.ui.theme.White
-import com.epy.linespotv2.domain.model.subscription.Promo
-import com.epy.linespotv2.domain.model.subscription.PromoTerpilih
-import com.epy.linespotv2.domain.model.subscription.StatusCard
+import com.epy.linespotv2.domain.model.subscription.DetailPromo
+import com.epy.linespotv2.domain.model.subscription.PromoTersedia
 import com.epy.linespotv2.domain.model.subscription.SubscribeResponseModel
-
-private data class PromoOfferUi(
-    val code: String?,
-    val description: String?,
-    val badge: String,
-    val color: Color
-)
+import com.epy.linespotv2.presentation.subscribe.ui_model.SubscribePromoColorStyle
+import com.epy.linespotv2.presentation.subscribe.ui_model.SubscribePromoUiModel
+import com.epy.linespotv2.presentation.subscribe.ui_model.toUiModel
 
 @Composable
 fun EnterPromoScreenPopUp(
     model: SubscribeResponseModel? = null,
     onClose: () -> Unit = {},
     onApply: (String) -> Unit = {},
-    onSelectPromo: (String) -> Unit = {}
+    onSelectPromo: (String) -> Unit = {},
+    viewModel: SubscribeViewModel = hiltViewModel()
 ) {
-    val promoGroup = model?.promo?.firstOrNull()
-    val promoSnk = promoGroup?.sNk.orEmpty()
-    val promoList = promoGroup?.promo.orEmpty()
+    val state = viewModel.state.collectAsStateWithLifecycle().value
+
+    LaunchedEffect(Unit) {
+        if (model == null) {
+            viewModel.onIntent(SubscribeIntent.LoadPage)
+        }
+    }
+
+    val uiModel = (model ?: state.subscribeResponseModel).toUiModel()
 
     Box(
         modifier = Modifier
@@ -122,29 +127,15 @@ fun EnterPromoScreenPopUp(
 
                 SectionTitle(text = "Syarat & Ketentuan")
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    if (promoSnk.isNotEmpty()) {
-                        promoSnk.forEach { BulletText(it) }
-                    } else {
-                        BulletText("Gagal Patch")
-                    }
+                    uiModel.promoTerms.forEach { BulletText(it) }
                 }
 
                 SectionTitle(text = "Promo tersedia")
-
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    if (promoList.isNotEmpty()) {
-                        promoList.forEach { promo ->
-                            PromoRow(
-                                promo = promo.toUiOffer(),
-//                                onClick = { onSelectPromo(promo.namaPromo) }
-                                        onClick = {  }
-
-                            )
-                        }
-                    } else {
+                    uiModel.promoItems.forEach { promo ->
                         PromoRow(
-                            promo = PromoOfferUi("Error", "Error", "Error", Color(0xFF2FA84F)),
-                            onClick = { }
+                            promo = promo,
+                            onClick = { onSelectPromo(promo.code) }
                         )
                     }
                 }
@@ -198,9 +189,15 @@ private fun PromoInputField(onApply: (String) -> Unit) {
 
 @Composable
 private fun PromoRow(
-    promo: PromoOfferUi,
+    promo: SubscribePromoUiModel,
     onClick: () -> Unit
 ) {
+    val tintColor = when (promo.colorStyle) {
+        SubscribePromoColorStyle.GREEN -> Color(0xFF2FA84F)
+        SubscribePromoColorStyle.BLUE -> SmartBlue
+        SubscribePromoColorStyle.ORANGE -> Tangerine
+    }
+
     Surface(
         color = White,
         shape = RoundedCornerShape(14.dp),
@@ -217,39 +214,35 @@ private fun PromoRow(
                 modifier = Modifier
                     .size(42.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(promo.color.copy(alpha = 0.12f)),
+                    .background(tintColor.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Percent,
                     contentDescription = null,
-                    tint = promo.color
+                    tint = tintColor
                 )
             }
             Spacer(modifier = Modifier.size(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                promo.code?.let {
-                    Text(
-                        text = it,
-                        color = DarkBlue,
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                }
-                promo.description?.let {
-                    Text(
-                        text = it,
-                        color = GreyText,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
+                Text(
+                    text = promo.code,
+                    color = DarkBlue,
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Text(
+                    text = promo.description,
+                    color = GreyText,
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
             Surface(
-                color = promo.color.copy(alpha = 0.12f),
+                color = tintColor.copy(alpha = 0.12f),
                 shape = RoundedCornerShape(999.dp)
             ) {
                 Text(
-                    text = promo.badge,
-                    color = promo.color,
+                    text = promo.badgeLabel,
+                    color = tintColor,
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                     style = MaterialTheme.typography.labelSmall
                 )
@@ -311,46 +304,29 @@ private fun InfoBox() {
     }
 }
 
-private fun PromoTerpilih.toUiOffer(): PromoOfferUi {
-    val badgeColor = when {
-//        jumlahDiskon >= 20 -> Tangerine
-//        jumlahDiskon >= 15 -> SmartBlue
-        else -> Color(0xFF2FA84F)
-    }
-    return PromoOfferUi(
-        code = namaPromo,
-        description = deskripsi,
-        badge = "HEMAT ${jumlahDiskon}%",
-        color = badgeColor
-    )
-}
-
 @Preview(showBackground = true)
 @Composable
 private fun EnterPromoScreenPopUpPreview() {
     val model = SubscribeResponseModel(
-        statusCard = StatusCard(
-            paketAktif = "Premium Gold",
-            kadaluarsa = "20 Mei 2025",
-            benefit = "Nikmati benefit parkir premium"
-        ),
-        packageCard = emptyList(),
-        promo = listOf(
-            Promo(
-                sNk = listOf(
-                    "Kode promo hanya berlaku untuk paket membership.",
-                    "Satu kode promo hanya dapat digunakan 1 kali.",
-                    "Kode promo tidak dapat digabung dengan promo lain.",
-                    "Pastikan kode promo masih berlaku."
-                ),
-                promo = listOf(
-                    PromoTerpilih("GOLDMONTH13", "Diskon 13% untuk paket bulanan", 13),
-                    PromoTerpilih("GOLD6MONTH15", "Diskon 15% untuk paket 6 bulan", 15),
-                    PromoTerpilih("GOLDYEAR20", "Diskon 20% untuk paket tahunan", 20)
-                )
+        activePackageName = "Premium Gold",
+        activePackageExpired = "2026-12-20",
+        activePackageBenefits = emptyList(),
+        listPaket = null,
+        promoTersedia = PromoTersedia(
+            syaratDanKetentuan = listOf(
+                "Kode promo hanya berlaku untuk paket membership.",
+                "Satu kode promo hanya dapat digunakan 1 kali.",
+                "Kode promo tidak dapat digabung dengan promo lain.",
+                "Pastikan kode promo masih berlaku."
+            ),
+            listPromo = listOf(
+                DetailPromo("GOLDMONTH13", 13),
+                DetailPromo("GOLD6MONTH15", 15),
+                DetailPromo("GOLDYEAR20", 20)
             )
         )
     )
+
     MaterialTheme {
         EnterPromoScreenPopUp(model = model)
     }

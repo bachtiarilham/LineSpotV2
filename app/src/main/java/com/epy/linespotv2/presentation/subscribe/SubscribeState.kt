@@ -8,5 +8,6 @@ data class SubscribeState (
     val error: String? = null,
     val subscribeEffect: SubscribeEffect? = null,
     val subscribeResponseModel: SubscribeResponseModel? = null,
-    val selectedTabIndex: Int = 2
+    val selectedTabIndex: Int = 2,
+    val selectedPackageName: String? = null
 )

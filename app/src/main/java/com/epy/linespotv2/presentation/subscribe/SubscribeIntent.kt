@@ -1,8 +1,9 @@
 package com.epy.linespotv2.presentation.subscribe
 
-sealed class SubscribeIntent {
-    object loadPage : SubscribeIntent()
-    object onOpenBenefit : SubscribeIntent()
-    data class onClickTab(val index: Int) : SubscribeIntent()
-    object onClickPackage : SubscribeIntent()
+sealed interface SubscribeIntent {
+    data object LoadPage : SubscribeIntent
+    data object OpenBenefit : SubscribeIntent
+    data object OpenPromo : SubscribeIntent
+    data class SelectTab(val index: Int) : SubscribeIntent
+    data class SelectPackage(val packageName: String) : SubscribeIntent
 }

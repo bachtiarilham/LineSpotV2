@@ -2,6 +2,6 @@ package com.epy.linespotv2.presentation.subscribe
 
 sealed interface SubscribeEffect {
     object NavigateToBenefit : SubscribeEffect
-    object NavigateToPackage : SubscribeEffect
+    data class NavigateToPackage(val packageName: String) : SubscribeEffect
     object NavigateToPromo : SubscribeEffect
 }

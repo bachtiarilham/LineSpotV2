@@ -15,12 +15,16 @@ class SubscribeViewModel @Inject constructor(
 
     override fun onIntent(intent: SubscribeIntent) {
         when (intent) {
-            is SubscribeIntent.loadPage -> loadPage(isRefresh = false)
-            is SubscribeIntent.onClickTab -> {
+            SubscribeIntent.LoadPage -> loadPage(isRefresh = false)
+            is SubscribeIntent.SelectTab -> {
                 updateState { it.copy(selectedTabIndex = intent.index) }
             }
-            is SubscribeIntent.onOpenBenefit -> sendEffect(SubscribeEffect.NavigateToBenefit)
-            is SubscribeIntent.onClickPackage -> sendEffect(SubscribeEffect.NavigateToPackage)
+            SubscribeIntent.OpenBenefit -> sendEffect(SubscribeEffect.NavigateToBenefit)
+            SubscribeIntent.OpenPromo -> sendEffect(SubscribeEffect.NavigateToPromo)
+            is SubscribeIntent.SelectPackage -> {
+                updateState { it.copy(selectedPackageName = intent.packageName) }
+                sendEffect(SubscribeEffect.NavigateToPackage(intent.packageName))
+            }
         }
     }
 

@@ -1,33 +1,32 @@
 package com.epy.linespotv2.domain.model.subscription
 
 data class SubscribeResponseModel(
-    val statusCard: StatusCard? = null,
-    val packageCard: List<PackageCard>? = null,
-    val promo: List<Promo>? = null
+    val activePackageName: String?,
+    val activePackageExpired: String?,
+    val activePackageBenefits: List<String?>? = emptyList(),
+    val listPaket: ListPaket?,
+    val promoTersedia: PromoTersedia?
 )
 
-data class StatusCard(
-    val paketAktif: String? = null,
-    val kadaluarsa: String? = null,
-    val benefit: String? = null
+data class ListPaket(
+    val bulanan: List<DetailPaket?>? = emptyList(),
+    val enamBulan: List<DetailPaket?>? = emptyList(),
+    val tahunan: List<DetailPaket?>? = emptyList()
 )
 
-data class PackageCard(
-    val namaPaket: String? = null,
-    val harga: Long? = null,
-    val masaBerlaku: String? = null,
-    val jumlahDiskon: Long? = null,
-    val deskripsi: String? = null,
-    val benefit: List<String>? = null
+data class DetailPaket(
+    val namaPaket: String?,
+    val harga: Long?,
+    val coverageLokasi: List<String?>? = emptyList(),
+    val benefitPackage: List<String?>? = emptyList()
 )
 
-data class Promo(
-    val sNk: List<String>? = null,
-    val promo: List<PromoTerpilih>? = null
+data class PromoTersedia(
+    val syaratDanKetentuan: List<String?>? = emptyList(),
+    val listPromo: List<DetailPromo?>? = emptyList()
 )
 
-data class PromoTerpilih(
-    val namaPromo: String? = null,
-    val deskripsi: String? = null,
-    val jumlahDiskon: Long? = null
+data class DetailPromo(
+    val namaPromo: String?,
+    val besarDiskon: Long?
 )

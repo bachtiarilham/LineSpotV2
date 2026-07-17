@@ -1,4 +1,4 @@
-﻿package com.epy.linespotv2.presentation.subscribe
+package com.epy.linespotv2.presentation.subscribe
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,7 +21,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CardGiftcard
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.EmojiEvents
@@ -54,20 +53,14 @@ import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.Tangerine
 import com.epy.linespotv2.core.ui.theme.White
-import com.epy.linespotv2.core.utils.toRupiah
-import com.epy.linespotv2.domain.model.subscription.PackageCard
-import com.epy.linespotv2.domain.model.subscription.StatusCard
+import com.epy.linespotv2.domain.model.subscription.DetailPaket
+import com.epy.linespotv2.domain.model.subscription.ListPaket
+import com.epy.linespotv2.domain.model.subscription.PromoTersedia
 import com.epy.linespotv2.domain.model.subscription.SubscribeResponseModel
 import com.epy.linespotv2.presentation.home_customer.FullScreenLoading
-
-private data class PackageOption(
-    val name: String,
-    val price: Long,
-    val period: String,
-    val discountInfo: String,
-    val badge: String? = null,
-    val highlighted: Boolean = false
-)
+import com.epy.linespotv2.presentation.subscribe.ui_model.SubscribePackageUiModel
+import com.epy.linespotv2.presentation.subscribe.ui_model.SubscribeUiModel
+import com.epy.linespotv2.presentation.subscribe.ui_model.toUiModel
 
 @Composable
 fun SubscribeScreen(
@@ -78,48 +71,55 @@ fun SubscribeScreen(
     onOpenPromoCode: () -> Unit = {},
 ) {
     val viewModel: SubscribeViewModel = hiltViewModel()
+    val state = viewModel.state.collectAsStateWithLifecycle().value
+
     LaunchedEffect(Unit) {
-        viewModel.onIntent(SubscribeIntent.loadPage)
+        viewModel.onIntent(SubscribeIntent.LoadPage)
     }
+
     SubscribeScreenContent(
         model = model,
-        consumeEffect = { viewModel.consumeEffect() },
-        state = viewModel.state.collectAsStateWithLifecycle().value,
+        state = state,
+        consumeEffect = viewModel::consumeEffect,
         onBack = onBack,
         onChoosePackage = onChoosePackage,
         onOpenBenefit = onOpenBenefit,
         onOpenPromoCode = onOpenPromoCode,
-        onTabSelected = { viewModel.onIntent(SubscribeIntent.onClickTab(it)) },
-        onRetry = { viewModel.onIntent(SubscribeIntent.loadPage) }
+        onIntent = viewModel::onIntent,
+        onRetry = { viewModel.onIntent(SubscribeIntent.LoadPage) }
     )
 }
 
 @Composable
 fun SubscribeScreenContent(
     model: SubscribeResponseModel? = null,
-    consumeEffect: () -> Unit = {},
     state: SubscribeState = SubscribeState(),
+    consumeEffect: () -> Unit = {},
     onBack: () -> Unit = {},
     onChoosePackage: (String) -> Unit = {},
     onOpenBenefit: () -> Unit = {},
     onOpenPromoCode: () -> Unit = {},
-    onTabSelected: (Int) -> Unit = {},
+    onIntent: (SubscribeIntent) -> Unit = {},
     onRetry: () -> Unit = {},
 ) {
-    val activeModel = model ?: state.subscribeResponseModel
-    val tabs = listOf("Bulanan", "6 Bulan", "Tahunan")
-    val selectedTab = state.selectedTabIndex.coerceIn(0, tabs.lastIndex)
-    val packages = activeModel?.packageCard
-        ?.filter { it.matchesTab(selectedTab) }
-        ?.map { it.toUiOption() }
-        .orEmpty()
-    val namaPackage = packages.firstOrNull()?.name.orEmpty()
+    val uiModel = (model ?: state.subscribeResponseModel).toUiModel()
+    val selectedTab = state.selectedTabIndex.coerceIn(0, uiModel.tabs.lastIndex)
+    val packages = uiModel.packagesForTab(selectedTab)
 
     LaunchedEffect(state.subscribeEffect) {
         when (state.subscribeEffect) {
-            is SubscribeEffect.NavigateToPackage -> { onChoosePackage(namaPackage); consumeEffect() }
-            is SubscribeEffect.NavigateToBenefit -> { onOpenBenefit() ; consumeEffect() }
-            is SubscribeEffect.NavigateToPromo -> { onOpenPromoCode() ; consumeEffect() }
+            SubscribeEffect.NavigateToBenefit -> {
+                onOpenBenefit()
+                consumeEffect()
+            }
+            is SubscribeEffect.NavigateToPackage -> {
+                onChoosePackage(state.subscribeEffect.packageName)
+                consumeEffect()
+            }
+            SubscribeEffect.NavigateToPromo -> {
+                onOpenPromoCode()
+                consumeEffect()
+            }
             null -> Unit
         }
     }
@@ -130,105 +130,111 @@ fun SubscribeScreenContent(
             .background(PageBg)
             .systemBarsPadding()
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    Brush.verticalGradient(
-                        listOf(Color(0xFF071B44), DarkBlue)
-                    )
-                )
-                .padding(horizontal = 20.dp, vertical = 18.dp)
-//                .clip(1.dp, border, RoundedCornerShape(16.dp))
-                .clip(RoundedCornerShape(5.dp))
-        ) {
-            when {
-                state.isLoading -> FullScreenLoading()
-                state.error != null -> ErrorScreen(
+        SubscribeTopBar(onBack = onBack)
+
+        when {
+            state.isLoading -> {
+                FullScreenLoading()
+            }
+            state.error != null && uiModel.allPackages().isEmpty() -> {
+                SubscribeErrorScreen(
                     message = state.error,
                     onRetry = onRetry
                 )
             }
+            else -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 18.dp, vertical = 14.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    if (uiModel.status != null) {
+                        ActiveMembershipCard(
+                            uiModel = uiModel,
+                            onOpenBenefit = { onIntent(SubscribeIntent.OpenBenefit) }
+                        )
+                    } else {
+                        UnsubscribedStatusCard()
+                    }
 
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        uiModel.tabs.forEachIndexed { index, label ->
+                            TabChip(
+                                text = label,
+                                selected = selectedTab == index,
+                                modifier = Modifier.weight(1f),
+                                onClickTab = { onIntent(SubscribeIntent.SelectTab(index)) }
+                            )
+                        }
+                    }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ChevronLeft,
-                    contentDescription = "Back",
-                    tint = White,
-                    modifier = Modifier.clickable { onBack() }
-                )
-
-                Spacer(modifier = Modifier.width(14.dp))
-
-                Text(
-                    text = "Membership",
-                    modifier = Modifier.weight(1f),
-                    color = White,
-                    style = MaterialTheme.typography.titleMedium,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.width(52.dp))
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 18.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            if (activeModel?.statusCard != null) {
-                StatusCard(
-                    statusCard = activeModel.statusCard,
-                    onOpenBenefit = onOpenBenefit
-                )
-            } else {
-                UnsubscribedStatusCard()
-            }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                tabs.forEachIndexed { index, label ->
-                    TabChip(
-                        text = label,
-                        selected = selectedTab == index,
-                        modifier = Modifier.weight(1f)
-                    ) { onTabSelected(index) }
-                }
-            }
-
-            Text(
-                text = "Pilih Paket",
-                color = DarkBlue,
-                style = MaterialTheme.typography.titleSmall
-            )
-
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                packages.forEach { option ->
-                    PackageCard(
-                        option = option,
-                        onClickPackage = { onChoosePackage(option.name) }
+                    Text(
+                        text = "Pilih Paket",
+                        color = DarkBlue,
+                        style = MaterialTheme.typography.titleSmall
                     )
+
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        packages.forEach { option ->
+                            PackageCard(
+                                option = option,
+                                onClickPackage = { onIntent(SubscribeIntent.SelectPackage(option.name)) }
+                            )
+                        }
+                    }
+
+                    PromoCard(onOpenPromoCode = { onIntent(SubscribeIntent.OpenPromo) })
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
             }
-
-            PromoCard(onOpenPromoCode = onOpenPromoCode)
-
-            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }
 
 @Composable
-private fun StatusCard(
-    statusCard: StatusCard,
+private fun SubscribeTopBar(onBack: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFF071B44), DarkBlue)
+                )
+            )
+            .padding(horizontal = 20.dp, vertical = 18.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.ChevronLeft,
+                contentDescription = "Back",
+                tint = White,
+                modifier = Modifier.clickable { onBack() }
+            )
+            Spacer(modifier = Modifier.width(14.dp))
+            Text(
+                text = "Membership",
+                modifier = Modifier.weight(1f),
+                color = White,
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.width(52.dp))
+        }
+    }
+}
+
+@Composable
+private fun ActiveMembershipCard(
+    uiModel: SubscribeUiModel,
     onOpenBenefit: () -> Unit
 ) {
+    val status = uiModel.status ?: return
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -261,38 +267,23 @@ private fun StatusCard(
                     )
                 }
 
-                statusCard.paketAktif?.let {
-                    Text(
-                        text = it,
-                        color = White,
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                }
                 Text(
-                    text = "Aktif hingga ${statusCard.kadaluarsa}",
+                    text = status.packageName,
+                    color = White,
+                    style = MaterialTheme.typography.headlineSmall
+                )
+                Text(
+                    text = "Aktif hingga ${status.expiredDate}",
                     color = White.copy(alpha = 0.92f),
                     style = MaterialTheme.typography.bodyMedium
                 )
-
-//                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-//                    Surface(
-//                        color = Color.Black.copy(alpha = 0.12f),
-//                        shape = RoundedCornerShape(12.dp)
-//                    ) {
-//                        Text(
-//                            text = "Lihat Benefit",
-//                            color = White,
-//                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-//                            style = MaterialTheme.typography.labelLarge
-//                        )
-//                    }
-//                }
-
-                Text(
-        text = statusCard.benefit.orEmpty(),
-        color = White.copy(alpha = 0.88f),
-        style = MaterialTheme.typography.bodySmall
-    )
+                if (status.benefitSummary.isNotBlank()) {
+                    Text(
+                        text = status.benefitSummary,
+                        color = White.copy(alpha = 0.88f),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
         }
     }
@@ -316,7 +307,7 @@ fun UnsubscribedStatusCard() {
                 )
                 .padding(18.dp)
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(
                         color = Color(0xFFFFC96A).copy(alpha = 0.25f),
@@ -355,14 +346,6 @@ fun UnsubscribedStatusCard() {
                     style = MaterialTheme.typography.headlineSmall
                 )
 
-//                Text(
-//                    text = "Nikmati diskon parkir, gratis jam parkir, dan berbagai benefit eksklusif lainnya.",
-//                    color = DarkBlue,
-//                    style = MaterialTheme.typography.bodySmall
-//                )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -394,23 +377,6 @@ fun UnsubscribedStatusCard() {
                         modifier = Modifier.weight(1f)
                     )
                 }
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-//                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-//                    Surface(
-//                        color = SmartBlue,
-//                        shape = RoundedCornerShape(12.dp),
-//                        modifier = Modifier.clickable { onOpenSubscribe() }
-//                    ) {
-//                        Text(
-//                            text = "Lihat Paket",
-//                            color = White,
-//                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-//                            style = MaterialTheme.typography.labelLarge
-//                        )
-//                    }
-//                }
             }
         }
     }
@@ -434,10 +400,10 @@ private fun BenefitMiniItem(
             modifier = Modifier.size(16.dp)
         )
         Text(
-        text = text,
-        color = DarkBlue,
-        style = MaterialTheme.typography.labelSmall,
-        textAlign = TextAlign.Center,
+            text = text,
+            color = DarkBlue,
+            style = MaterialTheme.typography.labelSmall,
+            textAlign = TextAlign.Center,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
@@ -457,10 +423,10 @@ private fun TabChip(
 
     Box(
         modifier = modifier
-            .height(22.dp)
-            .clip(RoundedCornerShape(5.dp))
+            .height(40.dp)
+            .clip(RoundedCornerShape(10.dp))
             .background(bg)
-            .border(1.dp, border, RoundedCornerShape(5.dp))
+            .border(1.dp, border, RoundedCornerShape(10.dp))
             .clickable { onClickTab() },
         contentAlignment = Alignment.Center
     ) {
@@ -474,11 +440,11 @@ private fun TabChip(
 
 @Composable
 private fun PackageCard(
-    option: PackageOption,
+    option: SubscribePackageUiModel,
     onClickPackage: () -> Unit
 ) {
-    val container = if (option.highlighted) Color(0xFFFDF4DF) else White
-    val border = if (option.highlighted) Tangerine else Color(0xFFE5E7EB)
+    val container = if (option.isHighlighted) Color(0xFFFDF4DF) else White
+    val border = if (option.isHighlighted) Tangerine else Color(0xFFE5E7EB)
 
     Card(
         modifier = Modifier
@@ -501,14 +467,14 @@ private fun PackageCard(
                         color = DarkBlue,
                         style = MaterialTheme.typography.titleMedium
                     )
-                    if (option.badge != null) {
+                    option.badgeLabel?.let { badge ->
                         Spacer(modifier = Modifier.width(10.dp))
                         Surface(
                             color = SmartBlue,
                             shape = RoundedCornerShape(999.dp)
                         ) {
                             Text(
-                                text = option.badge,
+                                text = badge,
                                 color = White,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                 style = MaterialTheme.typography.labelSmall
@@ -518,27 +484,23 @@ private fun PackageCard(
                 }
 
                 Text(
-                    text = "${option.price.toRupiah()} ${option.period}",
+                    text = "${option.priceLabel} ${option.periodLabel}",
                     color = DarkBlue,
                     style = MaterialTheme.typography.titleSmall
                 )
                 Text(
-                    text = option.discountInfo,
+                    text = option.infoLabel,
                     color = GreyText,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
 
-            Box(
-                modifier = Modifier.align(Alignment.CenterEnd),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ChevronRight,
-                    contentDescription = "Pilih paket",
-                    tint = GreyText
-                )
-            }
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = "Pilih paket",
+                tint = GreyText,
+                modifier = Modifier.align(Alignment.CenterEnd)
+            )
         }
     }
 }
@@ -599,7 +561,7 @@ private fun PromoCard(onOpenPromoCode: () -> Unit) {
 }
 
 @Composable
-private fun ErrorScreen(message: String, onRetry: () -> Unit) {
+private fun SubscribeErrorScreen(message: String, onRetry: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -607,9 +569,18 @@ private fun ErrorScreen(message: String, onRetry: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Terjadi kendala", color = DarkBlue, style = MaterialTheme.typography.headlineMedium)
+        Text(
+            text = "Terjadi kendala",
+            color = DarkBlue,
+            style = MaterialTheme.typography.headlineMedium
+        )
         Spacer(modifier = Modifier.height(12.dp))
-        Text(text = message, color = GreyText, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
+        Text(
+            text = message,
+            color = GreyText,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center
+        )
         Spacer(modifier = Modifier.height(20.dp))
         TextButton(onClick = onRetry) {
             Text("Coba Lagi", color = DarkBlue, style = MaterialTheme.typography.labelLarge)
@@ -617,81 +588,46 @@ private fun ErrorScreen(message: String, onRetry: () -> Unit) {
     }
 }
 
-@Composable
-private fun BenefitItem(text: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            imageVector = Icons.Default.CheckCircle,
-            contentDescription = null,
-            tint = Color(0xFF2FA84F),
-            modifier = Modifier.size(18.dp)
-        )
-        Spacer(modifier = Modifier.width(10.dp))
-        Text(
-            text = text,
-            color = DarkBlue,
-            style = MaterialTheme.typography.bodyMedium
-        )
-    }
-}
-
-private fun PackageCard.toUiOption(): PackageOption {
-    val highlighted = namaPaket.equals("Premium", ignoreCase = true)
-    val badge = if (highlighted) "Populer" else null
-    return PackageOption(
-        name = namaPaket.orEmpty().ifBlank { "Paket" },
-        price = harga ?: 0L,
-        period = "/${masaBerlaku.orEmpty().trimStart('/')}",
-        discountInfo = "${jumlahDiskon ?: 0L}% • ${deskripsi.orEmpty()}",
-        badge = badge,
-        highlighted = highlighted
-    )
-}
-
-private fun PackageCard.matchesTab(tabIndex: Int): Boolean {
-    val period = masaBerlaku.orEmpty().lowercase()
-    return when (tabIndex) {
-        0 -> period.contains("bulan") && !period.contains("6")
-        1 -> period.contains("6") || period.contains("enam")
-        2 -> period.contains("tahun")
-        else -> true
-    }
-}
-
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun SubscribeScreenPreview() {
-    val mockState = SubscribeState(
-        isLoading = false,
-        error = null,
-        subscribeResponseModel = null,
-        selectedTabIndex = 2
+    val model = SubscribeResponseModel(
+        activePackageName = "Premium Gold",
+        activePackageExpired = "2026-12-20",
+        activePackageBenefits = listOf("Diskon 25%", "3 jam gratis per bulan"),
+        listPaket = ListPaket(
+            bulanan = listOf(
+                DetailPaket(
+                    namaPaket = "Basic",
+                    harga = 290_000L,
+                    coverageLokasi = listOf("Area Braga"),
+                    benefitPackage = listOf("Diskon 0%", "1 jam gratis / bulan")
+                )
+            ),
+            enamBulan = listOf(
+                DetailPaket(
+                    namaPaket = "Premium",
+                    harga = 590_000L,
+                    coverageLokasi = listOf("Area Braga", "Area Asia Afrika"),
+                    benefitPackage = listOf("Diskon 13%", "3 jam gratis / bulan")
+                )
+            ),
+            tahunan = listOf(
+                DetailPaket(
+                    namaPaket = "VIP",
+                    harga = 990_000L,
+                    coverageLokasi = listOf("Semua area"),
+                    benefitPackage = listOf("Diskon 25%", "6 jam gratis / bulan")
+                )
+            )
+        ),
+        promoTersedia = PromoTersedia()
     )
 
     MaterialTheme {
         SubscribeScreenContent(
-            state = mockState,
-            model = SubscribeResponseModel(
-                statusCard = StatusCard(
-                    paketAktif = "Premium Gold",
-                    kadaluarsa = "20 Mei 2025",
-                    benefit = "Nikmati benefit parkir premium"
-                ),
-                packageCard = listOf(
-                    PackageCard(
-                        namaPaket = "VIP",
-                        harga = 990_000L,
-                        masaBerlaku = "tahun",
-                        jumlahDiskon = 25,
-                        deskripsi = "6 jam gratis / bulan",
-                        benefit = listOf(
-                            "Diskon 25%",
-                            "6 jam parkir gratis / bulan"
-                        )
-                    )
-                ),
-                promo = emptyList()
-            )
+            model = model,
+            state = SubscribeState(selectedTabIndex = 2)
         )
     }
 }

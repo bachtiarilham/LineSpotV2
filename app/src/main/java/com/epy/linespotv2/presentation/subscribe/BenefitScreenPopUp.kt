@@ -1,4 +1,4 @@
-﻿package com.epy.linespotv2.presentation.subscribe
+package com.epy.linespotv2.presentation.subscribe
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,37 +32,38 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.epy.linespotv2.core.ui.theme.DarkBlue
 import com.epy.linespotv2.core.ui.theme.GreyText
 import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
-import com.epy.linespotv2.domain.model.subscription.PackageCard
-import com.epy.linespotv2.domain.model.subscription.StatusCard
+import com.epy.linespotv2.domain.model.subscription.DetailPaket
+import com.epy.linespotv2.domain.model.subscription.ListPaket
+import com.epy.linespotv2.domain.model.subscription.PromoTersedia
 import com.epy.linespotv2.domain.model.subscription.SubscribeResponseModel
+import com.epy.linespotv2.presentation.subscribe.ui_model.toUiModel
 
 @Composable
 fun BenefitScreenPopUp(
     model: SubscribeResponseModel? = null,
     onClose: () -> Unit = {},
-    onAcknowledge: () -> Unit = {}
+    onAcknowledge: () -> Unit = {},
+    viewModel: SubscribeViewModel = hiltViewModel()
 ) {
-    val selectedPackage = model?.packageCard?.firstOrNull()
-        ?: PackageCard(
-            namaPaket = "Premium Gold",
-            harga = 590_000L,
-            masaBerlaku = "bulan",
-            jumlahDiskon = 13,
-            deskripsi = "3 jam gratis / bulan",
-            benefit = listOf(
-                "Diskon parkir hingga 25%",
-                "Gratis parkir 3 jam / bulan",
-                "Promo eksklusif",
-                "Prioritas customer service",
-                "Akses promo eksklusif",
-                "Riwayat parkir lebih lengkap"
-            )
-        )
+    val state = viewModel.state.collectAsStateWithLifecycle().value
+
+    LaunchedEffect(Unit) {
+        if (model == null) {
+            viewModel.onIntent(SubscribeIntent.LoadPage)
+        }
+    }
+
+    val uiModel = (model ?: state.subscribeResponseModel).toUiModel()
+    val selectedPackage = uiModel.activePackageOrFallback()
+    val benefitItems = uiModel.status?.benefitItems?.ifEmpty { selectedPackage?.benefits.orEmpty() }
+        ?: selectedPackage?.benefits.orEmpty()
 
     Box(
         modifier = Modifier
@@ -115,12 +117,12 @@ fun BenefitScreenPopUp(
                     textAlign = TextAlign.Center
                 )
 
-                StatusMiniCard(
-                    model = model,
-                )
+                StatusMiniCard(model = model)
 
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    selectedPackage.benefit?.forEach { item -> BenefitListRow(text = item) }
+                    benefitItems.forEach { item ->
+                        BenefitListRow(text = item)
+                    }
                 }
 
                 Surface(
@@ -144,9 +146,10 @@ fun BenefitScreenPopUp(
 }
 
 @Composable
-private fun StatusMiniCard(
-    model: SubscribeResponseModel? = null,
-) {
+private fun StatusMiniCard(model: SubscribeResponseModel? = null) {
+    val uiModel = model.toUiModel()
+    val status = uiModel.status
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
@@ -180,35 +183,16 @@ private fun StatusMiniCard(
                 }
                 Spacer(modifier = Modifier.size(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
-//                    model?.packageCard?.firstOrNull()?.let {
-//                        Text(
-//                            text = it.namaPaket,
-//                            color = White,
-//                            style = MaterialTheme.typography.titleMedium
-//                        )
-//                        Text(
-//                            text = it.masaBerlaku,
-//                            color = White.copy(alpha = 0.9f),
-//                            style = MaterialTheme.typography.bodySmall
-//                        )
-//                    }
-                    model?.statusCard?.let{
-                        it.paketAktif?.let { text ->
-                            Text(
-                                text = text,
-                                color = White,
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
-                        it.kadaluarsa?.let { text ->
-                            Text(
-                                text = text,
-                                color = White.copy(alpha = 0.9f),
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    }
-
+                    Text(
+                        text = status?.packageName.orEmpty(),
+                        color = White,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = status?.expiredDate.orEmpty(),
+                        color = White.copy(alpha = 0.9f),
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             }
         }
@@ -238,13 +222,11 @@ private fun BenefitListRow(text: String) {
             )
         }
         Spacer(modifier = Modifier.size(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = text,
-                color = DarkBlue,
-                style = MaterialTheme.typography.titleSmall
-            )
-        }
+        Text(
+            text = text,
+            color = DarkBlue,
+            style = MaterialTheme.typography.titleSmall
+        )
     }
 }
 
@@ -252,30 +234,32 @@ private fun BenefitListRow(text: String) {
 @Composable
 private fun BenefitScreenTopUpPreview() {
     val model = SubscribeResponseModel(
-        statusCard = StatusCard(
-            paketAktif = "Premium Gold",
-            kadaluarsa = "20 Mei 2025",
-            benefit = "Nikmati benefit parkir premium"
+        activePackageName = "Premium Gold",
+        activePackageExpired = "2026-12-20",
+        activePackageBenefits = listOf(
+            "Diskon parkir hingga 25%",
+            "Gratis parkir 3 jam / bulan",
+            "Promo eksklusif"
         ),
-        packageCard = listOf(
-            PackageCard(
-                namaPaket = "Premium Gold",
-                harga = 590_000L,
-                masaBerlaku = "bulan",
-                jumlahDiskon = 13,
-                deskripsi = "3 jam gratis / bulan",
-                benefit = listOf(
-                    "Diskon parkir hingga 25%",
-                    "Gratis parkir 3 jam / bulan",
-                    "Promo eksklusif",
-                    "Prioritas customer service",
-                    "Akses promo eksklusif",
-                    "Riwayat parkir lebih lengkap"
+        listPaket = ListPaket(
+            tahunan = listOf(
+                DetailPaket(
+                    namaPaket = "Premium Gold",
+                    harga = 590_000L,
+                    coverageLokasi = listOf("Area Braga"),
+                    benefitPackage = listOf(
+                        "Diskon parkir hingga 25%",
+                        "Gratis parkir 3 jam / bulan",
+                        "Promo eksklusif",
+                        "Prioritas customer service",
+                        "Riwayat parkir lebih lengkap"
+                    )
                 )
             )
         ),
-        promo = emptyList()
+        promoTersedia = PromoTersedia()
     )
+
     MaterialTheme {
         BenefitScreenPopUp(model = model)
     }

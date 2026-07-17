@@ -1,4 +1,4 @@
-﻿package com.epy.linespotv2.presentation.subscribe
+package com.epy.linespotv2.presentation.subscribe
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,29 +32,45 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.epy.linespotv2.core.ui.theme.DarkBlue
 import com.epy.linespotv2.core.ui.theme.GreyText
 import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.Tangerine
 import com.epy.linespotv2.core.ui.theme.White
-import com.epy.linespotv2.core.utils.toRupiah
-import com.epy.linespotv2.domain.model.subscription.PackageCard
-import com.epy.linespotv2.domain.model.subscription.StatusCard
+import com.epy.linespotv2.domain.model.subscription.DetailPaket
+import com.epy.linespotv2.domain.model.subscription.ListPaket
+import com.epy.linespotv2.domain.model.subscription.PromoTersedia
 import com.epy.linespotv2.domain.model.subscription.SubscribeResponseModel
+import com.epy.linespotv2.presentation.subscribe.ui_model.SubscribePackageUiModel
+import com.epy.linespotv2.presentation.subscribe.ui_model.toUiModel
 
 @Composable
 fun SubscribeScreenPopUpScreen(
-    model: SubscribeResponseModel ?= null,
+    packageName: String = "",
+    model: SubscribeResponseModel? = null,
     onClose: () -> Unit = {},
-    onSubscribeNow: (PackageCard) -> Unit = {}
+    onSubscribeNow: (String) -> Unit = {},
+    viewModel: SubscribeViewModel = hiltViewModel()
 ) {
-    val selectedPackage = model?.packageCard?.firstOrNull() ?: return
+    val state = viewModel.state.collectAsStateWithLifecycle().value
+
+    LaunchedEffect(Unit) {
+        if (model == null) {
+            viewModel.onIntent(SubscribeIntent.LoadPage)
+        }
+    }
+
+    val uiModel = (model ?: state.subscribeResponseModel).toUiModel()
+    val selectedPackage = uiModel.allPackages().firstOrNull {
+        it.name.equals(packageName, ignoreCase = true)
+    } ?: uiModel.activePackageOrFallback() ?: return
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .fillMaxWidth()
             .background(Color(0xFF000000).copy(alpha = 0.35f))
             .padding(top = 12.dp)
     ) {
@@ -104,7 +121,7 @@ fun SubscribeScreenPopUpScreen(
                 )
 
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    selectedPackage.benefit.orEmpty().forEach { benefit ->
+                    selectedPackage.benefits.forEach { benefit ->
                         BenefitRow(text = benefit)
                     }
                 }
@@ -118,7 +135,7 @@ fun SubscribeScreenPopUpScreen(
                         style = MaterialTheme.typography.bodySmall
                     )
                     Text(
-                        text = "${(selectedPackage.harga ?: 0L).toRupiah()} /${selectedPackage.masaBerlaku.orEmpty()}",
+                        text = "${selectedPackage.priceLabel} ${selectedPackage.periodLabel}",
                         color = DarkBlue,
                         style = MaterialTheme.typography.headlineMedium
                     )
@@ -127,7 +144,7 @@ fun SubscribeScreenPopUpScreen(
                 Surface(
                     color = SmartBlue,
                     shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.clickable { onSubscribeNow(selectedPackage) }
+                    modifier = Modifier.clickable { onSubscribeNow(selectedPackage.name) }
                 ) {
                     Text(
                         text = "Langganan Sekarang",
@@ -145,7 +162,7 @@ fun SubscribeScreenPopUpScreen(
 }
 
 @Composable
-private fun PackageSummaryCard(selectedPackage: PackageCard) {
+private fun PackageSummaryCard(selectedPackage: SubscribePackageUiModel) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -160,17 +177,17 @@ private fun PackageSummaryCard(selectedPackage: PackageCard) {
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = selectedPackage.namaPaket.orEmpty(),
+                    text = selectedPackage.name,
                     color = DarkBlue,
                     style = MaterialTheme.typography.headlineSmall
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Surface(
-                    color = Tangerine,
+                    color = if (selectedPackage.name.equals("VIP", ignoreCase = true)) Tangerine else SmartBlue,
                     shape = RoundedCornerShape(999.dp)
                 ) {
                     Text(
-                        text = if (selectedPackage.namaPaket.equals("VIP", ignoreCase = true)) "Terbaik" else "Populer",
+                        text = if (selectedPackage.name.equals("VIP", ignoreCase = true)) "Terbaik" else "Populer",
                         color = White,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall
@@ -179,22 +196,15 @@ private fun PackageSummaryCard(selectedPackage: PackageCard) {
             }
 
             Text(
-                text = "${(selectedPackage.harga ?: 0L).toRupiah()} /${selectedPackage.masaBerlaku.orEmpty()}",
+                text = "${selectedPackage.priceLabel} ${selectedPackage.periodLabel}",
                 color = DarkBlue,
                 style = MaterialTheme.typography.titleLarge
             )
             Text(
-                text = "Diskon ${selectedPackage.jumlahDiskon ?: 0L}%  •  ${selectedPackage.deskripsi.orEmpty()}",
+                text = selectedPackage.infoLabel,
                 color = DarkBlue,
                 style = MaterialTheme.typography.bodyMedium
             )
-//            Text(
-//                text = selectedPackage.deskripsi,
-//                color = GreyText,
-//                style = MaterialTheme.typography.bodySmall,
-//                maxLines = 3,
-//                overflow = TextOverflow.Ellipsis
-//            )
         }
     }
 }
@@ -221,29 +231,30 @@ private fun BenefitRow(text: String) {
 @Composable
 private fun SubscribeScreenPopUpPreview() {
     val model = SubscribeResponseModel(
-        statusCard = StatusCard(
-            paketAktif = "Premium Gold",
-            kadaluarsa = "20 Mei 2025",
-            benefit = "Nikmati benefit parkir premium"
-        ),
-        packageCard = listOf(
-            PackageCard(
-                namaPaket = "VIP",
-                harga = 990_000L,
-                masaBerlaku = "bulan",
-                jumlahDiskon = 25,
-                deskripsi = "6 jam gratis / bulan",
-                benefit = listOf(
-                    "Diskon parkir 25%",
-                    "6 jam parkir gratis / bulan",
-                    "Prioritas customer service",
-                    "Akses promo eksklusif",
-                    "Riwayat parkir lebih lengkap"
+        activePackageName = "VIP",
+        activePackageExpired = "2026-12-20",
+        activePackageBenefits = listOf("Diskon 25%", "6 jam gratis / bulan"),
+        listPaket = ListPaket(
+            bulanan = emptyList(),
+            enamBulan = emptyList(),
+            tahunan = listOf(
+                DetailPaket(
+                    namaPaket = "VIP",
+                    harga = 990_000L,
+                    coverageLokasi = listOf("Semua area"),
+                    benefitPackage = listOf(
+                        "Diskon parkir 25%",
+                        "6 jam parkir gratis / bulan",
+                        "Prioritas customer service",
+                        "Akses promo eksklusif",
+                        "Riwayat parkir lebih lengkap"
+                    )
                 )
             )
         ),
-        promo = null
+        promoTersedia = PromoTersedia()
     )
+
     MaterialTheme {
         SubscribeScreenPopUpScreen(model = model)
     }
