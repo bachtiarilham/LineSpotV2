@@ -1,44 +1,63 @@
 package com.epy.linespotv2.data.remote.mapper.helper
 
-import com.epy.linespotv2.data.remote.dto.helper.TopupOptionItemDto
-import com.epy.linespotv2.data.remote.dto.helper.TopupOptionsResponseDto
-import com.epy.linespotv2.domain.model.helper.TopupOptionItemModel
-import com.epy.linespotv2.domain.model.helper.TopupOptionsResponseModel
+import com.epy.linespotv2.data.remote.dto.helper.MetodeItemDto
+import com.epy.linespotv2.data.remote.dto.helper.NominalItemDto
+import com.epy.linespotv2.data.remote.dto.helper.TopupResponseDto
+import com.epy.linespotv2.domain.model.helper.MetodeItemModel
+import com.epy.linespotv2.domain.model.helper.NominalItemModel
+import com.epy.linespotv2.domain.model.helper.TopupModel
 
-// ==============================================================================
-// Helper Mappers
-// ==============================================================================
-
-fun TopupOptionsResponseModel?.toDto(): TopupOptionsResponseDto? {
+fun TopupModel?.toDto(): TopupResponseDto? {
     this ?: return null
 
     // Jika nominal null, Kotlin otomatis memberikan emptyList() sesuai logika Go
-    return TopupOptionsResponseDto(
-        nominal = this.nominal?.map { it.toDto() } ?: emptyList()
+    return TopupResponseDto(
+        nominal = this.nominal?.map { it.toDto() } ?: emptyList(),
+        metodePayment = this.metodePayment?.map { it.toDto() } ?: emptyList(),
     )
 }
 
-fun TopupOptionItemModel.toDto(): TopupOptionItemDto {
-    return TopupOptionItemDto(
+fun NominalItemModel.toDto(): NominalItemDto {
+    return NominalItemDto(
         optionId = this.optionId,
         nominalAmount = this.nominalAmount,
         label = this.label
     )
 }
 
-fun TopupOptionsResponseDto?.toModel(): TopupOptionsResponseModel? {
-    this ?: return null
-
-    // Jika nominal null, Kotlin otomatis memberikan emptyList() sesuai logika Go
-    return TopupOptionsResponseModel(
-        nominal = this.nominal?.map { it.toModel() } ?: emptyList()
+fun MetodeItemModel.toDto(): MetodeItemDto {
+    return MetodeItemDto(
+        paymentMethodId = this.paymentMethodId,
+        namaPayment = this.namaPayment,
+        codePayment = this.codePayment,
+        logoPayment = this.logoPayment
     )
 }
 
-fun TopupOptionItemDto.toModel(): TopupOptionItemModel {
-    return TopupOptionItemModel(
+fun TopupResponseDto?.toModel(): TopupModel? {
+    this ?: return null
+
+    // Jika nominal null, Kotlin otomatis memberikan emptyList() sesuai logika Go
+    return TopupModel(
+        nominal = this.nominal?.map { it.toModel() } ?: emptyList(),
+        metodePayment = this.metodePayment?.map { it.toModel() } ?: emptyList()
+
+    )
+}
+
+fun NominalItemDto.toModel(): NominalItemModel {
+    return NominalItemModel(
         optionId = this.optionId,
         nominalAmount = this.nominalAmount,
         label = this.label
+    )
+}
+
+fun MetodeItemDto.toModel(): MetodeItemModel {
+    return MetodeItemModel(
+        paymentMethodId = this.paymentMethodId,
+        namaPayment = this.namaPayment,
+        codePayment = this.codePayment,
+        logoPayment = this.logoPayment
     )
 }

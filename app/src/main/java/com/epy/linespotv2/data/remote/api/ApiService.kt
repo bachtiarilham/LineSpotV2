@@ -9,6 +9,7 @@ import com.epy.linespotv2.data.remote.dto.auth.RegisterRequestDto
 import com.epy.linespotv2.data.remote.dto.auth.TokenSetDto
 import com.epy.linespotv2.data.remote.dto.helper.LokasiResponseDto
 import com.epy.linespotv2.data.remote.dto.helper.TarifResponseDto
+import com.epy.linespotv2.data.remote.dto.helper.TopupResponseDto
 import com.epy.linespotv2.data.remote.dto.home.CustomerHomeDto
 import com.epy.linespotv2.data.remote.dto.home.JukirHomeDto
 import com.epy.linespotv2.data.remote.dto.laporan.LaporanRequestDto
@@ -22,6 +23,9 @@ import com.epy.linespotv2.data.remote.dto.profile.JukirDto
 import com.epy.linespotv2.data.remote.dto.riwayat.RiwayatRequestDto
 import com.epy.linespotv2.data.remote.dto.riwayat.RiwayatResponseDto
 import com.epy.linespotv2.data.remote.dto.subscription.SubscribeResponseDto
+import com.epy.linespotv2.data.remote.dto.topup.TopupCreateRequestDto
+import com.epy.linespotv2.data.remote.dto.topup.TopupCreateResponseDto
+import com.epy.linespotv2.data.remote.dto.topup.TopupStatusResponseDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -88,18 +92,23 @@ interface ApiService {
     @GET("api/v2/linespot/users/customer/me")
     suspend fun getCustomerUser(): ApiEnvelope<CustomerDto>
 
+    //topup
+    @POST("api/v2/linespot/topup/create")
+    suspend fun postTopUpCreate(
+        @Body body: TopupCreateRequestDto
+    ): ApiEnvelope<TopupCreateResponseDto>
+    @GET("api/v2/linespot/topup/{topupCode}/status")
+    suspend fun getTopUpStatus(
+        @Path("topupCode") topupCode: String
+    ): ApiEnvelope<TopupStatusResponseDto>
+
     //helper
     @GET("api/v2/linespot/get_lokasi")
     suspend fun getLokasi() : ApiEnvelope<LokasiResponseDto>
     @GET("api/v2/linespot/get_tarif")
     suspend fun getTarif() : ApiEnvelope<TarifResponseDto>
-
-
-
-
-
-
-
+    @GET("api/v2/linespot/get_topup")
+    suspend fun getTopUp() : ApiEnvelope<TopupResponseDto>
 }
 
 //    @GET("api/v2/linespot/riwayat_filter")

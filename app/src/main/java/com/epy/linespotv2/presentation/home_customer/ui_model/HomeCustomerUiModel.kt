@@ -35,7 +35,7 @@ data class HomeCustomerActivityUi(
     val title: String = "Belum ada aktivitas parkir",
     val subtitle: String = "Riwayat parkir akan muncul di sini",
     val detail: String = "",
-    val actionText: String = "Lihat Detail"
+    val actionText: String = "Detail"
 )
 
 data class HomeCustomerPromoUi(

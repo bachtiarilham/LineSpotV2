@@ -38,6 +38,7 @@ import com.epy.linespotv2.presentation.subscribe.BenefitScreenPopUp
 import com.epy.linespotv2.presentation.subscribe.EnterPromoScreenPopUp
 import com.epy.linespotv2.presentation.subscribe.SubscribeScreen
 import com.epy.linespotv2.presentation.subscribe.SubscribeScreenPopUpScreen
+import com.epy.linespotv2.presentation.topup.TopUpScreen
 
 @Composable
 fun AppNavHost() {
@@ -184,6 +185,13 @@ fun AppNavHost() {
 //        }
 
         composable("topup") {
+            TopUpScreen(
+                onBack = { navController.popBackStack() },
+                onTopUpCreated = { _ ->
+                    // Placeholder: route lanjutan top up belum disiapkan.
+                    // Status top up tetap dipolling di TopUpViewModel.
+                }
+            )
         }
 
         composable("subscribe") {
