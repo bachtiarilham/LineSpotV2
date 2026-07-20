@@ -1,9 +1,5 @@
 package com.epy.linespotv2.presentation.home_jukir
 
-import android.Manifest
-import android.content.pm.PackageManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -44,19 +40,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.epy.linespotv2.core.ui.theme.Black
@@ -65,7 +56,6 @@ import com.epy.linespotv2.core.ui.theme.GreyText
 import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
-import com.epy.linespotv2.core.utils.inlocation.LocationBoundaryStatus
 import com.epy.linespotv2.core.utils.toApiDate
 import com.epy.linespotv2.core.utils.toRupiah
 import com.epy.linespotv2.domain.model.home.JukirHomeModel
@@ -88,40 +78,9 @@ fun HomeJukirScreen(
     bottomBar: @Composable () -> Unit = {}
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-    var hasLocationPermission by remember {
-        mutableStateOf(
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-        )
-    }
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        hasLocationPermission = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-            permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-        if (hasLocationPermission) {
-            viewModel.onIntent(HomeJukirIntent.loadHomeJukir)
-        }
-    }
 
-    LaunchedEffect(hasLocationPermission) {
-        if (hasLocationPermission) {
-            viewModel.onIntent(HomeJukirIntent.loadHomeJukir)
-        } else {
-            permissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
-        }
+    LaunchedEffect(Unit) {
+        viewModel.onIntent(HomeJukirIntent.loadHomeJukir)
     }
 
     Scaffold(
@@ -135,16 +94,6 @@ fun HomeJukirScreen(
                 .background(PageBg)
         ) {
             when {
-                !hasLocationPermission -> PermissionRequiredScreen(
-                    onRetry = {
-                        permissionLauncher.launch(
-                            arrayOf(
-                                Manifest.permission.ACCESS_FINE_LOCATION,
-                                Manifest.permission.ACCESS_COARSE_LOCATION
-                            )
-                        )
-                    }
-                )
                 state.isLoading && state.homeJukirModel == null -> FullScreenLoading()
                 state.homeJukirModel != null && state.uiModel != null -> {
                     HomeScreenContent(
@@ -168,37 +117,6 @@ fun HomeJukirScreen(
                     onRetry = { viewModel.onIntent(HomeJukirIntent.loadHomeJukir) }
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun PermissionRequiredScreen(
-    onRetry: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "Izin lokasi dibutuhkan",
-            color = DarkBlue,
-            style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = "Aktifkan izin lokasi agar status area tugas bisa diverifikasi.",
-            color = GreyText,
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(20.dp))
-        TextButton(onClick = onRetry) {
-            Text("Aktifkan Izin", color = DarkBlue, style = MaterialTheme.typography.labelLarge)
         }
     }
 }
@@ -255,19 +173,6 @@ fun HomeScreenContent(
             lokasiValue = uiModel.lokasiValue,
             areaValue = uiModel.areaValue
         )
-
-        Text(
-            text = Date().toApiDate(),
-            color = DarkBlue,
-            style = MaterialTheme.typography.titleSmall
-        )
-
-        state.locationBoundaryStatus?.let { status ->
-            LocationStatusCard(
-                status = status,
-                message = state.locationStatusMessage.orEmpty()
-            )
-        }
 
         uiModel.financeWarning
             ?.takeIf { it.isNotBlank() }
@@ -346,15 +251,27 @@ private fun AreaTaskCard(
         colors = CardDefaults.cardColors(containerColor = White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Text(text = areaLabel, color = SmartBlue, style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = areaLabel,
+                color = SmartBlue,
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = Date().toApiDate(),
+                color = DarkBlue,
+                style = MaterialTheme.typography.titleSmall,
+                textAlign = TextAlign.Center
+            )
         }
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -406,46 +323,6 @@ private fun WarningCard(message: String) {
             Text(
                 text = "Perhatian",
                 color = DarkBlue,
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(
-                text = message,
-                color = GreyText,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
-    }
-}
-
-@Composable
-private fun LocationStatusCard(
-    status: LocationBoundaryStatus,
-    message: String
-) {
-    val accentColor = when (status) {
-        LocationBoundaryStatus.Inside -> Color(0xFF2FA84F)
-        LocationBoundaryStatus.Outside -> Color(0xFFE04F4F)
-        LocationBoundaryStatus.NeedPreciseRecheck -> Color(0xFFF5A623)
-        LocationBoundaryStatus.LocationDisabled -> Color(0xFFF5A623)
-        LocationBoundaryStatus.InvalidCurrentLocation -> GreyText
-        LocationBoundaryStatus.InvalidBoundary -> GreyText
-    }
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Text(
-                text = "Status Lokasi",
-                color = accentColor,
                 style = MaterialTheme.typography.titleMedium
             )
             Text(
@@ -545,7 +422,7 @@ private fun QuickActionsCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                QuickActionItem(Icons.Default.QrCodeScanner, "Scan Tiket", onScanTicketClick)
+                QuickActionItem(Icons.Default.QrCodeScanner, "Scan", onScanTicketClick)
                 QuickActionItem(Icons.Default.Edit, "Input Manual", onInputManualClick)
                 QuickActionItem(Icons.Default.Description, "Laporan", onLaporanClick)
                 QuickActionItem(Icons.Default.QuestionMark, "Bantuan", onBantuanClick)
