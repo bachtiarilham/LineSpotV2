@@ -214,7 +214,7 @@ fun LoginScreenContent(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.CenterEnd
             ) {
-                TextButton(onClick = { /* TODO: Forgot password */ }) {
+                TextButton(onClick = { }) {
                     Text(
                         text = "Lupa kata sandi?",
                         style = MaterialTheme.typography.bodySmall.copy(color = LoginHint, fontSize = 12.sp)
