@@ -25,6 +25,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
@@ -37,6 +38,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.epy.linespotv2.R
 import com.epy.linespotv2.core.ui.theme.LineSpotV2Theme
+import com.epy.linespotv2.core.ui.theme.LoginBgTop
+import com.epy.linespotv2.core.ui.theme.LoginBgBottom
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
@@ -106,7 +109,11 @@ private fun SplashScreenContent() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White),
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(LoginBgTop, LoginBgBottom)
+                )
+            ),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -138,9 +145,9 @@ private fun SplashScreenContent() {
                 )
             ) {
                 Text(
-                    text = "LineSpot V2",
-                    color = Color(0xFF001834),
-                    fontSize = 28.sp,
+                    text = "LineSpot",
+                    color = Color.White,
+                    fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
                 )

@@ -42,10 +42,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
@@ -155,65 +157,82 @@ fun HomeScreenContent(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .systemBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        HomeHeader(
-            uiModel = uiModel,
-            onProfileClick = { onIntent(HomeCustomerIntent.clickProfile) },
-            onNotificationClick = { onIntent(HomeCustomerIntent.clickNotification(0)) }
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Setengah background atas berwarna Navy (DarkBlue)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(400.dp)
+                .clip(RoundedCornerShape(bottomStart = 50.dp, bottomEnd = 50.dp))
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(DarkBlue, DarkBlue.copy(alpha = 0.9f))
+                    )
+                )
         )
 
-        BalanceCard(
-            balanceText = uiModel.balanceText,
-            onTopUp = { onIntent(HomeCustomerIntent.clickTopUp) }
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .systemBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            HomeHeader(
+                uiModel = uiModel,
+                onProfileClick = { onIntent(HomeCustomerIntent.clickProfile) },
+                onNotificationClick = { onIntent(HomeCustomerIntent.clickNotification(0)) }
+            )
 
-        PremiumCard(
-            title = uiModel.membershipTitle,
-            expiredDate = uiModel.membershipExpiredText,
-            onSubscribe = { onIntent(HomeCustomerIntent.clickSubscribe) }
-        )
+            BalanceCard(
+                balanceText = uiModel.balanceText,
+                onTopUp = { onIntent(HomeCustomerIntent.clickTopUp) }
+            )
 
-        QuickActions(
-            items = uiModel.quickActions,
-            onTopUpSaldo = { onIntent(HomeCustomerIntent.clickPayment) },
-            onMembership = { onIntent(HomeCustomerIntent.clickSubscribe) },
-            onParkirOnStreet = { onIntent(HomeCustomerIntent.clickPayment) },
-            onBookingParkir = { onIntent(HomeCustomerIntent.clickBooking) },
-            onPromo = { onIntent(HomeCustomerIntent.clickPromo) },
-            onLayananLain = { onIntent(HomeCustomerIntent.clickLayananLain) }
-        )
+            PremiumCard(
+                title = uiModel.membershipTitle,
+                expiredDate = uiModel.membershipExpiredText,
+                onSubscribe = { onIntent(HomeCustomerIntent.clickSubscribe) }
+            )
 
-        SectionTitle(
-            title = "Aktivitas Parkir Terkini",
-            actionText = "Lihat semua"
-        )
+            QuickActions(
+                items = uiModel.quickActions,
+                onTopUpSaldo = { onIntent(HomeCustomerIntent.clickPayment) },
+                onMembership = { onIntent(HomeCustomerIntent.clickSubscribe) },
+                onParkirOnStreet = { onIntent(HomeCustomerIntent.clickPayment) },
+                onBookingParkir = { onIntent(HomeCustomerIntent.clickBooking) },
+                onPromo = { onIntent(HomeCustomerIntent.clickPromo) },
+                onLayananLain = { onIntent(HomeCustomerIntent.clickLayananLain) }
+            )
 
-        ActivityCard(
-            title = uiModel.latestActivity.title,
-            subtitle = uiModel.latestActivity.subtitle,
-            detail = uiModel.latestActivity.detail,
-            actionText = uiModel.latestActivity.actionText
-        )
-
-        SectionTitle(
-            title = "Promo Spesial Untukmu",
-            actionText = "Lihat semua"
-        )
-
-        PromoCard(
-            title = uiModel.promo.title,
-            description = uiModel.promo.description,
-            badge = uiModel.promo.badge
-        )
-
-        Spacer(modifier = Modifier.height(72.dp))
+//            SectionTitle(
+//                title = "Aktivitas Parkir Terkini",
+//                actionText = "Lihat semua",
+//                isDark = false
+//            )
+//
+//            ActivityCard(
+//                title = uiModel.latestActivity.title,
+//                subtitle = uiModel.latestActivity.subtitle,
+//                detail = uiModel.latestActivity.detail,
+//                actionText = uiModel.latestActivity.actionText
+//            )
+//
+//            SectionTitle(
+//                title = "Promo Spesial Untukmu",
+//                actionText = "Lihat semua",
+//                isDark = false
+//            )
+//
+//            PromoCard(
+//                title = uiModel.promo.title,
+//                description = uiModel.promo.description,
+//                badge = uiModel.promo.badge
+//            )
+//
+//            Spacer(modifier = Modifier.height(72.dp))
+        }
     }
 }
 
@@ -231,22 +250,21 @@ private fun HomeHeader(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "Hi, ${uiModel.greetingName} 👋",
-                color = DarkBlue,
-                style = MaterialTheme.typography.headlineLarge
+                color = White,
+                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 24.sp)
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "Selamat datang kembali",
-                color = GreyText,
+                color = White.copy(alpha = 0.7f),
                 style = MaterialTheme.typography.bodyMedium
             )
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Surface(
-                color = Color.White,
+                color = Color.White.copy(alpha = 0.15f),
                 shape = RoundedCornerShape(16.dp),
-                shadowElevation = 2.dp,
                 modifier = Modifier.clickable { onNotificationClick() }
             ) {
                 Box(
@@ -256,7 +274,7 @@ private fun HomeHeader(
                     Icon(
                         imageVector = Icons.Default.NotificationsNone,
                         contentDescription = "Notifikasi",
-                        tint = DarkBlue
+                        tint = White
                     )
                 }
             }
@@ -266,9 +284,7 @@ private fun HomeHeader(
                     .size(46.dp)
                     .clip(CircleShape)
                     .clickable { onProfileClick() }
-                    .background(
-                        Brush.linearGradient(listOf(DarkBlue, SmartBlue))
-                    ),
+                    .background(Color.White.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) {
                 AsyncImage(
@@ -330,7 +346,7 @@ private fun BalanceCard(
                     Text(
                         text = balanceText,
                         color = White,
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
                     )
                 }
                 Row(
@@ -509,7 +525,8 @@ private fun ServiceShortcut(item: QuickActionItem) {
 @Composable
 private fun SectionTitle(
     title: String,
-    actionText: String
+    actionText: String,
+    isDark: Boolean = true
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -518,7 +535,7 @@ private fun SectionTitle(
     ) {
         Text(
             text = title,
-            color = DarkBlue,
+            color = if (isDark) White else DarkBlue,
             style = MaterialTheme.typography.titleMedium
         )
         TextButton(onClick = { }) {
