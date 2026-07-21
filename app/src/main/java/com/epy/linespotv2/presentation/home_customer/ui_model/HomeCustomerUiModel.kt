@@ -3,6 +3,7 @@ package com.epy.linespotv2.presentation.home_customer.ui_model
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -60,9 +61,9 @@ fun defaultQuickActions(): List<HomeCustomerQuickActionUi> = listOf(
         iconTint = Tangerine
     ),
     HomeCustomerQuickActionUi(
-        key = "layanan",
-        title = "Semua Layanan",
-        icon = Icons.Default.Build,
+        key = "history",
+        title = "Riwayat",
+        icon = Icons.Default.History,
         iconBg = Color(0xFFE8ECF6),
         iconTint = GreyText
     )
