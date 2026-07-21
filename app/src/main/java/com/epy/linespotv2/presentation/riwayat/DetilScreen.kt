@@ -85,16 +85,19 @@ fun DetilScreen(
             noteLabel = uiModel.noteLabel,
             noteValue = uiModel.noteValue
         )
+
+        DownloadPdfButton(onClick = onDownloadPdf)
+
         
         // Menampilkan tombol PDF secara dinamis jika diaktifkan di uiModel
-        if (uiModel.showDownloadPdfButton) {
-            DownloadPdfButton(onClick = onDownloadPdf)
-        }
+//        if (uiModel.showDownloadPdfButton) {
+//            DownloadPdfButton(onClick = onDownloadPdf)
+//        }
 
-        ActionButtons(
-            onPrint = onPrint,
-            onShare = onShare
-        )
+//        ActionButtons(
+//            onPrint = onPrint,
+//            onShare = onShare
+//        )
     }
 }
 
