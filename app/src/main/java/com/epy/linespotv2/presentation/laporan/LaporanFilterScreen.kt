@@ -18,24 +18,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -52,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.epy.linespotv2.core.ui.theme.DarkBlue
@@ -61,7 +54,13 @@ import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
 import com.epy.linespotv2.core.utils.parseApiDateOrNull
 import com.epy.linespotv2.core.utils.toApiDate
+import java.util.Calendar
 import java.util.Date
+
+private enum class LaporanDateField {
+    START,
+    END
+}
 
 @Composable
 fun LaporanFilterScreen(
@@ -70,6 +69,8 @@ fun LaporanFilterScreen(
     viewModel: LaporanViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    var startDate by rememberSaveable { mutableStateOf(Date().toApiDate()) }
+    var endDate by rememberSaveable { mutableStateOf(Date().toApiDate()) }
 
     LaunchedEffect(Unit) {
         viewModel.onIntent(LaporanIntent.loadFilterPage)
@@ -88,129 +89,177 @@ fun LaporanFilterScreen(
 
     LaporanFilterContent(
         state = state,
+        startDate = startDate,
+        endDate = endDate,
         onBack = onBack,
-        onIntent = viewModel::onIntent,
+        onStartDateClick = { startDate = it },
+        onEndDateClick = { endDate = it },
+        onQuickRangeSelected = { start, end ->
+            startDate = start
+            endDate = end
+        },
+        onApply = {
+            viewModel.onIntent(
+                LaporanIntent.submitFilter(
+                    startDate = startDate,
+                    endDate = endDate
+                )
+            )
+        }
     )
 }
 
 @Composable
 private fun LaporanFilterContent(
     state: LaporanState,
+    startDate: String,
+    endDate: String,
     onBack: () -> Unit,
-    onIntent: (LaporanIntent) -> Unit,
+    onStartDateClick: (String) -> Unit,
+    onEndDateClick: (String) -> Unit,
+    onQuickRangeSelected: (String, String) -> Unit,
+    onApply: () -> Unit
 ) {
-    var startDate by rememberSaveable { mutableStateOf(Date().toApiDate()) }
-    var endDate by rememberSaveable { mutableStateOf(Date().toApiDate()) }
-    var showStartDatePicker by remember { mutableStateOf(false) }
-    var showEndDatePicker by remember { mutableStateOf(false) }
+    var activeDateField by remember { mutableStateOf<LaporanDateField?>(null) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(PageBg)
-            .systemBarsPadding()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+    val today = Date()
+    val todayStr = today.toApiDate()
+
+    val yesterdayStr = remember {
+        val cal = Calendar.getInstance()
+        cal.add(Calendar.DAY_OF_YEAR, -1)
+        cal.time.toApiDate()
+    }
+
+    val last7DaysStr = remember {
+        val cal = Calendar.getInstance()
+        cal.add(Calendar.DAY_OF_YEAR, -6)
+        cal.time.toApiDate()
+    }
+
+    Surface(
+        color = White,
+        shape = RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp),
+        modifier = Modifier.fillMaxSize()
     ) {
-        FilterHeader(onBack = onBack)
-        InfoBanner()
-
-        state.error?.takeIf { it.isNotBlank() }?.let { message ->
-            ErrorBanner(message = message)
-        }
-
-        PeriodSection(
-            startDate = startDate,
-            endDate = endDate,
-            onStartDateClick = { showStartDatePicker = true },
-            onEndDateClick = { showEndDatePicker = true }
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        SubmitButton(
-            isLoading = state.isLoading,
-            onClick = {
-                onIntent(
-                    LaporanIntent.submitFilter(
-                        startDate = startDate,
-                        endDate = endDate,
-                    )
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(18.dp)
+        ) {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(width = 42.dp, height = 4.dp)
+                        .background(Color(0xFFD3D8E3), RoundedCornerShape(999.dp))
                 )
             }
-        )
-    }
 
-    if (showStartDatePicker) {
-        LaporanDatePickerDialog(
-            initialDate = startDate,
-            onDismiss = { showStartDatePicker = false },
-            onConfirm = {
-                startDate = it
-                showStartDatePicker = false
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ChevronLeft,
+                    contentDescription = "Kembali",
+                    tint = DarkBlue,
+                    modifier = Modifier
+                        .size(22.dp)
+                        .clickable { onBack() }
+                )
+                Spacer(modifier = Modifier.size(12.dp))
+                Text(
+                    text = "Filter Laporan",
+                    color = DarkBlue,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    text = "Reset",
+                    color = SmartBlue,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.clickable {
+                        onQuickRangeSelected(todayStr, todayStr)
+                    }
+                )
             }
-        )
-    }
 
-    if (showEndDatePicker) {
-        LaporanDatePickerDialog(
-            initialDate = endDate,
-            onDismiss = { showEndDatePicker = false },
-            onConfirm = {
-                endDate = it
-                showEndDatePicker = false
+            state.error?.takeIf { it.isNotBlank() }?.let { message ->
+                ErrorBanner(message = message)
             }
-        )
-    }
-}
 
-@Composable
-private fun FilterHeader(onBack: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 4.dp)
-    ) {
-        Icon(
-            imageVector = Icons.Default.ArrowBack,
-            contentDescription = null,
-            tint = DarkBlue,
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .clickable { onBack() }
-        )
-        Text(
-            text = "Filter Laporan",
-            color = DarkBlue,
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.align(Alignment.Center)
-        )
-    }
-}
+            // SECTION 1: Quick Range Chips (Fitur sama persis seperti RiwayatFilterScreen)
+            FilterSection("Pilih Cepat") {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    val isToday = startDate == todayStr && endDate == todayStr
+                    val isYesterday = startDate == yesterdayStr && endDate == yesterdayStr
+                    val is7Days = startDate == last7DaysStr && endDate == todayStr
 
-@Composable
-private fun InfoBanner() {
-    Surface(
-        color = Color(0xFFF2F6FF),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Info,
-                contentDescription = null,
-                tint = SmartBlue,
-            )
-            Text(
-                text = "Format tanggal menggunakan yyyy-MM-dd.",
-                color = GreyText,
-                style = MaterialTheme.typography.bodyMedium
+                    FilterChip("Hari Ini", isToday, Modifier.weight(1f)) {
+                        onQuickRangeSelected(todayStr, todayStr)
+                    }
+                    FilterChip("Kemarin", isYesterday, Modifier.weight(1f)) {
+                        onQuickRangeSelected(yesterdayStr, yesterdayStr)
+                    }
+                    FilterChip("7 Hari Terakhir", is7Days, Modifier.weight(1.2f)) {
+                        onQuickRangeSelected(last7DaysStr, todayStr)
+                    }
+                }
+            }
+
+            // SECTION 2: Kalender Manual Tanggal Awal dan Akhir
+            FilterSection("Rentang Tanggal") {
+                DateRangeField(
+                    startDate = startDate,
+                    endDate = endDate,
+                    onStartDateClick = { activeDateField = LaporanDateField.START },
+                    onEndDateClick = { activeDateField = LaporanDateField.END }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            SubmitButton(
+                isLoading = state.isLoading,
+                onClick = onApply
             )
         }
+    }
+
+    if (activeDateField != null) {
+        LaporanDatePickerDialog(
+            initialDate = if (activeDateField == LaporanDateField.START) startDate else endDate,
+            title = if (activeDateField == LaporanDateField.START) "Pilih tanggal mulai" else "Pilih tanggal akhir",
+            onDismiss = { activeDateField = null },
+            onConfirm = {
+                if (activeDateField == LaporanDateField.START) {
+                    onStartDateClick(it)
+                    activeDateField = null
+                } else {
+                    onEndDateClick(it)
+                    activeDateField = null
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun FilterSection(
+    title: String,
+    content: @Composable () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            text = title,
+            color = DarkBlue,
+            style = MaterialTheme.typography.titleSmall
+        )
+        content()
     }
 }
 
@@ -230,37 +279,6 @@ private fun ErrorBanner(message: String) {
 }
 
 @Composable
-private fun PeriodSection(
-    startDate: String,
-    endDate: String,
-    onStartDateClick: () -> Unit,
-    onEndDateClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = White)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = "Periode Laporan",
-                color = DarkBlue,
-                style = MaterialTheme.typography.titleMedium
-            )
-            DateRangeField(
-                startDate = startDate,
-                endDate = endDate,
-                onStartDateClick = onStartDateClick,
-                onEndDateClick = onEndDateClick
-            )
-        }
-    }
-}
-
-@Composable
 private fun DateRangeField(
     startDate: String,
     endDate: String,
@@ -269,26 +287,44 @@ private fun DateRangeField(
 ) {
     Surface(
         color = White,
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, Color(0xFFE3E8F0)),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
+        Column(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+            Row(
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                DateItem(
-                    label = "Tanggal Awal",
+                Icon(
+                    imageVector = Icons.Default.CalendarMonth,
+                    contentDescription = null,
+                    tint = SmartBlue,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.size(10.dp))
+                Text(
+                    text = "Pilih rentang tanggal kustom",
+                    color = DarkBlue,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                DateSelectionChip(
+                    label = "Mulai",
                     value = startDate,
+                    modifier = Modifier.weight(1f),
                     onClick = onStartDateClick
                 )
-                DateItem(
-                    label = "Tanggal Akhir",
+                DateSelectionChip(
+                    label = "Selesai",
                     value = endDate,
+                    modifier = Modifier.weight(1f),
                     onClick = onEndDateClick
                 )
             }
@@ -297,92 +333,46 @@ private fun DateRangeField(
 }
 
 @Composable
-private fun DateItem(
+private fun DateSelectionChip(
     label: String,
     value: String,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        horizontalArrangement = Arrangement.SpaceEvenly
+    Surface(
+        color = Color(0xFFF8FAFE),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, Color(0xFFE3E8F0)),
+        modifier = modifier
+            .clickable { onClick() }
     ) {
-        Text(
-            text = label,
-            color = GreyText,
-            style = MaterialTheme.typography.bodyMedium
-        )
-        Text(
-            text = value,
-            color = DarkBlue,
-            style = MaterialTheme.typography.bodyMedium
-        )
-        Icon(
-            imageVector = Icons.Outlined.CalendarMonth,
-            contentDescription = null,
-            tint = SmartBlue,
-            modifier = Modifier.size(20.dp)
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun LokasiDropdown(
-    lokasiList: List<String>,
-    selectedLokasi: String,
-    isLoading: Boolean,
-    onSelectLokasi: (String) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded }
-    ) {
-        OutlinedTextField(
-            value = if (isLoading) "Memuat area parkir..." else selectedLokasi,
-            onValueChange = {},
-            readOnly = true,
-            singleLine = true,
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.LocationOn,
-                    contentDescription = null,
-                    tint = GreyText,
-                    modifier = Modifier.size(20.dp)
-                )
-            },
-            trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-            },
-            textStyle = MaterialTheme.typography.bodyMedium,
-            shape = RoundedCornerShape(14.dp),
+        Row(
             modifier = Modifier
-                .menuAnchor()
-                .fillMaxWidth(),
-            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
-                focusedBorderColor = SmartBlue,
-                unfocusedBorderColor = Color(0xFFE3E8F0),
-                focusedTextColor = DarkBlue,
-                unfocusedTextColor = DarkBlue
-            )
-        )
-
-        ExposedDropdownMenu(
-            expanded = expanded && !isLoading,
-            onDismissRequest = { expanded = false }
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            lokasiList.forEach { lokasi ->
-                DropdownMenuItem(
-                    text = { Text(text = lokasi) },
-                    onClick = {
-                        onSelectLokasi(lokasi)
-                        expanded = false
-                    }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = label,
+                    color = GreyText,
+                    style = MaterialTheme.typography.labelMedium
+                )
+                Text(
+                    text = value,
+                    color = DarkBlue,
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowDown,
+                contentDescription = null,
+                tint = GreyText,
+                modifier = Modifier.size(18.dp)
+            )
         }
     }
 }
@@ -390,6 +380,7 @@ private fun LokasiDropdown(
 @Composable
 private fun LaporanDatePickerDialog(
     initialDate: String,
+    title: String,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
@@ -401,29 +392,66 @@ private fun LaporanDatePickerDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    val selectedDate = datePickerState.selectedDateMillis
-                    if (selectedDate != null) {
-                        onConfirm(Date(selectedDate).toApiDate())
+                    val selected = datePickerState.selectedDateMillis
+                    if (selected != null) {
+                        onConfirm(Date(selected).toApiDate())
                     } else {
                         onDismiss()
                     }
                 }
             ) {
-                Text(text = "Pilih", color = SmartBlue)
+                Text("Pilih", color = SmartBlue)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = "Batal", color = GreyText)
+                Text("Batal", color = GreyText)
             }
         }
     ) {
-        DatePicker(state = datePickerState)
+        Column {
+            Text(
+                text = title,
+                color = DarkBlue,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
+            )
+            DatePicker(state = datePickerState)
+        }
     }
 }
 
-private fun String.toMillis(): Long? {
-    return parseApiDateOrNull()?.time
+@Composable
+private fun FilterChip(
+    text: String,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
+) {
+    Surface(
+        color = if (selected) Color(0xFFEFF5FF) else White,
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(
+            1.dp,
+            if (selected) SmartBlue else Color(0xFFE3E8F0)
+        ),
+        modifier = modifier
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onClick() }
+                .padding(horizontal = 8.dp, vertical = 11.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = text,
+                color = if (selected) SmartBlue else DarkBlue,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp)
+            )
+        }
+    }
 }
 
 @Composable
@@ -456,14 +484,23 @@ private fun SubmitButton(
     }
 }
 
+private fun String.toMillis(): Long? {
+    return parseApiDateOrNull()?.time
+}
+
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 private fun LaporanFilterScreenPreview() {
     MaterialTheme {
         LaporanFilterContent(
             state = LaporanState(),
+            startDate = Date().toApiDate(),
+            endDate = Date().toApiDate(),
             onBack = {},
-            onIntent = {},
+            onStartDateClick = {},
+            onEndDateClick = {},
+            onQuickRangeSelected = { _, _ -> },
+            onApply = {}
         )
     }
 }
