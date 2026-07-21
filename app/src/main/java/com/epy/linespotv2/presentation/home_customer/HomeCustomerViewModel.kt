@@ -21,13 +21,28 @@ class HomeCustomerViewModel @Inject constructor(
             is HomeCustomerIntent.clickSubscribe -> sendEffect(HomeCustomerEffect.NavigateToSubscription)
             is HomeCustomerIntent.clickTopUp -> sendEffect(HomeCustomerEffect.NavigateToTopUp)
             is HomeCustomerIntent.clickPayment -> sendEffect(HomeCustomerEffect.NavigateToPayment)
-            is HomeCustomerIntent.clickBooking -> sendEffect(HomeCustomerEffect.NavigateToBooking)
-            is HomeCustomerIntent.clickPromo -> sendEffect(HomeCustomerEffect.NavigateToPromo)
+            
+            // Klik Booking & Promo akan menampilkan dialog Fitur Belum Tersedia
+            is HomeCustomerIntent.clickBooking -> {
+                updateState { it.copy(showFeatureUnavailableDialog = true, unavailableFeatureName = "Booking Parkir") }
+            }
+            is HomeCustomerIntent.clickPromo -> {
+                updateState { it.copy(showFeatureUnavailableDialog = true, unavailableFeatureName = "Promo") }
+            }
+            
             is HomeCustomerIntent.clickLayananLain -> sendEffect(HomeCustomerEffect.NavigateToLayananLain)
             is HomeCustomerIntent.clickNotification -> {
                 sendEffect(HomeCustomerEffect.ShowToast(message = "Notifikasi diklik"))
             }
             is HomeCustomerIntent.dismissError -> updateState { it.copy(error = null) }
+            
+            // Handle dialog toggle
+            is HomeCustomerIntent.showFeatureUnavailable -> {
+                updateState { it.copy(showFeatureUnavailableDialog = true, unavailableFeatureName = intent.featureName) }
+            }
+            is HomeCustomerIntent.dismissFeatureUnavailable -> {
+                updateState { it.copy(showFeatureUnavailableDialog = false, unavailableFeatureName = "") }
+            }
         }
     }
 

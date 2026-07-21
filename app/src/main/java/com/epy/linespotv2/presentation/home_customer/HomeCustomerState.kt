@@ -9,5 +9,7 @@ data class HomeCustomerState(
     val error: String? = null,
     val customerHomeEffect: HomeCustomerEffect? = null,
     val customerHomeModel: CustomerHomeModel? = null,
-    val uiModel: HomeCustomerUiModel? = null
+    val uiModel: HomeCustomerUiModel? = null,
+    val showFeatureUnavailableDialog: Boolean = false,
+    val unavailableFeatureName: String = ""
 )

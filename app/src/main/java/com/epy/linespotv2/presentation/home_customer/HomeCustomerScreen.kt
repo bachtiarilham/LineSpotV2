@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.LocalParking
 import androidx.compose.material.icons.filled.NotificationsNone
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -121,6 +122,14 @@ fun HomeCustomerScreen(
                 else -> ErrorScreen(
                     message = state.error ?: "Terjadi kesalahan",
                     onRetry = { viewModel.onIntent(HomeCustomerIntent.LoadHomeCustomer) }
+                )
+            }
+
+            // Pop-up Fitur Belum Tersedia
+            if (state.showFeatureUnavailableDialog) {
+                FeatureUnavailableDialog(
+                    featureName = state.unavailableFeatureName,
+                    onDismiss = { viewModel.onIntent(HomeCustomerIntent.dismissFeatureUnavailable) }
                 )
             }
         }
@@ -228,12 +237,49 @@ fun HomeScreenContent(
 //            PromoCard(
 //                title = uiModel.promo.title,
 //                description = uiModel.promo.description,
-//                badge = uiModel.promo.badge
+//                badge = uiModel.promo.badge,
+//                onPromoClick = { onIntent(HomeCustomerIntent.clickPromo) }
 //            )
 //
 //            Spacer(modifier = Modifier.height(72.dp))
         }
     }
+}
+
+@Composable
+private fun FeatureUnavailableDialog(
+    featureName: String,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Fitur Belum Tersedia",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = DarkBlue
+            )
+        },
+        text = {
+            Text(
+                text = "Maaf, fitur $featureName saat ini masih dalam tahap pengembangan dan akan segera hadir.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = GreyText
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    text = "Oke",
+                    color = SmartBlue,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        },
+        shape = RoundedCornerShape(16.dp),
+        containerColor = Color.White
+    )
 }
 
 @Composable
@@ -605,10 +651,13 @@ private fun ActivityCard(
 private fun PromoCard(
     title: String,
     description: String,
-    badge: String
+    badge: String,
+    onPromoClick: () -> Unit = {}
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onPromoClick() },
         shape = RoundedCornerShape(18.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         colors = CardDefaults.cardColors(containerColor = White)

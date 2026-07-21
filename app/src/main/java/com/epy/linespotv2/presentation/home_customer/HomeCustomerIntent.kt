@@ -11,4 +11,6 @@ sealed class HomeCustomerIntent {
     data object clickLayananLain : HomeCustomerIntent()
     data object dismissError : HomeCustomerIntent()
     data object clickPayment: HomeCustomerIntent()
+    data class showFeatureUnavailable(val featureName: String) : HomeCustomerIntent()
+    data object dismissFeatureUnavailable : HomeCustomerIntent()
 }
