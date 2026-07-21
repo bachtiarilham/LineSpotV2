@@ -20,6 +20,8 @@ import com.epy.linespotv2.data.remote.dto.payment.PostPaymentParkingRequestDto
 import com.epy.linespotv2.data.remote.dto.payment.PostPaymentParkingResponseDto
 import com.epy.linespotv2.data.remote.dto.profile.CustomerDto
 import com.epy.linespotv2.data.remote.dto.profile.JukirDto
+import com.epy.linespotv2.data.remote.dto.riwayat.DetilParkirResponseDto
+import com.epy.linespotv2.data.remote.dto.riwayat.DetilTransaksiResponseDto
 import com.epy.linespotv2.data.remote.dto.riwayat.RiwayatRequestDto
 import com.epy.linespotv2.data.remote.dto.riwayat.RiwayatResponseDto
 import com.epy.linespotv2.data.remote.dto.subscription.SubscribeResponseDto
@@ -67,6 +69,16 @@ interface ApiService {
     suspend fun getRiwayatPage(
         @Body request: RiwayatRequestDto
     ) : ApiEnvelope<RiwayatResponseDto>
+
+    @GET("api/v2/linespot/riwayat/parkir/{transaction_code}")
+    suspend fun getParkirDetil(
+        @Path("transaction_code") trxCode: String
+    ): ApiEnvelope<DetilParkirResponseDto>
+
+    @GET("api/v2/linespot/riwayat/transaksi/{topup_code}")
+    suspend fun getTransaksiDetil(
+        @Path("topup_code") topUpCode: String
+    ): ApiEnvelope<DetilTransaksiResponseDto>
 
     //subscription
     @GET("api/v2/linespot/subscribe")

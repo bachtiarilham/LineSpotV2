@@ -9,12 +9,5 @@ data class RiwayatRequestDto(
     @SerializedName("endDate")
     val endDate: String?,
 
-    @SerializedName("paymentCode")
-    val paymentCode: String?,
 
-    @SerializedName("vehicleCode")
-    val vehicleCode: String?,
-
-    @SerializedName("lokasiCode")
-    val lokasiCode: String?
 )

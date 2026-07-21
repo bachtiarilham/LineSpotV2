@@ -14,15 +14,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.MonetizationOn
-import androidx.compose.material.icons.filled.TwoWheeler
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.Icon
@@ -41,9 +35,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.epy.linespotv2.core.ui.theme.DarkBlue
@@ -53,7 +47,7 @@ import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
 import com.epy.linespotv2.core.utils.parseApiDateOrNull
 import com.epy.linespotv2.core.utils.toApiDate
-import com.epy.linespotv2.domain.model.helper.LokasiItemModel
+import java.util.Calendar
 import java.util.Date
 
 private enum class RiwayatDateField {
@@ -94,24 +88,19 @@ fun RiwayatFilterScreen(
         onReset = {
             startDate = Date().toApiDate()
             endDate = Date().toApiDate()
-            viewModel.onIntent(RiwayatIntent.updateLokasi("SEMUA"))
-            viewModel.onIntent(RiwayatIntent.updatePaymentCode("SEMUA"))
-            viewModel.onIntent(RiwayatIntent.updateVehicleCode("SEMUA"))
         },
         onCancel = onCancel,
         onStartDateClick = { startDate = it },
         onEndDateClick = { endDate = it },
-        onSelectLokasi = { viewModel.onIntent(RiwayatIntent.updateLokasi(it)) },
-        onSelectPayment = { viewModel.onIntent(RiwayatIntent.updatePaymentCode(it)) },
-        onSelectVehicle = { viewModel.onIntent(RiwayatIntent.updateVehicleCode(it)) },
+        onQuickRangeSelected = { start, end ->
+            startDate = start
+            endDate = end
+        },
         onApply = {
             viewModel.onIntent(
                 RiwayatIntent.submitFilter(
                     startDate = startDate,
-                    endDate = endDate,
-                    paymentCode = state.selectedPaymentCode,
-                    vehicleCode = state.selectedVehicleCode,
-                    lokasiCode = state.selectedLokasiCode ?: "SEMUA"
+                    endDate = endDate
                 )
             )
         }
@@ -127,21 +116,25 @@ fun RiwayatFilterContent(
     onCancel: () -> Unit,
     onStartDateClick: (String) -> Unit,
     onEndDateClick: (String) -> Unit,
-    onSelectLokasi: (String) -> Unit,
-    onSelectPayment: (String) -> Unit,
-    onSelectVehicle: (String) -> Unit,
+    onQuickRangeSelected: (String, String) -> Unit,
     onApply: () -> Unit
 ) {
     var activeDateField by remember { mutableStateOf<RiwayatDateField?>(null) }
-    val lokasiOptions = remember(state.lokasiList) {
-        buildList {
-            add("SEMUA")
-            addAll(
-                state.lokasiList.mapNotNull { lokasi ->
-                    lokasi.namaLokasi.orEmpty().trim().takeIf { it.isNotBlank() }
-                }.distinct()
-            )
-        }
+
+    // Logic untuk menghitung Quick Range tanggal
+    val today = Date()
+    val todayStr = today.toApiDate()
+
+    val yesterdayStr = remember {
+        val cal = Calendar.getInstance()
+        cal.add(Calendar.DAY_OF_YEAR, -1)
+        cal.time.toApiDate()
+    }
+
+    val last7DaysStr = remember {
+        val cal = Calendar.getInstance()
+        cal.add(Calendar.DAY_OF_YEAR, -6) // Maksimal 7 hari terakhir (hari ini + 6 hari ke belakang)
+        cal.time.toApiDate()
     }
 
     Surface(
@@ -151,7 +144,7 @@ fun RiwayatFilterContent(
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
             Box(
                 modifier = Modifier.fillMaxWidth(),
@@ -191,6 +184,26 @@ fun RiwayatFilterContent(
                 )
             }
 
+            // SECTION 1: Pintasan Cepat (Quick Range Chips)
+            FilterSection("Pilih Cepat") {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    val isToday = startDate == todayStr && endDate == todayStr
+                    val isYesterday = startDate == yesterdayStr && endDate == yesterdayStr
+                    val is7Days = startDate == last7DaysStr && endDate == todayStr
+
+                    FilterChip("Hari Ini", isToday, Modifier.weight(1f)) {
+                        onQuickRangeSelected(todayStr, todayStr)
+                    }
+                    FilterChip("Kemarin", isYesterday, Modifier.weight(1f)) {
+                        onQuickRangeSelected(yesterdayStr, yesterdayStr)
+                    }
+                    FilterChip("7 Hari Terakhir", is7Days, Modifier.weight(1.2f)) {
+                        onQuickRangeSelected(last7DaysStr, todayStr)
+                    }
+                }
+            }
+
+            // SECTION 2: Kalender Manual Tanggal Awal dan Akhir (Dipertahankan)
             FilterSection("Rentang Tanggal") {
                 DateRangeField(
                     startDate = startDate,
@@ -200,43 +213,7 @@ fun RiwayatFilterContent(
                 )
             }
 
-            FilterSection("Metode Pembayaran") {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    FilterChip("Semua", null, state.selectedPaymentCode == "SEMUA", Modifier.weight(1f)) {
-                        onSelectPayment("SEMUA")
-                    }
-                    FilterChip("QRIS", Icons.Default.AccountBalanceWallet, state.selectedPaymentCode == "QRIS", Modifier.weight(1f)) {
-                        onSelectPayment("QRIS")
-                    }
-                    FilterChip("CASH", Icons.Default.MonetizationOn, state.selectedPaymentCode == "CASH", Modifier.weight(1f)) {
-                        onSelectPayment("CASH")
-                    }
-                }
-            }
-
-            FilterSection("Jenis Kendaraan") {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    FilterChip("Semua", null, state.selectedVehicleCode == "SEMUA", Modifier.weight(1f)) {
-                        onSelectVehicle("SEMUA")
-                    }
-                    FilterChip("Motor", Icons.Default.TwoWheeler, state.selectedVehicleCode == "MOTOR", Modifier.weight(1f)) {
-                        onSelectVehicle("MOTOR")
-                    }
-                    FilterChip("Mobil", Icons.Default.DirectionsCar, state.selectedVehicleCode == "MOBIL", Modifier.weight(1f)) {
-                        onSelectVehicle("MOBIL")
-                    }
-                }
-            }
-
-            FilterSection("Lokasi Parkir") {
-                DropdownField(
-                    text = state.selectedLokasi,
-                    locations = lokasiOptions,
-                    isLoading = state.isLoadingLokasi,
-                    error = state.errorLokasi,
-                    onSelect = onSelectLokasi
-                )
-            }
+            Spacer(modifier = Modifier.weight(1f))
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 ActionButton(
@@ -246,7 +223,7 @@ fun RiwayatFilterContent(
                     onClick = onCancel
                 )
                 ActionButton(
-                    text = if (state.isLoading) "Memuat..." else "Terapkan Filter",
+                    text = "Terapkan Filter",
                     selected = true,
                     modifier = Modifier.weight(1f),
                     onClick = onApply
@@ -316,7 +293,7 @@ private fun DateRangeField(
                 )
                 Spacer(modifier = Modifier.size(10.dp))
                 Text(
-                    text = "Pilih tanggal mulai dan akhir",
+                    text = "Pilih rentang tanggal kustom",
                     color = DarkBlue,
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -338,12 +315,6 @@ private fun DateRangeField(
                     onClick = onEndDateClick
                 )
             }
-
-            Text(
-                text = "Format tanggal menggunakan yyyy-MM-dd.",
-                color = GreyText,
-                style = MaterialTheme.typography.bodySmall
-            )
         }
     }
 }
@@ -446,94 +417,8 @@ private fun Long.toApiDateString(): String {
 }
 
 @Composable
-private fun DropdownField(
-    text: String,
-    locations: List<String>,
-    isLoading: Boolean,
-    error: String?,
-    onSelect: (String) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Surface(
-        color = White,
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, Color(0xFFE3E8F0)),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 13.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = text,
-                color = GreyText,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable { expanded = !expanded }
-            )
-            if (isLoading) {
-                CircularProgressIndicator(
-                    color = SmartBlue,
-                    modifier = Modifier.size(18.dp),
-                    strokeWidth = 2.dp
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Default.ArrowDownward,
-                    contentDescription = null,
-                    tint = GreyText,
-                    modifier = Modifier.clickable { expanded = !expanded }
-                )
-            }
-        }
-    }
-
-    if (expanded) {
-        Column(
-            modifier = Modifier.padding(top = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            locations.forEach { location ->
-                Surface(
-                    color = if (location == text) Color(0xFFEFF5FF) else White,
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(
-                        1.dp,
-                        if (location == text) SmartBlue else Color(0xFFE3E8F0)
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            onSelect(location)
-                            expanded = false
-                        }
-                ) {
-                    Text(
-                        text = location,
-                        color = if (location == text) SmartBlue else DarkBlue,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)
-                    )
-                }
-            }
-
-            if (!error.isNullOrBlank()) {
-                Text(
-                    text = error,
-                    color = Color(0xFFE04F4F),
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-        }
-    }
-}
-
-@Composable
 private fun FilterChip(
     text: String,
-    icon: ImageVector?,
     selected: Boolean,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {}
@@ -551,23 +436,14 @@ private fun FilterChip(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onClick() }
-                .padding(horizontal = 10.dp, vertical = 11.dp),
+                .padding(horizontal = 8.dp, vertical = 11.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            if (icon != null) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = if (selected) SmartBlue else GreyText,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.size(6.dp))
-            }
             Text(
                 text = text,
                 color = if (selected) SmartBlue else DarkBlue,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp)
             )
         }
     }
@@ -615,23 +491,14 @@ private fun RiwayatFilterScreenPreview() {
                 .padding(top = 24.dp)
         ) {
             RiwayatFilterContent(
-                state = RiwayatState(
-                    lokasiList = listOf(
-                        LokasiItemModel(lokasiId = 1L, namaLokasi = "Zona Biru"),
-                        LokasiItemModel(lokasiId = 2L, namaLokasi = "Zona Merah")
-                    ),
-                    selectedLokasi = "SEMUA",
-                    selectedLokasiCode = "SEMUA"
-                ),
+                state = RiwayatState(),
                 startDate = Date().toApiDate(),
                 endDate = Date().toApiDate(),
                 onReset = {},
                 onCancel = {},
                 onStartDateClick = {},
                 onEndDateClick = {},
-                onSelectLokasi = {},
-                onSelectPayment = {},
-                onSelectVehicle = {},
+                onQuickRangeSelected = { _, _ -> },
                 onApply = {}
             )
         }

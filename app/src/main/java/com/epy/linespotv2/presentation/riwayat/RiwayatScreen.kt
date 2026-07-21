@@ -20,14 +20,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.NorthEast
 import androidx.compose.material.icons.filled.SouthWest
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -36,9 +42,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.epy.linespotv2.core.ui.theme.DarkBlue
@@ -74,15 +82,19 @@ fun RiwayatScreen(
         when {
             state.isLoading -> FullScreenLoading()
             state.screenUiModel != null -> {
-                if (state.screenUiModel!!.sections.isEmpty()) {
-                    EmptyRiwayatScreen(onBack = onBack)
-                } else {
-                    RiwayatScreenContent(
-                        uiModel = state.screenUiModel!!,
-                        onItemClick = { viewModel.onIntent(RiwayatIntent.clickRiwayatDetail) },
-                        onBack = onBack
-                    )
-                }
+                RiwayatScreenContent(
+                    uiModel = state.screenUiModel!!,
+                    selectedTab = state.selectedTab,
+                    onTabSelected = { viewModel.onIntent(RiwayatIntent.changeTab(it)) },
+                    onItemClick = { code, isParking -> 
+                        viewModel.onIntent(RiwayatIntent.clickRiwayatDetail(code, isParking)) 
+                    },
+                    onFilterClick = {
+                        // Triggers transition to filter screen
+                        state.riwayatEffect // Placeholder untuk navigasi
+                    },
+                    onBack = onBack
+                )
             }
             else -> ErrorScreen(
                 message = state.error ?: "Terjadi kesalahan",
@@ -93,44 +105,12 @@ fun RiwayatScreen(
 }
 
 @Composable
-private fun EmptyRiwayatScreen(onBack: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(PageBg)
-            .systemBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        HeaderBar(title = "Riwayat", onBack = onBack)
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Tidak ada riwayat transaksi",
-                color = DarkBlue,
-                style = MaterialTheme.typography.headlineSmall,
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Riwayat transaksi akan muncul setelah ada aktivitas parkir.",
-                color = GreyText,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-@Composable
 fun RiwayatScreenContent(
     uiModel: RiwayatScreenUiModel,
-    onItemClick: () -> Unit = {},
+    selectedTab: RiwayatTab,
+    onTabSelected: (RiwayatTab) -> Unit,
+    onItemClick: (String, Boolean) -> Unit,
+    onFilterClick: () -> Unit = {},
     onBack: () -> Unit = {}
 ) {
     Column(
@@ -138,19 +118,113 @@ fun RiwayatScreenContent(
             .fillMaxSize()
             .background(PageBg)
             .systemBarsPadding()
-            .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        HeaderBar(title = "Riwayat", onBack = onBack)
+        HeaderBar(
+            title = "Riwayat",
+            onBack = onBack,
+            onFilterClick = onFilterClick
+        )
 
-        uiModel.sections.forEach { section ->
-            DateSection(section.date)
-            section.items.forEach { item ->
-                RiwayatHistoryCard(
-                    item = item,
-                    onClick = onItemClick
+        // Tab Layout (Parkir & Keuangan)
+        TabRow(
+            selectedTabIndex = selectedTab.ordinal,
+            containerColor = Color.Transparent,
+            contentColor = SmartBlue,
+            indicator = { tabPositions ->
+                TabRowDefaults.SecondaryIndicator(
+                    modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab.ordinal]),
+                    color = SmartBlue
                 )
+            },
+            divider = {}
+        ) {
+            Tab(
+                selected = selectedTab == RiwayatTab.PARKIR,
+                onClick = { onTabSelected(RiwayatTab.PARKIR) },
+                text = {
+                    Text(
+                        text = "Parkir",
+                        fontWeight = if (selectedTab == RiwayatTab.PARKIR) FontWeight.Bold else FontWeight.Normal,
+                        fontSize = 14.sp
+                    )
+                }
+            )
+            Tab(
+                selected = selectedTab == RiwayatTab.KEUANGAN,
+                onClick = { onTabSelected(RiwayatTab.KEUANGAN) },
+                text = {
+                    Text(
+                        text = "Keuangan",
+                        fontWeight = if (selectedTab == RiwayatTab.KEUANGAN) FontWeight.Bold else FontWeight.Normal,
+                        fontSize = 14.sp
+                    )
+                }
+            )
+        }
+
+        // Penyaringan Item berdasarkan Tab
+        val filteredSections = uiModel.sections.map { section ->
+            val items = section.items.filter { item ->
+                if (selectedTab == RiwayatTab.PARKIR) {
+                    // Parkir: ditandai dengan ada data Plat Nomor
+                    item.plateNumber.isNotBlank() && item.plateNumber != "-"
+                } else {
+                    // Keuangan: data Plat Nomor kosong / tidak relevan
+                    item.plateNumber.isBlank() || item.plateNumber == "-"
+                }
+            }
+            section.copy(items = items)
+        }.filter { it.items.isNotEmpty() }
+
+        if (filteredSections.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                ) {
+                    Text(
+                        text = "Tidak ada riwayat",
+                        color = DarkBlue,
+                        style = MaterialTheme.typography.titleMedium,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Belum ada aktivitas ${if (selectedTab == RiwayatTab.PARKIR) "parkir" else "keuangan"} untuk saat ini.",
+                        color = GreyText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                filteredSections.forEach { section ->
+                    DateSection(section.date)
+                    section.items.forEach { item ->
+                        RiwayatHistoryCard(
+                            item = item,
+                            selectedTab = selectedTab,
+                            onClick = { 
+                                val isParking = selectedTab == RiwayatTab.PARKIR
+                                onItemClick(item.code, isParking) 
+                            }
+                        )
+                    }
+                }
             }
         }
     }
@@ -168,8 +242,11 @@ private fun DateSection(text: String) {
 @Composable
 private fun RiwayatHistoryCard(
     item: RiwayatItemUiModel,
+    selectedTab: RiwayatTab,
     onClick: () -> Unit
 ) {
+    val isTopUp = item.statusLabel.contains("Top Up", ignoreCase = true) || item.statusLabel.contains("Masuk", ignoreCase = true)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -182,13 +259,13 @@ private fun RiwayatHistoryCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
-                color = Color(0xFFEAF8EF),
+                color = if (isTopUp) Color(0xFFEAF8EF) else Color(0xFFFCEAEA),
                 shape = CircleShape
             ) {
                 Icon(
-                    imageVector = Icons.Default.SouthWest,
+                    imageVector = if (isTopUp) Icons.Default.SouthWest else Icons.Default.NorthEast,
                     contentDescription = null,
-                    tint = Color(0xFF2FA84F),
+                    tint = if (isTopUp) Color(0xFF2FA84F) else Color(0xFFE04F4F),
                     modifier = Modifier.padding(9.dp)
                 )
             }
@@ -200,13 +277,13 @@ private fun RiwayatHistoryCard(
                     style = MaterialTheme.typography.titleSmall
                 )
                 Text(
-                    text = "${item.plateNumber} • ${item.vehicleType}",
+                    text = if (selectedTab == RiwayatTab.PARKIR) "${item.plateNumber} • ${item.vehicleType}" else item.vehicleType,
                     color = GreyText,
                     style = MaterialTheme.typography.bodySmall
                 )
                 Text(
                     text = item.statusLabel,
-                    color =Color(0xFF2FA84F),
+                    color = if (isTopUp) Color(0xFF2FA84F) else Color(0xFFE04F4F),
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -228,23 +305,41 @@ private fun RiwayatHistoryCard(
 }
 
 @Composable
-private fun HeaderBar(title: String, onBack: () -> Unit) {
+private fun HeaderBar(
+    title: String,
+    onBack: () -> Unit,
+    onFilterClick: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Icon(
-            imageVector = Icons.Default.ChevronLeft,
-            contentDescription = null,
-            tint = DarkBlue,
-            modifier = Modifier.clickable { onBack() }
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = title,
-            color = DarkBlue,
-            style = MaterialTheme.typography.titleLarge
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Default.ChevronLeft,
+                contentDescription = null,
+                tint = DarkBlue,
+                modifier = Modifier.clickable { onBack() }
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = title,
+                color = DarkBlue,
+                style = MaterialTheme.typography.titleLarge
+            )
+        }
+
+        IconButton(
+            onClick = onFilterClick,
+            modifier = Modifier.size(24.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.FilterList,
+                contentDescription = "Filter",
+                tint = DarkBlue
+            )
+        }
     }
 }
 
@@ -315,31 +410,20 @@ private fun RiwayatScreenPreview() {
                                 statusLabel = "Masuk"
                             ),
                             RiwayatItemUiModel(
-                                code = "TRX-240530-00122",
-                                plateNumber = "B 5678 DEF",
-                                vehicleType = "Mobil",
+                                code = "Top Up Saldo",
+                                plateNumber = "",
+                                vehicleType = "Transfer Bank",
                                 time = "14:32",
-                                amountLabel = "Rp 10.000",
-                                statusLabel = "Keluar"
-                            )
-                        )
-                    ),
-                    RiwayatSectionUiModel(
-                        date = "29 Mei 2024",
-                        items = listOf(
-                            RiwayatItemUiModel(
-                                code = "TRX-240529-00119",
-                                plateNumber = "B 3344 UVW",
-                                vehicleType = "Motor",
-                                time = "21:02",
-                                amountLabel = "Rp 5.000",
-                                statusLabel = "Masuk"
+                                amountLabel = "Rp 100.000",
+                                statusLabel = "Sukses"
                             )
                         )
                     )
                 )
             ),
-            onItemClick = {},
+            selectedTab = RiwayatTab.PARKIR,
+            onTabSelected = {},
+            onItemClick = { _, _ -> },
             onBack = {}
         )
     }
