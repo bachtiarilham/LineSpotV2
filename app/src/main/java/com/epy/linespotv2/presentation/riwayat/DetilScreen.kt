@@ -4,13 +4,13 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -26,6 +26,9 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SouthWest
+import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -46,14 +49,15 @@ import com.epy.linespotv2.core.ui.theme.PageBg
 import com.epy.linespotv2.core.ui.theme.SmartBlue
 import com.epy.linespotv2.core.ui.theme.White
 import com.epy.linespotv2.presentation.riwayat.ui_model.DetilRiwayatInfoItemUiModel
-import com.epy.linespotv2.presentation.riwayat.ui_model.DetilRiwayatUiModel
+import com.epy.linespotv2.presentation.riwayat.ui_model.DetilScreenUiModel
 
 @Composable
-fun DetilRiwayatScreen(
+fun DetilScreen(
     onBack: () -> Unit = {},
     onPrint: () -> Unit = {},
     onShare: () -> Unit = {},
-    uiModel: DetilRiwayatUiModel = detilRiwayatPreviewModel()
+    onDownloadPdf: () -> Unit = {},
+    uiModel: DetilScreenUiModel = detilRiwayatPreviewModel()
 ) {
     Column(
         modifier = Modifier
@@ -71,16 +75,22 @@ fun DetilRiwayatScreen(
             methodLabel = uiModel.paymentMethodLabel,
             amountLabel = uiModel.paymentAmountLabel
         )
-        PetugasInfoCard(
-            officerName = uiModel.officerName,
-            officerRole = uiModel.officerRole,
-            officerIdLabel = uiModel.officerIdLabel,
-            officerIdValue = uiModel.officerIdValue
-        )
+//        PetugasInfoCard(
+//            officerName = uiModel.officerName,
+//            officerRole = uiModel.officerRole,
+//            officerIdLabel = uiModel.officerIdLabel,
+//            officerIdValue = uiModel.officerIdValue
+//        )
         NotesCard(
             noteLabel = uiModel.noteLabel,
             noteValue = uiModel.noteValue
         )
+        
+        // Menampilkan tombol PDF secara dinamis jika diaktifkan di uiModel
+        if (uiModel.showDownloadPdfButton) {
+            DownloadPdfButton(onClick = onDownloadPdf)
+        }
+
         ActionButtons(
             onPrint = onPrint,
             onShare = onShare
@@ -110,7 +120,7 @@ private fun DetailHeader(onBack: () -> Unit) {
 }
 
 @Composable
-private fun StatusCard(uiModel: DetilRiwayatUiModel) {
+private fun StatusCard(uiModel: DetilScreenUiModel) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -206,7 +216,7 @@ private fun StatusCard(uiModel: DetilRiwayatUiModel) {
 
 @Composable
 private fun TicketInfoCard(items: List<DetilRiwayatInfoItemUiModel>) {
-    DetailCard(title = "Informasi Tiket") {
+    DetailCard(title = "Informasi Transaksi") {
         items.forEachIndexed { index, item ->
             if (index > 0 && item.emphasized) {
                 HorizontalDivider(
@@ -269,7 +279,7 @@ private fun PetugasInfoCard(
     officerIdLabel: String,
     officerIdValue: String
 ) {
-    DetailCard(title = "Informasi Petugas") {
+    DetailCard(title = "Informasi Petugas / Provider") {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -346,6 +356,36 @@ private fun NotesCard(
                 text = noteValue,
                 color = GreyText,
                 style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+}
+
+@Composable
+private fun DownloadPdfButton(onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF22C55E)), // Hijau sukses
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.PictureAsPdf,
+                contentDescription = null,
+                tint = White,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.size(8.dp))
+            Text(
+                text = "Unduh Bukti PDF",
+                color = White,
+                style = MaterialTheme.typography.titleSmall
             )
         }
     }
@@ -466,8 +506,8 @@ private fun ActionButtons(
     }
 }
 
-private fun detilRiwayatPreviewModel(): DetilRiwayatUiModel {
-    return DetilRiwayatUiModel(
+private fun detilRiwayatPreviewModel(): DetilScreenUiModel {
+    return DetilScreenUiModel(
         ticketCode = "TRX-240530-00123",
         statusChipLabel = "Selesai",
         statusLabel = "Masuk",
@@ -487,19 +527,16 @@ private fun detilRiwayatPreviewModel(): DetilRiwayatUiModel {
         ),
         paymentMethodLabel = "Tunai",
         paymentAmountLabel = "Rp 5.000",
-        officerName = "Budi Santoso",
-        officerRole = "Juru Parkir",
-        officerIdLabel = "ID Petugas",
-        officerIdValue = "JP-000123",
         noteLabel = "Tidak ada catatan",
-        noteValue = "-"
+        noteValue = "-",
+        showDownloadPdfButton = true
     )
 }
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-private fun DetilRiwayatScreenPreview() {
+private fun DetilScreenPreview() {
     MaterialTheme {
-        DetilRiwayatScreen()
+        DetilScreen()
     }
 }

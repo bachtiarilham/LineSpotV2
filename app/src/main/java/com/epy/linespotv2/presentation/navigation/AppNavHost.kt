@@ -9,6 +9,8 @@ import androidx.navigation.navArgument
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.epy.linespotv2.presentation.riwayat.RiwayatViewModel
 import com.epy.linespotv2.presentation.auth.login.LoginScreen
 import com.epy.linespotv2.presentation.auth.register.RegisterScreen
@@ -22,7 +24,7 @@ import com.epy.linespotv2.presentation.laporan.LaporanFilterScreen
 import com.epy.linespotv2.presentation.laporan.LaporanScreen
 import com.epy.linespotv2.presentation.laporan.LaporanViewModel
 import com.epy.linespotv2.presentation.post_qr.ScanScreen
-import com.epy.linespotv2.presentation.riwayat.DetilRiwayatScreen
+import com.epy.linespotv2.presentation.riwayat.DetilScreen
 import com.epy.linespotv2.presentation.riwayat.RiwayatFilterScreen
 import com.epy.linespotv2.presentation.riwayat.RiwayatScreen
 import com.epy.linespotv2.presentation.settings.screen.BantuanFaqScreen
@@ -272,7 +274,18 @@ fun AppNavHost() {
         }
 
         composable("detail_riwayat") {
-            DetilRiwayatScreen()
+            val parentEntry = remember(it) {
+                navController.getBackStackEntry("riwayat_filter")
+            }
+            val riwayatViewModel: RiwayatViewModel = hiltViewModel(parentEntry)
+            val state by riwayatViewModel.state.collectAsStateWithLifecycle()
+            
+            state.selectedDetail?.let { detail ->
+                DetilScreen(
+                    uiModel = detail,
+                    onBack = { navController.popBackStack() }
+                )
+            }
         }
 
         composable("laporanFilter") {

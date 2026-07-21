@@ -1,6 +1,6 @@
 package com.epy.linespotv2.presentation.riwayat.ui_model
 
-data class DetilRiwayatUiModel(
+data class DetilScreenUiModel(
     val ticketCode: String,
     val statusChipLabel: String,
     val statusLabel: String,
@@ -12,12 +12,11 @@ data class DetilRiwayatUiModel(
     val ticketInfoItems: List<DetilRiwayatInfoItemUiModel>,
     val paymentMethodLabel: String,
     val paymentAmountLabel: String,
-    val officerName: String,
-    val officerRole: String,
-    val officerIdLabel: String,
-    val officerIdValue: String,
     val noteLabel: String,
-    val noteValue: String
+    val noteValue: String,
+    
+    // Properti Opsional untuk Opsi Unduh Bukti PDF
+    val showDownloadPdfButton: Boolean = false
 )
 
 data class DetilRiwayatInfoItemUiModel(
